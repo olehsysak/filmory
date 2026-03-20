@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment & env vars
+venv/
+.venv/
+.env
+
+# PyCharm
+.idea/
+
+# VSCode
+.vscode/
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Alembic
+migrations/versions/__pycache__/
+
+# Pytest
+.pytest_cache/
+
+# Logs
+*.log
