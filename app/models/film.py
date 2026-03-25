@@ -19,5 +19,4 @@ class Film(Base):
     vote_count: Mapped[int] = mapped_column(Integer, default=0)
     popularity: Mapped[float] = mapped_column(Float, default=0.0)
     runtime: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    genres: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default = func.now())

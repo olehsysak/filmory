@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Response, Request, status, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.dependencies import get_async_db
+from app.dependencies import get_auth_service
 from app.schemas.user import UserRegister, UserLogin, UserResponse
 from app.services.auth_service import AuthService
 
@@ -13,16 +13,14 @@ router = APIRouter(
 
 
 @router.post("/register", response_model=UserResponse)
-async def register_user(data: UserRegister, db: AsyncSession = Depends(get_async_db)):
+async def register_user(data: UserRegister, auth_service: AuthService = Depends(get_auth_service)):
     """Register a new user."""
-    auth_service = AuthService(db)
     return await auth_service.register(data)
 
 
 @router.post("/login")
-async def login_user(data: UserLogin, response: Response, db: AsyncSession = Depends(get_async_db)):
+async def login_user(data: UserLogin, response: Response, auth_service: AuthService = Depends(get_auth_service)):
     """Login user and set tokens in cookies."""
-    auth_service = AuthService(db)
     result = await auth_service.login(data)
 
     # Set tokens in cookies
@@ -44,9 +42,8 @@ async def login_user(data: UserLogin, response: Response, db: AsyncSession = Dep
 
 
 @router.post("/refresh")
-async def refresh(request: Request, db: AsyncSession = Depends(get_async_db)):
+async def refresh(request: Request, auth_service: AuthService = Depends(get_auth_service)):
     """Refresh access token using refresh token from cookie."""
-    auth_service = AuthService(db)
     refresh_token = request.cookies.get("refresh_token")
 
     if not refresh_token:
@@ -69,10 +66,9 @@ async def logout(response: Response):
 @router.post("/token")
 async def token(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_async_db)
+    auth_service: AuthService = Depends(get_auth_service)
 ):
     """OAuth2 token endpoint for Swagger UI authorization."""
-    auth_service = AuthService(db)
     result = await auth_service.login(UserLogin(
         email=form_data.username,
         password=form_data.password

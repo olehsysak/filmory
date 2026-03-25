@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import uvicorn
 from app.routers.auth import router as auth_router
+from app.routers.film import router as film_router
 from app.middleware.auth_middleware import AuthMiddleware
 
 from app.clients.tmdb_client import tmdb_client
@@ -19,6 +20,7 @@ app.add_middleware(AuthMiddleware)
 
 # connecting routers
 app.include_router(auth_router)
+app.include_router(film_router)
 
 
 # root endpoint

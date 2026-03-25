@@ -1,6 +1,6 @@
 import httpx
 from app.config import TMDB_API_KEY, TMDB_BASE_URL, TMDB_IMAGE_URL
-
+from datetime import date
 
 class TMDBClient:
     """Client for TMDB API"""
@@ -12,7 +12,7 @@ class TMDBClient:
 
 
     async def _get(self, endpoint: str, params: dict = None) -> dict:
-        """Base GET request to TMDB API"""
+        """Base GET request to TMDB API."""
         if params is None:
             params = {}
         params['api_key'] = self.api_key
@@ -48,14 +48,19 @@ class TMDBClient:
         return await self._get("/search/movie", {"query": query, "page": page})
 
 
-    async def get_by_genre(self, genre_id: int, page: int = 1) -> dict:
-        """Get films by genre."""
-        return await self._get("/discover/movie", {"with_genres": genre_id, "page": page})
+    async def get_upcoming(self, page: int = 1) -> dict:
+        """Get upcoming films."""
+        return await self._get("/movie/upcoming", {"page": page})
 
 
-    async def get_genres(self) -> dict:
-        """Get all genres."""
-        return await self._get("/genre/movie/list")
+    async def get_new(self, page: int = 1) -> dict:
+        """Get new films (sorted by release_date descending)."""
+        params = {
+            "sort_by": "release_date.desc",
+            "page": page,
+            "release_date.lte": date.today().isoformat()
+        }
+        return await self._get("/discover/movie", params)
 
 
     def get_image_url(self, poster_path: str | None) -> str | None:
