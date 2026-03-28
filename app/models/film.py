@@ -1,7 +1,12 @@
 from sqlalchemy import Integer, String, Text, Date, Float, DateTime, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime, date
 from app.database import Base
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from app.models.genre import Genre
 
 
 class Film(Base):
@@ -20,3 +25,7 @@ class Film(Base):
     popularity: Mapped[float] = mapped_column(Float, default=0.0)
     runtime: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default = func.now())
+
+    genres: Mapped[list["Genre"]] = relationship(
+        "Genre", secondary="film_genre", back_populates="films"
+    )
