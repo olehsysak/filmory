@@ -52,3 +52,15 @@ async def get_film(tmdb_id: int, service: FilmService = Depends(get_film_service
     if not film:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Film not found")
     return film
+
+
+@router.get("/", response_model=list[FilmShort])
+async def get_films_by_genre(
+    genre_id: int = Query(..., description="Internal genre ID"),
+    service: FilmService = Depends(get_film_service)
+):
+    """Get films filtered by genre."""
+    films = await service.get_by_genre(genre_id)
+    if not films:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No films found for this genre")
+    return films

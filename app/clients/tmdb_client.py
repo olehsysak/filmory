@@ -70,4 +70,9 @@ class TMDBClient:
         return f"{self.image_url}{poster_path}"
 
 
+    async def get_genres(self) -> list:
+        """Get all movie genres from TMDB."""
+        data = await self._get("/genre/movie/list")
+        return data.get("genres", [])
+
 tmdb_client = TMDBClient()

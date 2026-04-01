@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import async_session_maker
 from app.services.film_service import FilmService
 from app.services.auth_service import AuthService
+from app.services.genre_service import GenreService
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
@@ -46,3 +47,8 @@ def get_film_service(db: AsyncSession = Depends(get_async_db)):
 def get_auth_service(db: AsyncSession = Depends(get_async_db)):
     """FastAPI dependency for AuthService."""
     return AuthService(db)
+
+
+def get_genre_service(db: AsyncSession = Depends(get_async_db)):
+    """FastAPI dependency for GenreService."""
+    return GenreService(db)

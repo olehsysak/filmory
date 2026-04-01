@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 from datetime import date
+from app.schemas.genre import GenreResponse
 
 
 class FilmBase(BaseModel):
@@ -25,6 +26,7 @@ class FilmResponse(FilmBase):
     """Schema for film response."""
     id: int = Field(..., description="Internal film ID")
     poster_url: str | None = Field(None, description="Full poster URL")
+    genres: list[GenreResponse] = Field(default_factory=list, description="Film genres")
 
     model_config = ConfigDict(from_attributes=True)
 
