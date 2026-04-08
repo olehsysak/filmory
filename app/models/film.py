@@ -19,6 +19,7 @@ class Film(Base):
     overview: Mapped[str | None] = mapped_column(Text, nullable=True)
     tagline: Mapped[str | None] = mapped_column(Text, nullable=True)
     poster_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    backdrop_path: Mapped[str | None] = mapped_column(String, nullable=True)
     release_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     vote_average: Mapped[float] = mapped_column(Float, default=0.0)
     vote_count: Mapped[int] = mapped_column(Integer, default=0)

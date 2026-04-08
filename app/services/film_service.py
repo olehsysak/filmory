@@ -29,6 +29,7 @@ class FilmService:
             "overview": tmdb_data.get("overview"),
             "tagline": tmdb_data.get("tagline"),
             "poster_path": tmdb_data.get("poster_path"),
+            "backdrop_path": tmdb_data.get("backdrop_path"),
             "release_date": release_date,
             "vote_average": tmdb_data.get("vote_average", 0.0),
             "vote_count": tmdb_data.get("vote_count", 0),
@@ -68,6 +69,7 @@ class FilmService:
         # Return if film exists and has complete details
         if film and film.runtime is not None and film.tagline is not None and film.genres:
             film.poster_url = tmdb_client.get_image_url(film.poster_path)
+            film.backdrop_url = tmdb_client.get_image_url(film.backdrop_path, size="w1280") if film.backdrop_path else None
             return film
 
         # Fetch film data from TMDB
@@ -87,6 +89,7 @@ class FilmService:
         await self.db.commit()
         await self.db.refresh(film)
         film.poster_url = tmdb_client.get_image_url(film.poster_path)
+        film.backdrop_url = tmdb_client.get_image_url(film.backdrop_path, size="w1280") if film.backdrop_path else None
         return film
 
 

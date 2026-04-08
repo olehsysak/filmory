@@ -1,0 +1,119 @@
+/* Welcome banner */
+.welcome-banner {
+    margin-bottom: 40px;
+    padding: 28px 32px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.welcome-banner--guest {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.welcome-banner__text h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text);
+}
+
+.welcome-banner__text p {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.welcome-banner--user h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.welcome-banner--user p {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.welcome-banner__actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+/* Film row */
+.film-row {
+    margin-bottom: 48px;
+}
+
+.film-row__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.see-all {
+    font-size: 13px;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.15s;
+}
+
+.see-all:hover { opacity: 0.75; }
+
+.film-row__wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.film-row__track {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+    flex: 1;
+}
+
+.film-row__track::-webkit-scrollbar { display: none; }
+
+.film-row__track .film-card {
+    flex: 0 0 150px;
+}
+
+.film-row__empty {
+    font-size: 14px;
+    color: var(--text-muted);
+    padding: 20px 0;
+}
+
+/* Row arrows */
+.row-arrow {
+    flex-shrink: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    z-index: 10;
+}
+
+.row-arrow:hover {
+    background: var(--border);
+    color: var(--accent);
+    border-color: var(--accent);
+}

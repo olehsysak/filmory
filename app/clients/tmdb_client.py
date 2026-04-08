@@ -63,11 +63,11 @@ class TMDBClient:
         return await self._get("/discover/movie", params)
 
 
-    def get_image_url(self, poster_path: str | None) -> str | None:
+    def get_image_url(self, poster_path: str | None, size: str = "w500") -> str | None:
         """Get full image URL from poster path."""
         if not poster_path:
             return None
-        return f"{self.image_url}{poster_path}"
+        return f"https://image.tmdb.org/t/p/{size}{poster_path}"
 
 
     async def get_genres(self) -> list:

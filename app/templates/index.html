@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Filmory — Discover Films{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/pages/index.css') }}">
+{% endblock %}
+
+{% macro film_row(title, films, see_all_url, track_id) %}
+<section class="film-row">
+    <div class="film-row__header">
+        <h2 class="section-title">{{ title }}</h2>
+        <a href="{{ see_all_url }}" class="see-all">See all →</a>
+    </div>
+    <div class="film-row__wrapper">
+        <button class="row-arrow row-arrow--prev" aria-label="Scroll left">‹</button>
+        <div class="film-row__track" id="{{ track_id }}">
+            {% if films %}
+                {% for film in films %}
+                <a href="/film/{{ film.tmdb_id }}" class="film-card">
+                    {% if film.poster_url %}
+                    <img
+                        class="film-card__poster"
+                        src="{{ film.poster_url }}"
+                        alt="{{ film.title }}"
+                        loading="lazy"
+                    >
+                    {% else %}
+                    <div class="film-card__no-poster">No Image</div>
+                    {% endif %}
+                    <div class="film-card__info">
+                        <p class="film-card__title">{{ film.title }}</p>
+                        <p class="film-card__meta">
+                            {% if film.release_date %}{{ film.release_date.year }}{% endif %}
+                            <span class="film-card__rating">★ {{ "%.1f"|format(film.vote_average) }}</span>
+                        </p>
+                    </div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <p class="film-row__empty">No films available right now.</p>
+            {% endif %}
+        </div>
+        <button class="row-arrow row-arrow--next" aria-label="Scroll right">›</button>
+    </div>
+</section>
+{% endmacro %}
+
+{% block content %}
+<div class="container">
+
+    <!-- WELCOME BANNER -->
+    {% if current_user %}
+    <div class="welcome-banner welcome-banner--user">
+        <div class="welcome-banner__text">
+            <h2>Welcome back, {{ current_user.username }} 👋</h2>
+            <p>Ready to discover something new today?</p>
+        </div>
+    </div>
+    {% else %}
+    <div class="welcome-banner welcome-banner--guest" id="welcomeBanner">
+        <div class="welcome-banner__text">
+            <h2>Discover your next favourite film</h2>
+            <p>Track films you've watched, create lists and share with friends.</p>
+        </div>
+        <div class="welcome-banner__actions">
+            <a href="/register" class="btn btn--primary">Get Started</a>
+            <a href="/login" class="btn btn--outline">Login</a>
+        </div>
+    </div>
+    {% endif %}
+
+    {{ film_row("Popular This Week", popular[:12], "/films?sort=popular", "popularTrack") }}
+    {{ film_row("Coming Soon", coming_soon[:12], "/films?sort=upcoming", "comingSoonTrack") }}
+
+</div>
+{% endblock %}

@@ -10,6 +10,7 @@ class FilmBase(BaseModel):
     overview: str | None = Field(None, description="Film overview")
     tagline: str | None = Field(None, description="Film tagline")
     poster_path: str | None = Field(None, description="Poster path from TMDB")
+    backdrop_path: str | None = Field(None, description="Backdrop path from TMDB")
     release_date: date | None = Field(None, description="Release date")
     vote_average: float = Field(0.0, ge=0.0, le=10.0, description="TMDB rating")
     vote_count: int = Field(0, ge=0, description="Number of votes")
@@ -26,6 +27,7 @@ class FilmResponse(FilmBase):
     """Schema for film response."""
     id: int = Field(..., description="Internal film ID")
     poster_url: str | None = Field(None, description="Full poster URL")
+    backdrop_url: str | None = Field(None, description="Full backdrop URL")
     genres: list[GenreResponse] = Field(default_factory=list, description="Film genres")
 
     model_config = ConfigDict(from_attributes=True)

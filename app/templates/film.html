@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}{{ film.title }} — Filmory{% endblock %}
+
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', path='css/pages/film.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div class="film-hero">
+    {% if film.backdrop_url %}
+    <div class="film-hero__backdrop" style="background-image: url('{{ film.backdrop_url }}')"></div>
+    {% elif film.poster_url %}
+    <div class="film-hero__backdrop film-hero__backdrop--blur" style="background-image: url('{{ film.poster_url }}')"></div>
+    {% else %}
+    <div class="film-hero__backdrop" style="background: var(--bg-secondary)"></div>
+    {% endif %}
+    <div class="film-hero__gradient"></div>
+    <div class="film-hero__content"></div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="film-layout">
+
+    <!-- LEFT: Poster + Stats -->
+    <div class="film-poster-col">
+        {% if film.poster_url %}
+        <img class="film-poster" src="{{ film.poster_url }}" alt="{{ film.title }}">
+        {% else %}
+        <div class="film-poster--placeholder">No Poster</div>
+        {% endif %}
+
+        <div class="film-stats">
+            {% if film.release_date %}
+            <div class="film-stat">
+                <span class="film-stat__label">Release date</span>
+                <span class="film-stat__value">{{ film.release_date.strftime('%b %d, %Y') }}</span>
+            </div>
+            <div class="film-stat__divider"></div>
+            {% endif %}
+
+            {% if film.runtime %}
+            <div class="film-stat">
+                <span class="film-stat__label">Runtime</span>
+                <span class="film-stat__value">
+                    {% set h = film.runtime // 60 %}
+                    {% set m = film.runtime % 60 %}
+                    {% if h %}{{ h }}h {% endif %}{{ m }}m
+                </span>
+            </div>
+            <div class="film-stat__divider"></div>
+            {% endif %}
+
+            <div class="film-stat">
+                <span class="film-stat__label">Rating</span>
+                <span class="film-stat__value" style="color: var(--accent)">
+                    ★ {{ "%.2f"|format(film.vote_average) }} / 10
+                </span>
+            </div>
+            <div class="film-stat__divider"></div>
+
+            <div class="film-stat">
+                <span class="film-stat__label">Votes</span>
+                <span class="film-stat__value">{{ "{:,}".format(film.vote_count) }}</span>
+            </div>
+            <div class="film-stat__divider"></div>
+
+            <div class="film-stat">
+                <span class="film-stat__label">Popularity</span>
+                <span class="film-stat__value">{{ "%.1f"|format(film.popularity) }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Info -->
+    <div class="film-info">
+
+        {% if film.genres %}
+        <div class="film-genres">
+            {% for genre in film.genres %}
+            <a href="/films?genre={{ genre.tmdb_id }}" class="film-genre-tag">{{ genre.name }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <h1 class="film-title">{{ film.title }}</h1>
+
+        {% if film.tagline %}
+        <p class="film-tagline">{{ film.tagline }}</p>
+        {% endif %}
+
+        <!-- Rating visual -->
+        <div class="film-rating-row">
+            <div class="film-rating">
+                <span class="film-rating__score">{{ "%.1f"|format(film.vote_average) }}</span>
+                <span class="film-rating__max">/ 10</span>
+            </div>
+            <div class="film-rating__stars">
+                {% for i in range(1, 6) %}
+                <span class="film-rating__star {% if (film.vote_average / 2) >= i %}film-rating__star--filled{% elif (film.vote_average / 2) >= (i - 0.5) %}film-rating__star--filled{% endif %}">★</span>
+                {% endfor %}
+            </div>
+            <span class="film-rating__votes">{{ "{:,}".format(film.vote_count) }} votes</span>
+        </div>
+
+        <!-- Meta pills -->
+        <div class="film-meta-pills">
+            {% if film.release_date %}
+            <span class="film-meta-pill">{{ film.release_date.year }}</span>
+            {% endif %}
+            {% if film.runtime %}
+            <span class="film-meta-pill">
+                ⏱
+                {% set h = film.runtime // 60 %}
+                {% set m = film.runtime % 60 %}
+                {% if h %}{{ h }}h {% endif %}{{ m }}min
+            </span>
+            {% endif %}
+            {% if film.genres %}
+            <span class="film-meta-pill">{{ film.genres | map(attribute='name') | join(', ') }}</span>
+            {% endif %}
+        </div>
+
+        <!-- Overview -->
+        {% if film.overview %}
+        <div>
+            <p class="film-section-label">Overview</p>
+            <p class="film-overview">{{ film.overview }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Popularity bar -->
+        <div class="film-popularity">
+            <p class="film-section-label">Popularity score</p>
+            <div class="film-popularity__bar-track">
+                <div
+                    class="film-popularity__bar-fill"
+                    style="width: {{ [film.popularity / 3, 100] | min }}%"
+                ></div>
+            </div>
+            <span class="film-popularity__label">{{ "%.1f"|format(film.popularity) }} / 300+</span>
+        </div>
+
+        <a href="javascript:history.back()" class="btn btn--outline" style="align-self: flex-start; margin-top: 8px;">← Back</a>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='js/film.js') }}"></script>
+{% endblock %}
