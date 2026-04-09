@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Register — Filmory{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/pages/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+
+        <div class="auth-card__header">
+            <h1 class="auth-card__title">Create account</h1>
+            <p class="auth-card__subtitle">Join Filmory and start tracking films</p>
+        </div>
+
+        <div class="auth-error" id="authError" style="display:none"></div>
+
+        <div class="auth-card__body">
+            <div class="form-group">
+                <label class="form-label" for="username">Username</label>
+                <input
+                    class="form-input"
+                    type="text"
+                    id="username"
+                    placeholder="yourname"
+                    autocomplete="username"
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">Email</label>
+                <input
+                    class="form-input"
+                    type="email"
+                    id="email"
+                    placeholder="you@example.com"
+                    autocomplete="email"
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <div class="form-input-wrap">
+                    <input
+                        class="form-input"
+                        type="password"
+                        id="password"
+                        placeholder="••••••••"
+                        autocomplete="new-password"
+                    >
+                    <button class="form-input-toggle" type="button" id="togglePassword" tabindex="-1">
+                        <span id="toggleIcon">👁</span>
+                    </button>
+                </div>
+            </div>
+
+            <button class="btn btn--primary btn--full" id="registerBtn">
+                Create account
+            </button>
+        </div>
+
+        <div class="auth-card__footer">
+            <p>Already have an account? <a href="/login" class="auth-link">Sign in</a></p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='js/register.js') }}"></script>
+{% endblock %}

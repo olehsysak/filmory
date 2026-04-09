@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Login — Filmory{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/pages/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+
+        <div class="auth-card__header">
+            <h1 class="auth-card__title">Welcome back</h1>
+            <p class="auth-card__subtitle">Sign in to your Filmory account</p>
+        </div>
+
+        <div class="auth-error" id="authError" style="display:none"></div>
+
+        <div class="auth-card__body">
+            <div class="form-group">
+                <label class="form-label" for="email">Email</label>
+                <input
+                    class="form-input"
+                    type="email"
+                    id="email"
+                    placeholder="you@example.com"
+                    autocomplete="email"
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <div class="form-input-wrap">
+                    <input
+                        class="form-input"
+                        type="password"
+                        id="password"
+                        placeholder="••••••••"
+                        autocomplete="current-password"
+                    >
+                    <button class="form-input-toggle" type="button" id="togglePassword" tabindex="-1">
+                        <span id="toggleIcon">👁</span>
+                    </button>
+                </div>
+            </div>
+
+            <button class="btn btn--primary btn--full" id="loginBtn">
+                Sign in
+            </button>
+        </div>
+
+        <div class="auth-card__footer">
+            <p>Don't have an account? <a href="/register" class="auth-link">Register</a></p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='js/login.js') }}"></script>
+{% endblock %}

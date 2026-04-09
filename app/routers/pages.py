@@ -27,3 +27,17 @@ async def film_detail(request: Request, tmdb_id: int, service: FilmService = Dep
         "request": request,
         "film": film,
     })
+
+
+@router.get("/login")
+async def login(request: Request):
+    return templates.TemplateResponse("login.html", {
+        "request": request,
+    })
+
+
+@router.get("/register")
+async def register_page(request: Request):
+    return templates.TemplateResponse("register.html", {
+        "request": request
+    })

@@ -1,0 +1,142 @@
+.auth-page {
+    min-height: calc(100vh - 64px - 73px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.auth-card__header {
+    padding: 36px 36px 0;
+}
+
+.auth-card__title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+.auth-card__subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.auth-card__body {
+    padding: 28px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.auth-card__footer {
+    padding: 0 36px 28px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+/* ================== FORM ================== */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.form-input-wrap {
+    position: relative;
+}
+
+.form-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--text);
+    font-family: inherit;
+    transition: border-color 0.15s;
+    outline: none;
+}
+
+.form-input-wrap .form-input {
+    padding-right: 44px;
+}
+
+.form-input::placeholder {
+    color: var(--text-muted);
+}
+
+.form-input:focus {
+    border-color: var(--accent);
+}
+
+.form-input--error {
+    border-color: #e53e3e;
+}
+
+.form-input-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-muted);
+    padding: 0;
+    line-height: 1;
+    transition: color 0.15s;
+}
+
+.form-input-toggle:hover {
+    color: var(--text);
+}
+
+/* ================== BUTTON FULL ================== */
+.btn--full {
+    width: 100%;
+    padding: 11px;
+    font-size: 15px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+/* ================== ERROR ================== */
+.auth-error {
+    margin: 16px 36px 0;
+    padding: 12px 14px;
+    background: rgba(229, 62, 62, 0.1);
+    border: 1px solid rgba(229, 62, 62, 0.3);
+    border-radius: 8px;
+    font-size: 13px;
+    color: #e53e3e;
+}
+
+/* ================== LINK ================== */
+.auth-link {
+    color: var(--accent);
+    font-weight: 500;
+    transition: opacity 0.15s;
+}
+
+.auth-link:hover {
+    opacity: 0.8;
+}
