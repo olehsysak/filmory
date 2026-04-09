@@ -34,12 +34,14 @@ async def login_user(data: UserLogin, response: Response, auth_service: AuthServ
         key="access_token",
         value=result["access_token"],
         httponly=True,
+        path="/",
         max_age=60 * 30  # 30 minutes
     )
     response.set_cookie(
         key="refresh_token",
         value=result["refresh_token"],
         httponly=True,
+        path="/",
         max_age=60 * 60 * 24 * 7  # 7 days
     )
 
@@ -63,9 +65,22 @@ async def refresh(request: Request, auth_service: AuthService = Depends(get_auth
 
 @router.post("/logout")
 async def logout(response: Response):
-    """Logout user by clearing cookies."""
-    response.delete_cookie("access_token")
-    response.delete_cookie("refresh_token")
+    response.set_cookie(
+        key="access_token",
+        value="",
+        httponly=True,
+        path="/",
+        max_age=0,
+        expires=0
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value="",
+        httponly=True,
+        path="/",
+        max_age=0,
+        expires=0
+    )
     return {"message": "Logged out successfully"}
 
 

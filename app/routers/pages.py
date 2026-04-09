@@ -15,6 +15,7 @@ async def index(request: Request, service: FilmService = Depends(get_film_servic
         "request": request,
         "popular": popular,
         "coming_soon": coming_soon,
+        "current_user": request.state.user if hasattr(request.state, 'user') else None,
     })
 
 
