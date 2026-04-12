@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Request, Depends, status, HTTPException
 from app.templates import templates
 from app.services.film_service import FilmService
-from app.dependencies import get_film_service
+from app.dependencies import get_film_service, get_async_db
+from app.repositories.genre_repo import GenreRepository
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 router = APIRouter(tags=["pages"])
@@ -19,6 +21,17 @@ async def index(request: Request, service: FilmService = Depends(get_film_servic
     })
 
 
+@router.get("/films")
+async def films_page(request: Request, db: AsyncSession = Depends(get_async_db)):
+    genre_repo = GenreRepository(db)
+    genres = await genre_repo.get_all()
+    return templates.TemplateResponse("films.html", {
+        "request": request,
+        "genres": genres,
+        "current_user": request.state.user if hasattr(request.state, 'user') else None,
+    })
+
+
 @router.get("/film/{tmdb_id}")
 async def film_detail(request: Request, tmdb_id: int, service: FilmService = Depends(get_film_service)):
     film = await service.get_or_fetch_film(tmdb_id)
@@ -32,13 +45,9 @@ async def film_detail(request: Request, tmdb_id: int, service: FilmService = Dep
 
 @router.get("/login")
 async def login(request: Request):
-    return templates.TemplateResponse("login.html", {
-        "request": request,
-    })
+    return templates.TemplateResponse("login.html", {"request": request})
 
 
 @router.get("/register")
 async def register_page(request: Request):
-    return templates.TemplateResponse("register.html", {
-        "request": request
-    })
+    return templates.TemplateResponse("register.html", {"request": request})

@@ -75,4 +75,47 @@ class TMDBClient:
         data = await self._get("/genre/movie/list")
         return data.get("genres", [])
 
+
+    async def discover(
+            self,
+            sort_by: str = "popularity.desc",
+            genre_id: int | None = None,
+            year: int | None = None,
+            year_from: int | None = None,
+            year_to: int | None = None,
+            upcoming: bool = False,
+            runtime_min: int | None = None,
+            runtime_max: int | None = None,
+            page: int = 1
+    ) -> dict:
+        vote_min = 500 if "vote_average" in sort_by else 100
+        params = {
+            "sort_by": sort_by,
+            "page": page,
+            "vote_count.gte": vote_min,
+        }
+        if genre_id:
+            params["with_genres"] = genre_id
+        if year:
+            params["primary_release_year"] = year
+        if year_from:
+            params["primary_release_date.gte"] = f"{year_from}-01-01"
+        if year_to:
+            params["primary_release_date.lte"] = f"{year_to}-12-31"
+        if upcoming:
+            params["primary_release_date.gte"] = date.today().isoformat()
+            params.pop("vote_count.gte", None)
+        if runtime_min:
+            params["with_runtime.gte"] = runtime_min
+        if runtime_max:
+            params["with_runtime.lte"] = runtime_max
+
+        return await self._get("/discover/movie", params)
+
+
+    async def get_trending(self, period: str = "week", page: int = 1) -> dict:
+        """Get trending films. Period: day or week."""
+        return await self._get(f"/trending/movie/{period}", {"page": page})
+
+
 tmdb_client = TMDBClient()

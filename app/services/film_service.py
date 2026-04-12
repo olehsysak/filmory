@@ -136,11 +136,9 @@ class FilmService:
 
 
     async def get_popular(self) -> list:
-        """Get popular films from TMDB and sync with DB."""
         tmdb_data = await tmdb_client.get_popular()
-        return await self._get_or_create_from_tmdb_list(
-            tmdb_data.get("results", [])
-        )
+        results = [r for r in tmdb_data.get("results", []) if r.get("vote_count", 0) >= 100]
+        return await self._get_or_create_from_tmdb_list(results)
 
 
     async def get_top_rated(self) -> list:
@@ -178,3 +176,54 @@ class FilmService:
         """Get films by genre."""
         films = await self.film_repo.get_by_genre(genre_id)
         return self._set_poster_urls(films)
+
+
+    async def get_catalog(
+            self,
+            sort: str = "popular",
+            genre_id: int | None = None,
+            year: int | None = None,
+            year_from: int | None = None,
+            year_to: int | None = None,
+            upcoming: bool = False,
+            trending_period: str | None = None,
+            runtime_min: int | None = None,
+            runtime_max: int | None = None,
+            page: int = 1,
+    ) -> tuple[list, int, int]:
+
+        if trending_period in ("day", "week"):
+            tmdb_data = await tmdb_client.get_trending(period=trending_period, page=page)
+            films = await self._get_or_create_from_tmdb_list(tmdb_data.get("results", []))
+            if genre_id:
+                films = [f for f in films if any(g.tmdb_id == genre_id for g in f.genres)]
+            total = len(films)
+            return films, total, 1
+
+        if sort == "popular" and not genre_id and not year and not year_from and not runtime_min and not runtime_max:
+            tmdb_data = await tmdb_client.get_popular(page=page)
+            films = await self._get_or_create_from_tmdb_list(tmdb_data.get("results", []))
+            return films, tmdb_data.get("total_results", 0), tmdb_data.get("total_pages", 1)
+
+        sort_map = {
+            "popular": "popularity.desc",
+            "top_rated": "vote_average.desc",
+            "lowest_rated": "vote_average.asc",
+            "newest": "release_date.desc",
+            "oldest": "release_date.asc",
+        }
+        sort_by = sort_map.get(sort, "popularity.desc")
+
+        tmdb_data = await tmdb_client.discover(
+            sort_by=sort_by,
+            genre_id=genre_id,
+            year=year,
+            year_from=year_from,
+            year_to=year_to,
+            upcoming=upcoming,
+            runtime_min=runtime_min,
+            runtime_max=runtime_max,
+            page=page,
+        )
+        films = await self._get_or_create_from_tmdb_list(tmdb_data.get("results", []))
+        return films, tmdb_data.get("total_results", 0), tmdb_data.get("total_pages", 1)
