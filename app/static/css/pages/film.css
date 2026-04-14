@@ -274,6 +274,68 @@
     color: var(--text-muted);
 }
 
+/* Similar films */
+.film-similar {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px 60px;
+    border-top: 1px solid var(--border);
+    padding-top: 48px;
+}
+
+.film-similar__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.film-similar .film-row__wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.film-similar .film-row__track {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+    flex: 1;
+}
+
+.film-similar .film-row__track::-webkit-scrollbar {
+    display: none;
+}
+
+.film-similar .film-row__track .film-card {
+    flex: 0 0 150px;
+}
+
+.film-similar .row-arrow {
+    flex-shrink: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+
+.film-similar .row-arrow:hover {
+    background: var(--border);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .film-layout {
@@ -305,5 +367,9 @@
 
     .film-hero__content {
         padding: 40px 20px 0;
+    }
+
+    .film-similar {
+        padding: 32px 20px 40px;
     }
 }

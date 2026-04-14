@@ -37,9 +37,11 @@ async def film_detail(request: Request, tmdb_id: int, service: FilmService = Dep
     film = await service.get_or_fetch_film(tmdb_id)
     if not film:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Film not found")
+    similar = await service.get_similar(tmdb_id)
     return templates.TemplateResponse("film.html", {
         "request": request,
         "film": film,
+        "similar": similar,
     })
 
 

@@ -165,6 +165,12 @@ class FilmService:
         )
 
 
+    async def get_similar(self, tmdb_id: int) -> list:
+        """Get similar films from TMDB and sync to DB."""
+        tmdb_data = await tmdb_client.get_similar(tmdb_id)
+        return await self._get_or_create_from_tmdb_list(tmdb_data.get("results", []))
+
+
     def _set_poster_urls(self, films: list) -> list:
         """Set poster_url for list of films."""
         for film in films:
