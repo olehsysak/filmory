@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, ForeignKey, UniqueConstraint
+from sqlalchemy import Integer, String, Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 from typing import TYPE_CHECKING
@@ -19,6 +19,7 @@ class FilmCredit(Base):
     job: Mapped[str] = mapped_column(String(100), nullable=False)
     character: Mapped[str | None] = mapped_column(String(255), nullable=True)
     credit_order: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    is_key: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     __table_args__ = (
         UniqueConstraint('film_id', 'person_id', 'job', name='uq_film_person_job'),

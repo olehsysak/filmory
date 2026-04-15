@@ -1,0 +1,175 @@
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.repositories.person_repo import PersonRepository
+from app.repositories.film_credit_repo import FilmCreditRepository
+from app.clients.tmdb_client import tmdb_client
+from datetime import date
+
+KEY_JOBS = {"Director", "Producer", "Screenplay", "Writer", "Original Music Composer", "Director of Photography"}
+
+
+class PersonService:
+    """Service for cast and crew business logic."""
+
+    def __init__(self, db: AsyncSession):
+        self.db = db
+        self.person_repo = PersonRepository(db)
+        self.credit_repo = FilmCreditRepository(db)
+
+
+    def _parse_person_data(self, tmdb_data: dict) -> dict:
+        """Parse TMDB person data to our database format."""
+        birthday = None
+        raw_date = tmdb_data.get("birthday")
+        if raw_date:
+            try:
+                birthday = date.fromisoformat(raw_date)
+            except ValueError:
+                birthday = None
+
+        return {
+            "tmdb_id": tmdb_data.get("id"),
+            "name": tmdb_data.get("name", ""),
+            "profile_path": tmdb_data.get("profile_path"),
+            "biography": tmdb_data.get("biography"),
+            "birthday": birthday,
+            "place_of_birth": tmdb_data.get("place_of_birth"),
+        }
+
+
+    def _parse_cast_credits(self, film_id: int, person_id: int, member: dict) -> dict:
+        """Parse TMDB cast member to FilmCredit format."""
+        return {
+            "film_id": film_id,
+            "person_id": person_id,
+            "department": "Acting",
+            "job": "Actor",
+            "character": member.get("character"),
+            "credit_order": member.get("order"),
+        }
+
+
+    def _parse_crew_credits(self, film_id: int, person_id: int, member: dict) -> dict:
+        """Parse TMDB crew member to FilmCredit format."""
+        return {
+            "film_id": film_id,
+            "person_id": person_id,
+            "department": member.get("department", ""),
+            "job": member.get("job", ""),
+            "character": None,
+            "credit_order": None,
+        }
+
+
+    async def get_film_credits(self, film_id: int, tmdb_id: int) -> dict:
+        """Get cast and crew for a film. Fetch from TMDB and cache if not in DB."""
+        if not await self.credit_repo.has_credits(film_id):
+            await self._fetch_and_cache_credits(film_id, tmdb_id)
+
+        credits = await self.credit_repo.get_film_credits(film_id)
+        return self._split_and_enrich_credits(credits)
+
+
+    async def _fetch_and_cache_credits(self, film_id: int, tmdb_id: int) -> None:
+        """Fetch credits from TMDB and save to DB."""
+        tmdb_data = await tmdb_client.get_credits(tmdb_id)
+
+        credits_to_create = []
+
+        for member in tmdb_data.get("cast", []):
+            person = await self.person_repo.get_or_create(
+                {"tmdb_id": member["id"], "name": member["name"], "profile_path": member.get("profile_path")}
+            )
+            credits_to_create.append(self._parse_cast_credits(film_id, person.id, member))
+
+        for member in tmdb_data.get("crew", []):
+            person = await self.person_repo.get_or_create(
+                {"tmdb_id": member["id"], "name": member["name"], "profile_path": member.get("profile_path")}
+            )
+            credit = self._parse_crew_credits(film_id, person.id, member)
+            credit["is_key"] = member.get("job") in KEY_JOBS
+            credits_to_create.append(credit)
+
+        await self.credit_repo.bulk_create_credits(credits_to_create)
+        await self.db.commit()
+
+
+    def _split_and_enrich_credits(self, credits: list) -> dict:
+        """Split credits into cast/crew and add profile URLs."""
+        cast, crew = [], []
+        for credit in credits:
+            person = credit.person
+            entry = {
+                "tmdb_id": person.tmdb_id,
+                "name": person.name,
+                "profile_url": tmdb_client.get_image_url(person.profile_path, size="w185") if person.profile_path else None,
+                "job": credit.job,
+                "department": credit.department,
+                "character": credit.character,
+                "order": credit.credit_order,
+                "is_key": credit.is_key,
+            }
+            if credit.department == "Acting":
+                cast.append(entry)
+            else:
+                crew.append(entry)
+
+        cast.sort(key=lambda x: x["order"] if x["order"] is not None else 9999)
+        return {"cast": cast, "crew": crew}
+
+
+    async def get_person_detail(self, tmdb_id: int) -> dict:
+        """Get person detail. Fetch from TMDB if bio is missing."""
+        person = await self.person_repo.get_by_tmdb_id(tmdb_id)
+
+        if not person or not person.biography:
+            tmdb_data = await tmdb_client.get_person(tmdb_id)
+            person_data = self._parse_person_data(tmdb_data)
+            if person:
+                for key, value in person_data.items():
+                    if getattr(person, key) is None and value is not None:
+                        setattr(person, key, value)
+            else:
+                person = await self.person_repo.create(person_data)
+            await self.db.commit()
+            await self.db.refresh(person)
+
+        return self._enrich_person(person)
+
+
+    async def get_person_films(self, person_id: int, tmdb_id: int) -> list[dict]:
+        """Get all films for a person from DB credits."""
+        credits = await self.credit_repo.get_person_credits(person_id)
+
+        films = []
+        seen_film_ids = set()
+        for credit in credits:
+            film = credit.film
+            if film.id in seen_film_ids:
+                continue
+            seen_film_ids.add(film.id)
+            films.append({
+                "tmdb_id": film.tmdb_id,
+                "title": film.title,
+                "poster_url": tmdb_client.get_image_url(film.poster_path),
+                "release_date": film.release_date,
+                "vote_average": film.vote_average,
+                "job": credit.job,
+                "character": credit.character,
+                "genres": [{"id": g.tmdb_id, "name": g.name} for g in film.genres],
+            })
+
+        films.sort(key=lambda x: x["release_date"] or date.min, reverse=True)
+        return films
+
+
+    def _enrich_person(self, person) -> dict:
+        """Add profile URL to person."""
+        return {
+            "id": person.id,
+            "tmdb_id": person.tmdb_id,
+            "name": person.name,
+            "biography": person.biography,
+            "birthday": person.birthday,
+            "place_of_birth": person.place_of_birth,
+            "profile_url": tmdb_client.get_image_url(person.profile_path, size="w342") if person.profile_path else None,
+        }
