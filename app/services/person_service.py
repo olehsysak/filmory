@@ -31,7 +31,7 @@ class PersonService:
             "name": tmdb_data.get("name", ""),
             "profile_path": tmdb_data.get("profile_path"),
             "biography": tmdb_data.get("biography"),
-            "birthday": birthday,
+            "birthday": self._parse_date(tmdb_data.get("birthday")),
             "place_of_birth": tmdb_data.get("place_of_birth"),
         }
 
@@ -58,6 +58,16 @@ class PersonService:
             "character": None,
             "credit_order": None,
         }
+
+
+    def _parse_date(self, raw_date: str | None) -> date | None:
+        """Parse date string to date object."""
+        if not raw_date:
+            return None
+        try:
+            return date.fromisoformat(raw_date)
+        except ValueError:
+            return None
 
 
     async def get_film_credits(self, film_id: int, tmdb_id: int) -> dict:
@@ -137,16 +147,17 @@ class PersonService:
 
 
     async def get_person_films(self, person_id: int, tmdb_id: int) -> list[dict]:
-        """Get all films for a person from DB credits."""
-        credits = await self.credit_repo.get_person_credits(person_id)
+        """Get all films for a person — merge DB cache with TMDB."""
+        # Get cached film credits from database (already stored relations)
+        db_credits = await self.credit_repo.get_person_credits(person_id)
 
         films = []
-        seen_film_ids = set()
-        for credit in credits:
+        cached_tmdb_ids = set()
+
+        # Convert DB credits into response format
+        for credit in db_credits:
             film = credit.film
-            if film.id in seen_film_ids:
-                continue
-            seen_film_ids.add(film.id)
+            cached_tmdb_ids.add(film.tmdb_id)
             films.append({
                 "tmdb_id": film.tmdb_id,
                 "title": film.title,
@@ -157,6 +168,42 @@ class PersonService:
                 "character": credit.character,
                 "genres": [{"id": g.tmdb_id, "name": g.name} for g in film.genres],
             })
+
+        # Fetch full filmography from TMDB (source of truth)
+        tmdb_data = await tmdb_client.get_person_film_credits(tmdb_id)
+
+        # Add cast credits that are not yet cached in DB
+        for item in tmdb_data.get("cast", []):
+            if item["id"] in cached_tmdb_ids:
+                continue
+
+            films.append({
+                "tmdb_id": item["id"],
+                "title": item.get("title", ""),
+                "poster_url": tmdb_client.get_image_url(item.get("poster_path")),
+                "release_date": self._parse_date(item.get("release_date")),
+                "vote_average": item.get("vote_average", 0.0),
+                "job": "Actor",
+                "character": item.get("character"),
+                "genres": [],
+            })
+
+        # Add crew credits that are not yet cached in DB
+        for item in tmdb_data.get("crew", []):
+            if item["id"] in cached_tmdb_ids:
+                continue
+
+            films.append({
+                "tmdb_id": item["id"],
+                "title": item.get("title", ""),
+                "poster_url": tmdb_client.get_image_url(item.get("poster_path")),
+                "release_date": self._parse_date(item.get("release_date")),
+                "vote_average": item.get("vote_average", 0.0),
+                "job": item.get("job", ""),
+                "character": None,
+                "genres": [],
+            })
+            cached_tmdb_ids.add(item["id"])
 
         films.sort(key=lambda x: x["release_date"] or date.min, reverse=True)
         return films

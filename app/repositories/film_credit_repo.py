@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.film_credit import FilmCredit
-from app.models.person import Person
+from app.models.film import Film
 
 
 class FilmCreditRepository:
@@ -52,7 +52,9 @@ class FilmCreditRepository:
         """Get all film credits for a person."""
         result = await self.db.execute(
             select(FilmCredit)
-            .options(selectinload(FilmCredit.film))
+            .options(
+                selectinload(FilmCredit.film).selectinload(Film.genres)
+            )
             .where(FilmCredit.person_id == person_id)
             .order_by(FilmCredit.credit_order.asc().nulls_last())
         )

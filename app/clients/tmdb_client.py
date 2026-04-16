@@ -23,14 +23,11 @@ class TMDBClient:
             return response.json()
 
 
-    async def get_popular(self, page: int = 1) -> dict:
-        """Get popular films."""
-        return await self._get("/movie/popular", {"page": page})
-
-
-    async def get_top_rated(self, page: int = 1) -> dict:
-        """Get top rated films."""
-        return await self._get("/movie/top_rated", {"page": page})
+    def get_image_url(self, poster_path: str | None, size: str = "w500") -> str | None:
+        """Get full image URL from poster path."""
+        if not poster_path:
+            return None
+        return f"https://image.tmdb.org/t/p/{size}{poster_path}"
 
 
     async def get_film(self, tmdb_id: int) -> dict:
@@ -43,9 +40,24 @@ class TMDBClient:
         return await self._get(f"/movie/{tmdb_id}/similar")
 
 
-    async def search(self, query: str, page: int = 1) -> dict:
-        """Search films by title."""
-        return await self._get("/search/movie", {"query": query, "page": page})
+    async def get_credits(self, tmdb_id: int) -> dict:
+        """Get cast and crew for a film."""
+        return await self._get(f"/movie/{tmdb_id}/credits")
+
+
+    async def get_person_film_credits(self, tmdb_id: int) -> dict:
+        """Get all film credits for a person."""
+        return await self._get(f"/person/{tmdb_id}/movie_credits")
+
+
+    async def get_popular(self, page: int = 1) -> dict:
+        """Get popular films."""
+        return await self._get("/movie/popular", {"page": page})
+
+
+    async def get_top_rated(self, page: int = 1) -> dict:
+        """Get top rated films."""
+        return await self._get("/movie/top_rated", {"page": page})
 
 
     async def get_upcoming(self, page: int = 1) -> dict:
@@ -63,17 +75,9 @@ class TMDBClient:
         return await self._get("/discover/movie", params)
 
 
-    def get_image_url(self, poster_path: str | None, size: str = "w500") -> str | None:
-        """Get full image URL from poster path."""
-        if not poster_path:
-            return None
-        return f"https://image.tmdb.org/t/p/{size}{poster_path}"
-
-
-    async def get_genres(self) -> list:
-        """Get all movie genres from TMDB."""
-        data = await self._get("/genre/movie/list")
-        return data.get("genres", [])
+    async def get_trending(self, period: str = "week", page: int = 1) -> dict:
+        """Get trending films. Period: day or week."""
+        return await self._get(f"/trending/movie/{period}", {"page": page})
 
 
     async def discover(
@@ -113,9 +117,20 @@ class TMDBClient:
         return await self._get("/discover/movie", params)
 
 
-    async def get_trending(self, period: str = "week", page: int = 1) -> dict:
-        """Get trending films. Period: day or week."""
-        return await self._get(f"/trending/movie/{period}", {"page": page})
+    async def search(self, query: str, page: int = 1) -> dict:
+        """Search films by title."""
+        return await self._get("/search/movie", {"query": query, "page": page})
+
+
+    async def get_genres(self) -> list:
+        """Get all movie genres from TMDB."""
+        data = await self._get("/genre/movie/list")
+        return data.get("genres", [])
+
+
+    async def get_person(self, tmdb_id: int) -> dict:
+        """Get person details by TMDB ID."""
+        return await self._get(f"/person/{tmdb_id}")
 
 
 tmdb_client = TMDBClient()
