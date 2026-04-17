@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.dependencies import get_film_service, get_person_service
-from app.schemas.credits import FilmCreditsResponse
+from app.schemas.film_credits import FilmCreditsResponse
 from app.services.film_service import FilmService
 from app.services.person_service import PersonService
 

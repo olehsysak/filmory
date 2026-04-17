@@ -70,3 +70,117 @@
     color: var(--accent);
     font-weight: 600;
 }
+
+/* Person card (cast row) */
+.person-card {
+    flex: 0 0 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s;
+}
+
+.person-card:hover {
+    transform: translateY(-4px);
+}
+
+.person-card__photo {
+    width: 100%;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+    border-radius: 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+}
+
+.person-card__name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-top: 10px;
+    line-height: 1.3;
+    width: 100%;
+}
+
+.person-card__sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    line-height: 1.3;
+    width: 100%;
+}
+
+/* Crew card */
+.crew-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s;
+}
+
+.crew-card:hover {
+    border-color: var(--accent);
+}
+
+.crew-card__photo {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--border);
+    flex-shrink: 0;
+}
+
+.crew-card__info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+}
+
+.crew-card__name {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.crew-card__job {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Skeleton */
+.skeleton-box {
+    background: linear-gradient(
+        90deg,
+        var(--bg-secondary) 25%,
+        var(--border) 50%,
+        var(--bg-secondary) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s infinite;
+    border-radius: 6px;
+    display: block;
+}
+
+@keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}

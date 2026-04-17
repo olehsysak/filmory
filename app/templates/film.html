@@ -148,6 +148,47 @@
     </div>
 </div>
 
+<!-- CREDITS -->
+<div class="film-credits" id="filmCredits">
+    <div class="film-credits__container">
+
+        <!-- Tabs -->
+        <div class="film-credits__header">
+            <div class="film-credits__tabs">
+                <button class="film-credits__tab film-credits__tab--active" data-tab="top-cast">Top Cast</button>
+                <button class="film-credits__tab" data-tab="top-crew">Top Crew</button>
+            </div>
+        </div>
+
+        <!-- Top Cast -->
+        <div class="film-credits__panel" id="topCastPanel">
+            <div class="film-row__wrapper">
+                <button class="row-arrow row-arrow--prev" aria-label="Scroll left">‹</button>
+                <div class="film-row__track" id="topCastTrack">
+                    {% for _ in range(12) %}
+                    <div class="person-card person-card--skeleton">
+                        <div class="person-card__photo skeleton-box"></div>
+                        <div class="person-card__name skeleton-box" style="height:12px; width:80%; margin-top:10px;"></div>
+                        <div class="person-card__sub skeleton-box" style="height:10px; width:60%; margin-top:6px;"></div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="row-arrow row-arrow--next" aria-label="Scroll right">›</button>
+            </div>
+        </div>
+
+        <!-- Top Crew -->
+        <div class="film-credits__panel film-credits__panel--hidden" id="topCrewPanel">
+            <div class="film-crew__grid" id="topCrewGrid"></div>
+        </div>
+
+        <a href="/film/{{ film.tmdb_id }}/credits" class="fc-link">
+            View Full Cast & Crew
+            <span class="fc-link__arrow">→</span>
+        </a>
+    </div>
+</div>
+
 <!-- SIMILAR FILMS -->
 {% if similar %}
 <div class="film-similar">

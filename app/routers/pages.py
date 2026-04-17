@@ -32,6 +32,18 @@ async def films_page(request: Request, db: AsyncSession = Depends(get_async_db))
     })
 
 
+@router.get("/film/{tmdb_id}/credits")
+async def film_credits_page(request: Request, tmdb_id: int, service: FilmService = Depends(get_film_service)):
+    film = await service.get_or_fetch_film(tmdb_id)
+    if not film:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Film not found")
+    return templates.TemplateResponse("film_credits.html", {
+        "request": request,
+        "film": film,
+        "current_user": request.state.user if hasattr(request.state, 'user') else None,
+    })
+
+
 @router.get("/film/{tmdb_id}")
 async def film_detail(request: Request, tmdb_id: int, service: FilmService = Depends(get_film_service)):
     film = await service.get_or_fetch_film(tmdb_id)

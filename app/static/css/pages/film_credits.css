@@ -1,0 +1,205 @@
+/* Hero */
+.fc-hero {
+    position: relative;
+    width: 100%;
+    height: 280px;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+}
+
+.fc-hero__backdrop {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center 20%;
+    filter: brightness(0.25);
+}
+
+.fc-hero__backdrop--blur {
+    filter: brightness(0.2) blur(2px);
+}
+
+.fc-hero__gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(0,0,0,0.4) 60%,
+        var(--bg) 100%
+    );
+}
+
+.fc-hero__content {
+    position: relative;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px 32px;
+}
+
+.fc-hero__film {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+}
+
+.fc-hero__poster {
+    width: 100px;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    flex-shrink: 0;
+}
+
+.fc-hero__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-bottom: 4px;
+}
+
+.fc-hero__title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(24px, 3vw, 40px);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+}
+
+.fc-hero__year {
+    font-size: 18px;
+    color: rgba(255,255,255,0.6);
+}
+
+.fc-hero__back {
+    font-size: 15px;
+    color: rgba(255,255,255,0.6);
+    text-decoration: none;
+    margin-top: 8px;
+    transition: color 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 6px 14px;
+    border-radius: 20px;
+}
+
+.fc-hero__back:hover {
+    color: #fff;
+    border-color: rgba(255,255,255,0.5);
+}
+
+/* Body */
+.fc-body {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 32px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+/* Tabs */
+.fc-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    width: fit-content;
+}
+
+.fc-tab {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 28px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.04em;
+}
+
+.fc-tab--active {
+    background: var(--accent);
+    color: #fff;
+}
+
+.fc-panel--hidden {
+    display: none;
+}
+
+/* Full Cast grid */
+.fc-cast-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+/* Full Crew */
+.fc-crew-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Crew departments */
+.crew-dept__title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.crew-dept__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.crew-departments--full {
+    columns: 4;
+    column-gap: 24px;
+    width: 100%;
+}
+
+.crew-departments--full .crew-dept {
+    break-inside: avoid;
+    margin-bottom: 24px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .fc-cast-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .crew-departments--full {
+        columns: 3;
+    }
+}
+
+@media (max-width: 768px) {
+    .fc-hero__content {
+        padding: 0 20px 24px;
+    }
+    .fc-body {
+        padding: 24px 20px 40px;
+    }
+    .fc-cast-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .crew-departments--full {
+        columns: 2;
+    }
+}

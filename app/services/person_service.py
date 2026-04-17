@@ -4,7 +4,16 @@ from app.repositories.film_credit_repo import FilmCreditRepository
 from app.clients.tmdb_client import tmdb_client
 from datetime import date
 
-KEY_JOBS = {"Director", "Producer", "Screenplay", "Writer", "Original Music Composer", "Director of Photography"}
+
+KEY_JOBS = {
+    "Director", "Co-Director",
+    "Producer", "Executive Producer",
+    "Screenplay", "Writer", "Novel",
+    "Director of Photography",
+    "Original Music Composer",
+    "Editor",
+    "Production Design",
+}
 
 
 class PersonService:

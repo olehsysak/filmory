@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}{{ film.title }} — Full Credits — Filmory{% endblock %}
+
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', path='css/pages/film_credits.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div class="fc-hero">
+    {% if film.backdrop_url %}
+    <div class="fc-hero__backdrop" style="background-image: url('{{ film.backdrop_url }}')"></div>
+    {% elif film.poster_url %}
+    <div class="fc-hero__backdrop fc-hero__backdrop--blur" style="background-image: url('{{ film.poster_url }}')"></div>
+    {% else %}
+    <div class="fc-hero__backdrop" style="background: var(--bg-secondary)"></div>
+    {% endif %}
+    <div class="fc-hero__gradient"></div>
+
+    <div class="fc-hero__content">
+        <div class="fc-hero__film">
+            {% if film.poster_url %}
+            <img class="fc-hero__poster" src="{{ film.poster_url }}" alt="{{ film.title }}">
+            {% endif %}
+            <div class="fc-hero__meta">
+                <h1 class="fc-hero__title">{{ film.title }}</h1>
+                {% if film.release_date %}
+                <p class="fc-hero__year">({{ film.release_date.year }})</p>
+                {% endif %}
+                <a href="/film/{{ film.tmdb_id }}" class="fc-hero__back">
+                    ← Back to film
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CREDITS BODY -->
+<div class="fc-body">
+
+    <!-- Tabs -->
+    <div class="fc-tabs">
+        <button class="fc-tab fc-tab--active" data-tab="cast">Full Cast</button>
+        <button class="fc-tab" data-tab="crew">Full Crew</button>
+    </div>
+
+    <!-- Full Cast -->
+    <div class="fc-panel" id="fcCastPanel">
+        <div class="fc-cast-grid" id="fcCastGrid">
+            <!-- skeleton -->
+            {% for _ in range(20) %}
+            <div class="crew-card crew-card--skeleton">
+                <div class="crew-card__photo skeleton-box" style="border-radius:50%;width:44px;height:44px;flex-shrink:0;"></div>
+                <div class="crew-card__info">
+                    <div class="skeleton-box" style="height:12px;width:120px;border-radius:4px;"></div>
+                    <div class="skeleton-box" style="height:10px;width:80px;border-radius:4px;margin-top:6px;"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Full Crew -->
+    <div class="fc-panel fc-panel--hidden" id="fcCrewPanel">
+        <div class="fc-crew-body" id="fcCrewGrid"></div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='js/film_credits.js') }}"></script>
+{% endblock %}

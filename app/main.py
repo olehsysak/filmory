@@ -5,7 +5,7 @@ import uvicorn
 from app.routers.auth import router as auth_router
 from app.routers.film import router as film_router
 from app.routers.genre import router as genre_router
-from app.routers.credits import router as credits_router
+from app.routers.film_credits import router as credits_router
 from app.routers.person import router as person_router
 from app.routers.pages import router as pages_router
 from app.middleware.auth_middleware import AuthMiddleware

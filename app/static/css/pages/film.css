@@ -373,3 +373,243 @@
         padding: 32px 20px 40px;
     }
 }
+
+/* Credits section */
+.film-credits {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px 60px;
+    border-top: 1px solid var(--border);
+    padding-top: 48px;
+}
+
+.film-credits__container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.film-credits__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.film-credits__tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+}
+
+.film-credits__tab {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 7px 20px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.04em;
+}
+
+.film-credits__tab--active {
+    background: var(--accent);
+    color: #fff;
+}
+
+.film-credits__panel--hidden {
+    display: none;
+}
+
+/* Person card (cast row) */
+.film-credits .film-row__wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.film-credits .film-row__track {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+    flex: 1;
+}
+
+.film-credits .film-row__track::-webkit-scrollbar {
+    display: none;
+}
+
+.film-credits .row-arrow {
+    flex-shrink: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+
+.film-credits .row-arrow:hover {
+    background: var(--border);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+/* Crew grid */
+.film-crew__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .film-credits {
+        padding: 32px 20px 40px;
+    }
+
+    .film-crew__grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+}
+
+/* Crew departments */
+.crew-departments {
+    columns: 4;
+    column-gap: 24px;
+    width: 100%;
+}
+
+.crew-dept {
+    break-inside: avoid;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+    .crew-departments {
+        columns: 3;
+    }
+}
+
+@media (max-width: 768px) {
+    .crew-departments {
+        columns: 2;
+    }
+}
+
+.crew-dept__title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.crew-dept__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.crew-toggle {
+    margin-top: 8px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 13px;
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.crew-toggle:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.crew-toggle__count {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 11px;
+}
+
+#topCrewGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+@media (max-width: 768px) {
+    #topCrewGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.credits-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+@media (max-width: 1024px) {
+    .credits-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .credits-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.fc-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 10px 24px;
+    text-decoration: none;
+    transition: all 0.15s;
+    width: fit-content;
+}
+
+.fc-link:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.fc-link__arrow {
+    transition: transform 0.15s;
+}
+
+.fc-link:hover .fc-link__arrow {
+    transform: translateX(4px);
+}
