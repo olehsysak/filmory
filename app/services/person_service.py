@@ -1,4 +1,7 @@
+import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.database import async_session_maker
+from app.repositories.film_repo import FilmRepository
 from app.repositories.person_repo import PersonRepository
 from app.repositories.film_credit_repo import FilmCreditRepository
 from app.clients.tmdb_client import tmdb_client
@@ -19,10 +22,12 @@ KEY_JOBS = {
 class PersonService:
     """Service for cast and crew business logic."""
 
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession, film_service=None):
         self.db = db
         self.person_repo = PersonRepository(db)
         self.credit_repo = FilmCreditRepository(db)
+        self.film_repo = FilmRepository(db)
+        self.film_service = film_service
 
 
     def _parse_person_data(self, tmdb_data: dict) -> dict:
@@ -136,6 +141,23 @@ class PersonService:
         return {"cast": cast, "crew": crew}
 
 
+    async def _cache_full_details(self, items: list) -> None:
+        """Cache full film details — each film gets its own DB session."""
+        semaphore = asyncio.Semaphore(5)
+
+        async def fetch_one(item):
+            async with semaphore:
+                try:
+                    async with async_session_maker() as session:
+                        from app.services.film_service import FilmService
+                        service = FilmService(session)
+                        await service.get_or_fetch_film(item["id"])
+                except Exception:
+                    pass
+
+        await asyncio.gather(*[fetch_one(item) for item in items])
+
+
     async def get_person_detail(self, tmdb_id: int) -> dict:
         """Get person detail. Fetch from TMDB if bio is missing."""
         person = await self.person_repo.get_by_tmdb_id(tmdb_id)
@@ -155,64 +177,66 @@ class PersonService:
         return self._enrich_person(person)
 
 
+    async def get_person_jobs(self, tmdb_id: int) -> list[str]:
+        """Get all unique jobs for a person directly from TMDB."""
+        tmdb_data = await tmdb_client.get_person_film_credits(tmdb_id)
+        jobs = set()
+        for item in tmdb_data.get("cast", []):
+            jobs.add("Actor")
+        for item in tmdb_data.get("crew", []):
+            if item.get("job"):
+                jobs.add(item["job"])
+        return sorted(list(jobs))
+
+
     async def get_person_films(self, person_id: int, tmdb_id: int) -> list[dict]:
-        """Get all films for a person — merge DB cache with TMDB."""
-        # Get cached film credits from database (already stored relations)
-        db_credits = await self.credit_repo.get_person_credits(person_id)
+        tmdb_data = await tmdb_client.get_person_film_credits(tmdb_id)
+
+        tmdb_jobs = {}
+        for item in tmdb_data.get("cast", []):
+            tmdb_jobs.setdefault(item["id"], []).append({
+                "job": "Actor",
+                "department": "Acting",
+                "character": item.get("character"),
+            })
+        for item in tmdb_data.get("crew", []):
+            tmdb_jobs.setdefault(item["id"], []).append({
+                "job": item.get("job", ""),
+                "department": item.get("department", ""),
+                "character": None,
+            })
+
+        all_items = []
+        seen = set()
+        for item in tmdb_data.get("cast", []) + tmdb_data.get("crew", []):
+            if item["id"] not in seen:
+                seen.add(item["id"])
+                all_items.append(item)
+
+        await self._cache_full_details(all_items)
 
         films = []
-        cached_tmdb_ids = set()
+        for item in all_items:
+            film = await self.film_repo.get_by_tmdb_id(item["id"])
+            if not film:
+                continue
 
-        # Convert DB credits into response format
-        for credit in db_credits:
-            film = credit.film
-            cached_tmdb_ids.add(film.tmdb_id)
+            jobs = tmdb_jobs.get(item["id"], [])
+            all_jobs = list({j["job"] for j in jobs})
+            characters = [j["character"] for j in jobs if j["character"]]
+
             films.append({
                 "tmdb_id": film.tmdb_id,
                 "title": film.title,
                 "poster_url": tmdb_client.get_image_url(film.poster_path),
                 "release_date": film.release_date,
                 "vote_average": film.vote_average,
-                "job": credit.job,
-                "character": credit.character,
+                "popularity": film.popularity,
+                "runtime": film.runtime,
+                "jobs": all_jobs,
+                "character": characters[0] if characters else None,
                 "genres": [{"id": g.tmdb_id, "name": g.name} for g in film.genres],
             })
-
-        # Fetch full filmography from TMDB (source of truth)
-        tmdb_data = await tmdb_client.get_person_film_credits(tmdb_id)
-
-        # Add cast credits that are not yet cached in DB
-        for item in tmdb_data.get("cast", []):
-            if item["id"] in cached_tmdb_ids:
-                continue
-
-            films.append({
-                "tmdb_id": item["id"],
-                "title": item.get("title", ""),
-                "poster_url": tmdb_client.get_image_url(item.get("poster_path")),
-                "release_date": self._parse_date(item.get("release_date")),
-                "vote_average": item.get("vote_average", 0.0),
-                "job": "Actor",
-                "character": item.get("character"),
-                "genres": [],
-            })
-
-        # Add crew credits that are not yet cached in DB
-        for item in tmdb_data.get("crew", []):
-            if item["id"] in cached_tmdb_ids:
-                continue
-
-            films.append({
-                "tmdb_id": item["id"],
-                "title": item.get("title", ""),
-                "poster_url": tmdb_client.get_image_url(item.get("poster_path")),
-                "release_date": self._parse_date(item.get("release_date")),
-                "vote_average": item.get("vote_average", 0.0),
-                "job": item.get("job", ""),
-                "character": None,
-                "genres": [],
-            })
-            cached_tmdb_ids.add(item["id"])
 
         films.sort(key=lambda x: x["release_date"] or date.min, reverse=True)
         return films

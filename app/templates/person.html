@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}{{ person.name }} — Filmory{% endblock %}
+
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', path='css/pages/films.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/pages/person.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="person-layout">
+
+    <!-- LEFT: Films + Filters -->
+    <div class="person-main">
+
+    <!-- Filters -->
+<div class="filters">
+
+    <!-- Role/Job -->
+    <div class="filter-dropdown" id="jobDropdown">
+        <button class="filter-btn" id="jobBtn">
+            <span id="jobLabel">Role</span>
+            <span class="filter-btn__arrow">▾</span>
+        </button>
+        <div class="filter-dropdown__menu" id="jobMenu">
+            <button class="filter-option selected" data-filter="job" data-value="">All Roles</button>
+        </div>
+    </div>
+
+    <!-- Sort -->
+    <div class="filter-dropdown" id="sortDropdown">
+        <button class="filter-btn" id="sortBtn">
+            <span id="sortLabel">Sort</span>
+            <span class="filter-btn__arrow">▾</span>
+        </button>
+        <div class="filter-dropdown__menu filter-dropdown__menu--sort">
+            <div class="filter-dropdown__section">Release</div>
+            <button class="filter-option selected" data-filter="sort" data-value="newest" data-label="Release · Newest">Newest First</button>
+            <button class="filter-option" data-filter="sort" data-value="oldest" data-label="Release · Oldest">Oldest First</button>
+            <button class="filter-option" data-filter="sort" data-value="upcoming" data-label="Release · Upcoming">Upcoming</button>
+            <div class="filter-dropdown__section">Rating</div>
+            <button class="filter-option" data-filter="sort" data-value="highest" data-label="Rating · Highest">Highest Rated</button>
+            <button class="filter-option" data-filter="sort" data-value="lowest" data-label="Rating · Lowest">Lowest Rated</button>
+            <div class="filter-dropdown__section">Popularity</div>
+            <button class="filter-option" data-filter="sort" data-value="popular" data-label="Popularity · All Time">All Time</button>
+        </div>
+    </div>
+
+    <!-- Year -->
+    <div class="filter-dropdown" id="yearDropdown">
+        <button class="filter-btn" id="yearBtn">
+            <span id="yearLabel">Year</span>
+            <span class="filter-btn__arrow">▾</span>
+        </button>
+        <div class="filter-dropdown__menu filter-dropdown__menu--years" id="yearMenu">
+            <button class="filter-option selected" data-filter="year" data-value="">All Years</button>
+            <div class="filter-dropdown__section">By Decade</div>
+            <button class="filter-option decade-btn" data-decade="2020">2020s</button>
+            <button class="filter-option decade-btn" data-decade="2010">2010s</button>
+            <button class="filter-option decade-btn" data-decade="2000">2000s</button>
+            <button class="filter-option decade-btn" data-decade="1990">1990s</button>
+            <button class="filter-option decade-btn" data-decade="1980">1980s</button>
+            <button class="filter-option decade-btn" data-decade="1970">1970s</button>
+            <button class="filter-option decade-btn" data-decade="1960">1960s</button>
+            <button class="filter-option decade-btn" data-decade="1950">1950s</button>
+        </div>
+    </div>
+
+    <!-- Genre -->
+    <div class="filter-dropdown" id="genreDropdown">
+        <button class="filter-btn" id="genreBtn">
+            <span id="genreLabel">Genre</span>
+            <span class="filter-btn__arrow">▾</span>
+        </button>
+        <div class="filter-dropdown__menu filter-dropdown__menu--genres" id="genreMenu">
+            <button class="filter-option selected" data-filter="genre" data-value="">All Genres</button>
+        </div>
+    </div>
+
+    <!-- Duration -->
+    <div class="filter-dropdown" id="durationDropdown">
+        <button class="filter-btn" id="durationBtn">
+            <span id="durationLabel">Duration</span>
+            <span class="filter-btn__arrow">▾</span>
+        </button>
+        <div class="filter-dropdown__menu">
+            <div class="filter-dropdown__section">Runtime</div>
+            <button class="filter-option selected" data-filter="duration" data-value="">Any Length</button>
+            <button class="filter-option" data-filter="duration" data-value="short">Short · under 90 min</button>
+            <button class="filter-option" data-filter="duration" data-value="medium">Standard · 90–150 min</button>
+            <button class="filter-option" data-filter="duration" data-value="long">Long · over 150 min</button>
+        </div>
+    </div>
+
+    <!-- Active filters -->
+    <div class="active-filters" id="activeFilters"></div>
+
+    <!-- Reset -->
+    <button class="filter-reset" id="resetFilters" style="display:none">Reset all</button>
+
+</div>
+
+        <!-- Films count -->
+        <p class="person-films__count" id="filmsCount"></p>
+
+        <!-- Films grid -->
+        <div class="person-films__grid" id="filmsGrid">
+            {% for _ in range(10) %}
+            <div class="film-card film-card--skeleton">
+                <div class="film-card__poster skeleton-box"></div>
+                <div class="film-card__info">
+                    <div class="skeleton-box" style="height:12px;width:80%;border-radius:4px;margin-bottom:6px;"></div>
+                    <div class="skeleton-box" style="height:10px;width:50%;border-radius:4px;"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Load More -->
+        <div class="person-films__more" id="loadMoreWrapper" style="display:none;">
+            <button class="person-films__load-more" id="loadMoreBtn">Load More</button>
+        </div>
+
+    </div>
+
+    <!-- RIGHT: Person info -->
+    <div class="person-sidebar">
+        {% if person.profile_url %}
+        <img class="person-sidebar__photo" src="{{ person.profile_url }}" alt="{{ person.name }}">
+        {% else %}
+        <div class="person-sidebar__photo person-sidebar__photo--placeholder">
+            <img src="{{ url_for('static', path='img/no-avatar.svg') }}" alt="{{ person.name }}">
+        </div>
+        {% endif %}
+
+        <div class="person-sidebar__info">
+            <h1 class="person-sidebar__name">{{ person.name }}</h1>
+
+            {% if person.birthday %}
+            <div class="person-sidebar__meta">
+                <span class="person-sidebar__meta-label">Born</span>
+                <span class="person-sidebar__meta-value">{{ person.birthday.strftime('%b %d, %Y') }}</span>
+            </div>
+            {% endif %}
+
+            {% if person.place_of_birth %}
+            <div class="person-sidebar__meta">
+                <span class="person-sidebar__meta-label">From</span>
+                <span class="person-sidebar__meta-value">{{ person.place_of_birth }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if person.biography %}
+        <div class="person-sidebar__bio">
+            <p class="person-sidebar__bio-label">Biography</p>
+            <p class="person-sidebar__bio-text" id="bioText">{{ person.biography }}</p>
+            <button class="person-sidebar__bio-toggle" id="bioToggle">Show more</button>
+        </div>
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const PERSON_TMDB_ID = {{ person.tmdb_id }};
+</script>
+<script src="{{ url_for('static', path='js/person.js') }}"></script>
+{% endblock %}

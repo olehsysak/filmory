@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Request, Depends, status, HTTPException
 from app.templates import templates
 from app.services.film_service import FilmService
-from app.dependencies import get_film_service, get_async_db
+from app.services.person_service import PersonService
+from app.dependencies import get_film_service, get_async_db, get_person_service
 from app.repositories.genre_repo import GenreRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -54,6 +55,18 @@ async def film_detail(request: Request, tmdb_id: int, service: FilmService = Dep
         "request": request,
         "film": film,
         "similar": similar,
+    })
+
+
+@router.get("/person/{tmdb_id}")
+async def person_page(request: Request, tmdb_id: int, service: PersonService = Depends(get_person_service)):
+    person = await service.get_person_detail(tmdb_id)
+    if not person:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Person not found")
+    return templates.TemplateResponse("person.html", {
+        "request": request,
+        "person": person,
+        "current_user": request.state.user if hasattr(request.state, 'user') else None,
     })
 
 

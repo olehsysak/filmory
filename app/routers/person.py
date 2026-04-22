@@ -33,3 +33,13 @@ async def get_person_films(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Person not found")
     films = await service.get_person_films(person["id"], tmdb_id)
     return films
+
+
+@router.get("/{tmdb_id}/jobs")
+async def get_person_jobs(
+    tmdb_id: int,
+    service: PersonService = Depends(get_person_service),
+):
+    """Get all unique jobs for a person."""
+    jobs = await service.get_person_jobs(tmdb_id)
+    return {"jobs": jobs}
