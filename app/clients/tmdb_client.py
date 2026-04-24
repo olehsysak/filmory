@@ -122,6 +122,11 @@ class TMDBClient:
         return await self._get("/search/movie", {"query": query, "page": page})
 
 
+    async def search_person(self, query: str) -> dict:
+        """Search person."""
+        return await self._get("search/person", {"query": query})
+
+
     async def get_genres(self) -> list:
         """Get all movie genres from TMDB."""
         data = await self._get("/genre/movie/list")

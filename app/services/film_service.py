@@ -106,33 +106,31 @@ class FilmService:
         return self._set_poster_urls(films)
 
 
-    async def search(self, query: str) -> list:
-        """Search films in DB first, then TMDB (with merge)."""
+    async def search(self, query: str, limit: int = 20) -> list:
         db_films = await self.film_repo.search(query)
-        if len(db_films) >= 10:
-            return self._set_poster_urls(db_films)
+        if len(db_films) >= limit:
+            return self._set_poster_urls(db_films[:limit])
 
-        # Fetch from TMDB if not enough DB results
         tmdb_data = await tmdb_client.search(query)
         films = db_films.copy()
         existing_tmdb_ids = {film.tmdb_id for film in films}
 
         for item in tmdb_data.get("results", []):
+            if len(films) >= limit:
+                break
             tmdb_id = item["id"]
             if tmdb_id in existing_tmdb_ids:
                 continue
-
             film = await self.film_repo.get_by_tmdb_id(tmdb_id)
             if not film:
                 film_data = self._parse_film_data(item)
                 film = await self.film_repo.create(film_data)
-
             await self._attach_genres_from_ids(film, item.get("genre_ids", []))
             films.append(film)
             existing_tmdb_ids.add(tmdb_id)
 
         await self.db.commit()
-        return self._set_poster_urls(films)
+        return self._set_poster_urls(films[:limit])
 
 
     async def get_popular(self) -> list:

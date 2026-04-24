@@ -65,13 +65,6 @@ async def get_catalog(
     }
 
 
-@router.get("/search", response_model=list[FilmShort])
-async def search_films(query: str = Query(..., min_length=1), service: FilmService = Depends(get_film_service)):
-    """Search films by title."""
-    films = await service.search(query)
-    return films
-
-
 @router.get("/{tmdb_id}", response_model=FilmResponse)
 async def get_film(tmdb_id: int, service: FilmService = Depends(get_film_service)):
     """Get film by TMDB ID, fetch from TMDB if not in DB."""

@@ -8,6 +8,7 @@ from app.routers.genre import router as genre_router
 from app.routers.film_credits import router as credits_router
 from app.routers.person import router as person_router
 from app.routers.pages import router as pages_router
+from app.routers.search import router as search_router
 from app.middleware.auth_middleware import AuthMiddleware
 from app.database import async_session_maker
 from app.utils.sync import sync_genres
@@ -44,6 +45,7 @@ app.include_router(film_router, prefix="/api")
 app.include_router(genre_router, prefix="/api")
 app.include_router(credits_router, prefix="/api")
 app.include_router(person_router, prefix="/api")
+app.include_router(search_router, prefix="/api")
 app.include_router(pages_router)
 
 

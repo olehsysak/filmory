@@ -242,6 +242,25 @@ class PersonService:
         return films
 
 
+    async def search(self, query: str, limit: int = 5) -> list[dict]:
+        """Search persons via TMDB."""
+        tmdb_data = await tmdb_client.search_person(query)
+        results = []
+
+        for item in tmdb_data.get("results", [])[:limit]:
+            known_for_dept = item.get("known_for_department")
+            results.append({
+                "tmdb_id": item["id"],
+                "name": item["name"],
+                "profile_url": tmdb_client.get_image_url(
+                    item.get("profile_path"), size="w185"
+                ) if item.get("profile_path") else None,
+                "known_for": known_for_dept,
+            })
+
+        return results
+
+
     def _enrich_person(self, person) -> dict:
         """Add profile URL to person."""
         return {

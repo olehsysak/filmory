@@ -58,3 +58,8 @@ def get_genre_service(db: AsyncSession = Depends(get_async_db)):
 def get_person_service(db: AsyncSession = Depends(get_async_db)):
     """FastAPI dependency for PersonService."""
     return PersonService(db)
+
+
+def get_search_services(db: AsyncSession = Depends(get_async_db)):
+    """FastAPI dependency for unified search (film + person)."""
+    return FilmService(db), PersonService(db)
