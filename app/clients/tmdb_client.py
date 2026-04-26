@@ -12,7 +12,6 @@ class TMDBClient:
 
 
     async def _get(self, endpoint: str, params: dict = None) -> dict:
-        """Base GET request to TMDB API."""
         if params is None:
             params = {}
         params['api_key'] = self.api_key
@@ -20,6 +19,8 @@ class TMDBClient:
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{self.base_url}{endpoint}", params=params)
             response.raise_for_status()
+            if response.status_code == 204 or not response.content:
+                return {}
             return response.json()
 
 
@@ -124,7 +125,7 @@ class TMDBClient:
 
     async def search_person(self, query: str) -> dict:
         """Search person."""
-        return await self._get("search/person", {"query": query})
+        return await self._get("/search/person", {"query": query})
 
 
     async def get_genres(self) -> list:

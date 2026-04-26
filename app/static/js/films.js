@@ -14,6 +14,7 @@ const state = {
     total: 0,
     pages: 0,
     loading: false,
+    q: null,
 };
 
 const durationLabels = {
@@ -34,11 +35,15 @@ async function fetchFilms() {
     state.loading = true;
     renderSkeletons();
 
+    let url;
     const params = new URLSearchParams({ page: state.page });
 
-    if (state.trending_period && !state.runtime_min && !state.runtime_max) {
+    if (state.q) {
+        url = `${API}/search?q=${encodeURIComponent(state.q)}&type=film&limit=20`;
+    } else if (state.trending_period && !state.runtime_min && !state.runtime_max) {
         params.set('trending_period', state.trending_period);
         if (state.genre_id) params.set('genre_id', state.genre_id);
+        url = `${API}/film/catalog?${params}`;
     } else {
         params.set('sort', state.sort);
         if (state.upcoming) params.set('upcoming', 'true');
@@ -48,14 +53,16 @@ async function fetchFilms() {
         if (state.year_to) params.set('year_to', state.year_to);
         if (state.runtime_min) params.set('runtime_min', state.runtime_min);
         if (state.runtime_max) params.set('runtime_max', state.runtime_max);
+        url = `${API}/film/catalog?${params}`;
     }
 
     try {
-        const res = await fetch(`${API}/film/catalog?${params}`);
+        const res = await fetch(url);
         const data = await res.json();
-        state.total = data.total;
-        state.pages = data.pages;
-        renderFilms(data.films);
+        const films = data.films !== undefined ? data.films : data.films;
+        state.total = data.total || films.length;
+        state.pages = data.pages || 1;
+        renderFilms(films);
         renderPagination();
         renderResultsCount();
         updateURL();
@@ -434,6 +441,7 @@ function updateURL() {
     var params = new URLSearchParams();
     if (state.trending_period) params.set('trending_period', state.trending_period);
     else if (state.sort !== 'popular') params.set('sort', state.sort);
+    if (state.q) params.set('q', state.q);
     if (state.upcoming) params.set('upcoming', 'true');
     if (state.genre_id) params.set('genre_id', state.genre_id);
     if (state.year) params.set('year', state.year);
@@ -452,6 +460,7 @@ function loadFromURL() {
         state.trending_period = params.get('trending_period');
         toggleYearFilter(true);
     }
+    if (params.get('q')) state.q = params.get('q');
     if (params.get('sort')) state.sort = params.get('sort');
     if (params.get('upcoming') === 'true') state.upcoming = true;
     if (params.get('genre_id')) state.genre_id = parseInt(params.get('genre_id'));
@@ -476,7 +485,10 @@ if (resetBtn) {
         state.runtime_min = null;
         state.runtime_max = null;
         state.page = 1;
+        state.q = null;
 
+        document.getElementById('filmsSearchInput').value = '';
+        document.getElementById('filmsSearchClear').style.display = 'none';
         document.getElementById('sortLabel').textContent = 'Sort';
         document.getElementById('genreLabel').textContent = 'Genre';
         document.getElementById('yearLabel').textContent = 'Year';
@@ -492,6 +504,16 @@ if (resetBtn) {
         fetchFilms();
     });
 }
+
+// Sets search query, resets page, and reloads films
+function setFilmsSearch(q) {
+    state.q = q || null;
+    state.page = 1;
+    renderActiveFilters();
+    fetchFilms();
+}
+
+window.setFilmsSearch = setFilmsSearch;
 
 // Utils
 function escapeHtml(str) {

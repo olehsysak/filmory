@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="{{ url_for('static', path='css/components/buttons.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', path='css/components/cards.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', path='css/components/hero.css') }}">
-
+    <link rel="stylesheet" href="{{ url_for('static', path='css/components/search.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -43,15 +43,18 @@
         </nav>
 
         <div class="navbar__actions">
-            <form class="search-form" id="searchForm">
-                <input
-                    type="text"
-                    class="search-form__input"
-                    id="searchInput"
-                    placeholder="Search films..."
-                    autocomplete="off"
-                >
-                <button type="submit" class="search-form__btn">⌕</button>
+            <form class="search-form" id="searchForm" onsubmit="return false;">
+                <div class="search-form__field">
+                    <input
+                        type="text"
+                        class="search-form__input"
+                        id="searchInput"
+                        placeholder="Search films & people..."
+                        autocomplete="off"
+                    >
+                    <button type="button" class="search-form__btn" id="searchSubmitBtn">⌕</button>
+                </div>
+                <div class="search-form__suggestions" id="searchSuggestions" style="display:none"></div>
             </form>
 
             <div class="auth" id="authBlock">
@@ -80,6 +83,7 @@
 <script src="{{ url_for('static', path='js/theme.js') }}"></script>
 <script src="{{ url_for('static', path='js/index.js') }}"></script>
 <script src="{{ url_for('static', path='js/auth.js') }}"></script>
+<script src="{{ url_for('static', path='js/navbar-search.js') }}"></script>
 {% block extra_js %}{% endblock %}
 
 </body>

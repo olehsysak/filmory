@@ -3,7 +3,9 @@
 {% block title %}Films — Filmory{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/components/navbar.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', path='css/pages/films.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/components/search.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -19,7 +21,7 @@
 
     <!-- FILTERS -->
     <div class="filters">
-
+        <span class="filters__label">Sort by</span>
         <!-- Sort -->
         <div class="filter-dropdown" id="sortDropdown">
             <button class="filter-btn" id="sortBtn">
@@ -93,12 +95,30 @@
             </div>
         </div>
 
-        <!-- Active filters -->
+        <!-- Search -->
+        <div class="filters__search-group">
+            <span class="filters__label filters__label--search">Find a film</span>
+            <div class="films-search" id="filmsSearchWrapper">
+                <div class="films-search__field">
+                    <span class="films-search__icon">⌕</span>
+                    <input
+                        type="text"
+                        class="films-search__input"
+                        id="filmsSearchInput"
+                        placeholder="Search..."
+                        autocomplete="off"
+                    >
+                    <button class="films-search__clear" id="filmsSearchClear" style="display:none">×</button>
+                </div>
+                <div class="films-search__suggestions" id="filmsSearchSuggestions" style="display:none"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTIVE FILTERS -->
+    <div class="active-filters-bar">
         <div class="active-filters" id="activeFilters"></div>
-
-        <!-- Reset -->
         <button class="filter-reset" id="resetFilters" style="display:none">Reset all</button>
-
     </div>
 
     <!-- GRID -->
@@ -116,4 +136,5 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', path='js/films.js') }}"></script>
+<script src="{{ url_for('static', path='js/films-search.js') }}"></script>
 {% endblock %}

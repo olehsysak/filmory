@@ -5,6 +5,7 @@
     position: sticky;
     top: 0;
     z-index: 100;
+    overflow: visible;
 }
 
 .navbar__container {
@@ -108,10 +109,17 @@
     align-items: center;
     gap: 16px;
     flex-shrink: 0;
+    overflow: visible;
 }
 
 /* Search */
 .search-form {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-form__field {
     display: flex;
     align-items: center;
     background: var(--bg-secondary);
@@ -133,7 +141,7 @@
     outline: none;
     color: var(--text);
     font-size: 14px;
-    width: 180px;
+    width: 350px;
     padding: 8px 0;
     font-family: inherit;
 }

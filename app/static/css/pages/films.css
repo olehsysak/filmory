@@ -26,14 +26,36 @@
     padding-top: 8px;
 }
 
+.films-search {
+    flex-shrink: 0;
+}
+
 /* Filters */
 .filters {
     display: flex;
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
-    margin-bottom: 32px;
+    margin-bottom: 12px;
 }
+
+/* Search group */
+.filters__search-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* Filter label */
+.filters__label {
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
 
 /* Filter dropdown */
 .filter-dropdown {
@@ -218,6 +240,14 @@
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
+}
+
+.active-filters-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+    min-height: 28px;
 }
 
 .active-filter-tag {
