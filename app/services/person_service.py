@@ -190,6 +190,7 @@ class PersonService:
 
 
     async def get_person_films(self, person_id: int, tmdb_id: int) -> list[dict]:
+        """Get all films for a person directly from TMDB."""
         tmdb_data = await tmdb_client.get_person_film_credits(tmdb_id)
 
         tmdb_jobs = {}
@@ -242,20 +243,25 @@ class PersonService:
         return films
 
 
-    async def search(self, query: str, limit: int = 5) -> list[dict]:
-        """Search persons via TMDB."""
-        tmdb_data = await tmdb_client.search_person(query)
+    async def search(self, query: str, limit: int = 5, page: int = 1) -> list[dict]:
+        """Search for people on TMDB and return their main known-for titles."""
+        tmdb_data = await tmdb_client.search_person(query, page=page)
         results = []
 
         for item in tmdb_data.get("results", [])[:limit]:
-            known_for_dept = item.get("known_for_department")
+            known_for_list = item.get("known_for", [])
+            top_film = None
+            if known_for_list:
+                top_film = known_for_list[0].get("title") or known_for_list[0].get("name")
+
             results.append({
                 "tmdb_id": item["id"],
                 "name": item["name"],
                 "profile_url": tmdb_client.get_image_url(
                     item.get("profile_path"), size="w185"
                 ) if item.get("profile_path") else None,
-                "known_for": known_for_dept,
+                "known_for": item.get("known_for_department"),
+                "top_film": top_film,
             })
 
         return results

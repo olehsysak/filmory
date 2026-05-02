@@ -118,14 +118,19 @@ class TMDBClient:
         return await self._get("/discover/movie", params)
 
 
+    async def search_multi(self, query: str, page: int = 1) -> dict:
+        """Search films and person at the same time."""
+        return await self._get("/search/multi", {"query": query, "page": page})
+
+
     async def search(self, query: str, page: int = 1) -> dict:
         """Search films by title."""
         return await self._get("/search/movie", {"query": query, "page": page})
 
 
-    async def search_person(self, query: str) -> dict:
+    async def search_person(self, query: str, page: int = 1) -> dict:
         """Search person."""
-        return await self._get("/search/person", {"query": query})
+        return await self._get("/search/person", {"query": query, "page": page})
 
 
     async def get_genres(self) -> list:

@@ -41,5 +41,6 @@ class FilmShort(BaseModel):
     poster_url: str | None = Field(None, description="Full poster URL")
     release_date: date | None = Field(None, description="Release date")
     vote_average: float = Field(0.0, ge=0.0, le=10.0, description="TMDB rating")
+    overview: str | None = Field(None, description="Film overview")
 
     model_config = ConfigDict(from_attributes=True)

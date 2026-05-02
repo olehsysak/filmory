@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}{{ q }} — Search — Filmory{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/components/search.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/pages/search.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="search-page__header">
+        <p class="search-page__label">Showing matches for</p>
+        <h1 class="search-page__title">"<span class="search-page__query">{{ q }}</span>"</h1>
+    </div>
+
+    <div class="search-layout">
+
+        <!-- MAIN CONTENT -->
+        <div class="search-main">
+
+            <!-- ALL SECTION -->
+            <section class="search-section" id="allSection">
+                <div class="search-section__header">
+                    <h2 class="search-section__title">All Results</h2>
+                    <span class="search-section__count" id="mixedCount"></span>
+                </div>
+                <div id="mixedGrid"></div>
+                <div class="search-section__more">
+                    <button class="search-more-btn" id="mixedMoreBtn" style="display:none">Show more</button>
+                </div>
+            </section>
+
+            <!-- FILMS SECTION -->
+            <section class="search-section" id="filmsSection" style="display:none">
+                <div class="search-section__header">
+                    <h2 class="search-section__title">Films</h2>
+                    <span class="search-section__count" id="filmsCount"></span>
+                </div>
+                <div id="filmsGrid"></div>
+                <div class="search-section__more">
+                    <button class="search-more-btn" id="filmsMoreBtn" style="display:none">Show more films</button>
+                </div>
+            </section>
+
+            <!-- PEOPLE SECTION -->
+            <section class="search-section" id="peopleSection" style="display:none">
+                <div class="search-section__header">
+                    <h2 class="search-section__title">People</h2>
+                    <span class="search-section__count" id="personsCount"></span>
+                </div>
+                <div id="personsGrid"></div>
+                <div class="search-section__more">
+                    <button class="search-more-btn" id="personsMoreBtn" style="display:none">Show more people</button>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- SIDEBAR -->
+        <aside class="search-sidebar">
+            <p class="search-sidebar__label">Show results for</p>
+            <nav class="search-sidebar__nav">
+                <button class="search-sidebar__item active" data-tab="all">All</button>
+                <button class="search-sidebar__item" data-tab="films">Films</button>
+                <button class="search-sidebar__item" data-tab="people">People</button>
+            </nav>
+        </aside>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const SEARCH_QUERY = {{ q | tojson }};
+</script>
+<script src="{{ url_for('static', path='js/search-results.js') }}"></script>
+{% endblock %}

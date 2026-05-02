@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends, status, HTTPException
+from fastapi import APIRouter, Request, Depends, status, HTTPException, Query
 from app.templates import templates
 from app.services.film_service import FilmService
 from app.services.person_service import PersonService
@@ -66,6 +66,15 @@ async def person_page(request: Request, tmdb_id: int, service: PersonService = D
     return templates.TemplateResponse("person.html", {
         "request": request,
         "person": person,
+        "current_user": request.state.user if hasattr(request.state, 'user') else None,
+    })
+
+
+@router.get("/search")
+async def search_page(request: Request, q: str = Query(default="")):
+    return templates.TemplateResponse("search.html", {
+        "request": request,
+        "q": q,
         "current_user": request.state.user if hasattr(request.state, 'user') else None,
     })
 
