@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 import os
 
 
-load_dotenv()
+load_dotenv(".env.local" if os.path.exists(".env.local") else ".env")
 
 JWT_SECRET = os.getenv("JWT_SECRET")
 if not JWT_SECRET:
