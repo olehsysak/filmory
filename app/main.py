@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import uvicorn
+from app.cache.redis_client import get_redis, close_redis
 from app.routers.auth import router as auth_router
 from app.routers.film import router as film_router
 from app.routers.genre import router as genre_router
@@ -17,9 +18,14 @@ from app.utils.sync import sync_genres
 # connecting lifespan to FastAPI
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # startup
+    await get_redis()
     async with async_session_maker() as db:
         await sync_genres(db)
     yield
+
+    # shutdown
+    await close_redis()
 
 
 # application
