@@ -1,6 +1,6 @@
-import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import async_session_maker
+from app.cache.redis_cache import redis_cache
+from app.cache.ttl import TTL
 from app.repositories.film_repo import FilmRepository
 from app.repositories.person_repo import PersonRepository
 from app.repositories.film_credit_repo import FilmCreditRepository
@@ -32,14 +32,6 @@ class PersonService:
 
     def _parse_person_data(self, tmdb_data: dict) -> dict:
         """Parse TMDB person data to our database format."""
-        birthday = None
-        raw_date = tmdb_data.get("birthday")
-        if raw_date:
-            try:
-                birthday = date.fromisoformat(raw_date)
-            except ValueError:
-                birthday = None
-
         return {
             "tmdb_id": tmdb_data.get("id"),
             "name": tmdb_data.get("name", ""),
@@ -141,28 +133,17 @@ class PersonService:
         return {"cast": cast, "crew": crew}
 
 
-    async def _cache_full_details(self, items: list) -> None:
-        """Cache full film details — each film gets its own DB session."""
-        semaphore = asyncio.Semaphore(5)
-
-        async def fetch_one(item):
-            async with semaphore:
-                try:
-                    async with async_session_maker() as session:
-                        from app.services.film_service import FilmService
-                        service = FilmService(session)
-                        await service.get_or_fetch_film(item["id"])
-                except Exception:
-                    pass
-
-        await asyncio.gather(*[fetch_one(item) for item in items])
-
-
     async def get_person_detail(self, tmdb_id: int) -> dict:
-        """Get person detail. Fetch from TMDB if bio is missing."""
+        """Get person detail. Fetch from TMDB if details are missing."""
         person = await self.person_repo.get_by_tmdb_id(tmdb_id)
 
-        if not person or not person.biography:
+        has_details = person and any([
+            person.biography,
+            person.birthday,
+            person.place_of_birth,
+        ])
+
+        if not has_details:
             tmdb_data = await tmdb_client.get_person(tmdb_id)
             person_data = self._parse_person_data(tmdb_data)
             if person:
@@ -178,7 +159,19 @@ class PersonService:
 
 
     async def get_person_jobs(self, tmdb_id: int) -> list[str]:
-        """Get all unique jobs for a person directly from TMDB."""
+        """Get all unique jobs from cached person films."""
+        cache_key = f"person:films:{tmdb_id}"
+        cached = await redis_cache.get(cache_key)
+
+        if cached is not None:
+            # extract jobs from already cached movies
+            jobs = set()
+            for film in cached:
+                for job in film.get("jobs", []):
+                    jobs.add(job)
+            return sorted(list(jobs))
+
+        # if there is no cache — as before
         tmdb_data = await tmdb_client.get_person_film_credits(tmdb_id)
         jobs = set()
         for item in tmdb_data.get("cast", []):
@@ -191,7 +184,17 @@ class PersonService:
 
     async def get_person_films(self, person_id: int, tmdb_id: int) -> list[dict]:
         """Get all films for a person directly from TMDB."""
+        cache_key = f"person:films:{tmdb_id}"
+
+        cached = await redis_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         tmdb_data = await tmdb_client.get_person_film_credits(tmdb_id)
+
+        # genres map from Redis
+        genres_list = await redis_cache.get("tmdb:genres") or []
+        genres_map = {g["id"]: g["name"] for g in genres_list}
 
         tmdb_jobs = {}
         for item in tmdb_data.get("cast", []):
@@ -207,39 +210,37 @@ class PersonService:
                 "character": None,
             })
 
-        all_items = []
         seen = set()
-        for item in tmdb_data.get("cast", []) + tmdb_data.get("crew", []):
-            if item["id"] not in seen:
-                seen.add(item["id"])
-                all_items.append(item)
-
-        await self._cache_full_details(all_items)
-
         films = []
-        for item in all_items:
-            film = await self.film_repo.get_by_tmdb_id(item["id"])
-            if not film:
+        for item in tmdb_data.get("cast", []) + tmdb_data.get("crew", []):
+            if item["id"] in seen:
                 continue
+            seen.add(item["id"])
 
             jobs = tmdb_jobs.get(item["id"], [])
             all_jobs = list({j["job"] for j in jobs})
             characters = [j["character"] for j in jobs if j["character"]]
+            release_date = item.get("release_date") or None
 
             films.append({
-                "tmdb_id": film.tmdb_id,
-                "title": film.title,
-                "poster_url": tmdb_client.get_image_url(film.poster_path),
-                "release_date": film.release_date,
-                "vote_average": film.vote_average,
-                "popularity": film.popularity,
-                "runtime": film.runtime,
+                "tmdb_id": item["id"],
+                "title": item.get("title", ""),
+                "poster_url": tmdb_client.get_image_url(item.get("poster_path")),
+                "release_date": release_date,
+                "vote_average": item.get("vote_average", 0.0),
+                "popularity": item.get("popularity", 0.0),
+                "runtime": None,
                 "jobs": all_jobs,
                 "character": characters[0] if characters else None,
-                "genres": [{"id": g.tmdb_id, "name": g.name} for g in film.genres],
+                "genres": [
+                    {"id": gid, "name": genres_map.get(gid, "")}
+                    for gid in item.get("genre_ids", [])
+                ],
             })
 
-        films.sort(key=lambda x: x["release_date"] or date.min, reverse=True)
+        films.sort(key=lambda x: x["release_date"] or "", reverse=True)
+
+        await redis_cache.set(cache_key, films, TTL.FILM)
         return films
 
 

@@ -11,7 +11,6 @@ const activeFilters = {
     year_from: null,
     year_to: null,
     genre: '',
-    duration: '',
 };
 
 const filterLabels = {
@@ -19,17 +18,18 @@ const filterLabels = {
     job: { id: 'jobLabel', default: 'Role' },
     year: { id: 'yearLabel', default: 'Year' },
     genre: { id: 'genreLabel', default: 'Genre' },
-    duration: { id: 'durationLabel', default: 'Duration' },
 };
 
 // Load data
 async function init() {
-    showLoading(); // skeleton before loading data
+    showLoading();
     try {
-        const filmsRes = await fetch(`/api/person/${PERSON_TMDB_ID}/films`);
-        allFilms = await filmsRes.json();
+        const [filmsRes, jobsRes] = await Promise.all([
+            fetch(`/api/person/${PERSON_TMDB_ID}/films`),
+            fetch(`/api/person/${PERSON_TMDB_ID}/jobs`),
+        ]);
 
-        const jobsRes = await fetch(`/api/person/${PERSON_TMDB_ID}/jobs`);
+        allFilms = await filmsRes.json();
         const { jobs } = await jobsRes.json();
 
         populateJobFilter(jobs);
@@ -311,7 +311,6 @@ document.getElementById('resetFilters').addEventListener('click', () => {
     activeFilters.year_from = null;
     activeFilters.year_to = null;
     activeFilters.genre = '';
-    activeFilters.duration = '';
 
 
     // UI: Clear active states
@@ -352,11 +351,6 @@ function applyFilters() {
 
         // genre filter
         if (activeFilters.genre && !f.genres.some(g => String(g.id) === activeFilters.genre)) return false;
-
-        // duration filters
-        if (activeFilters.duration === 'short' && (!f.runtime || f.runtime >= 90)) return false;
-        if (activeFilters.duration === 'medium' && (!f.runtime || f.runtime < 90 || f.runtime > 150)) return false;
-        if (activeFilters.duration === 'long' && (!f.runtime || f.runtime <= 150)) return false;
 
         // sorting-based filtering
         if (activeFilters.sort === 'upcoming') {
