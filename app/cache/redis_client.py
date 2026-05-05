@@ -14,6 +14,8 @@ async def get_redis() -> redis.Redis:
             REDIS_URL,
             encoding="utf-8",
             decode_responses=True,
+            socket_connect_timeout=1,  # 1 секунда на підключення
+            socket_timeout=1,  # 1 секунда на операцію
         )
     return _redis_pool
 
