@@ -5,5 +5,6 @@ from .film import Film
 from .genre import Genre
 from .person import Person
 from .film_credit import FilmCredit
+from .user_film import UserFilm
 
-__all__ = ["User", "film_genre", "Film", "Genre", "Person", "FilmCredit"]
+__all__ = ["User", "film_genre", "Film", "Genre", "Person", "FilmCredit", "UserFilm"]

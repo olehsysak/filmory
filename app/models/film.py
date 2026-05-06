@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.genre import Genre
     from app.models.film_credit import FilmCredit
+    from app.models.user_film import UserFilm
 
 
 class Film(Base):
@@ -33,4 +34,7 @@ class Film(Base):
     )
     credits: Mapped[list["FilmCredit"]] = relationship(
         "FilmCredit", back_populates="film", cascade="all, delete-orphan"
+    )
+    user_entries: Mapped[list["UserFilm"]] = relationship(
+        "UserFilm", back_populates="film", cascade="all, delete-orphan"
     )
