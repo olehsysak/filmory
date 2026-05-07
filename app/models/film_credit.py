@@ -11,6 +11,9 @@ if TYPE_CHECKING:
 class FilmCredit(Base):
     """FilmCredit Model — links Films and Persons with their role (cast or crew)."""
     __tablename__ = 'film_credits'
+    __table_args__ = (
+        UniqueConstraint('film_id', 'person_id', 'job', name='uq_film_person_job'),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     film_id: Mapped[int] = mapped_column(Integer, ForeignKey('films.id', ondelete='CASCADE'), nullable=False)
@@ -20,10 +23,6 @@ class FilmCredit(Base):
     character: Mapped[str | None] = mapped_column(String(255), nullable=True)
     credit_order: Mapped[int | None] = mapped_column(Integer, nullable=True)
     is_key: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-
-    __table_args__ = (
-        UniqueConstraint('film_id', 'person_id', 'job', name='uq_film_person_job'),
-    )
 
     film: Mapped["Film"] = relationship("Film", back_populates="credits")
     person: Mapped["Person"] = relationship("Person", back_populates="credits")

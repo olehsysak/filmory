@@ -26,10 +26,10 @@ class UserFilmService:
         if existing:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Film already in your list")
 
-        entry = await self.repo.create(user_id, film.id, WatchStatus.want_to_watch)
+        await self.repo.create(user_id, film.id, WatchStatus.want_to_watch)
         await self.db.commit()
-        await self.db.refresh(entry)
-        return entry
+
+        return await self.repo.get(user_id, film.id)
 
 
     async def set_status(self, user_id: int, tmdb_id: int, watch_status: WatchStatus) -> UserFilm:
@@ -52,32 +52,15 @@ class UserFilmService:
             entry.is_favorite = False
 
         await self.db.commit()
-        await self.db.refresh(entry)
-        return entry
 
-
-    async def set_favorite(self, user_id: int, tmdb_id: int, is_favorite: bool) -> UserFilm:
-        """Set or unset favorite for a completed film"""
-        film = await self.film_repo.get_by_tmdb_id(tmdb_id)
-        if not film:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Film not found")
-
-        entry = await self.repo.get(user_id, film.id)
-        if not entry:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Film not in your list")
-        if entry.status != WatchStatus.completed:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Can only favorite completed films")
-
-        entry.is_favorite = is_favorite
-        await self.db.commit()
-        await self.db.refresh(entry)
-        return entry
+        return await self.repo.get(user_id, film.id)
 
 
     async def set_rating(self, user_id: int, tmdb_id: int, rating: int) -> UserFilm:
-        """Set rating (1-10) for a completed film"""
+        """Set rating"""
         if not (1 <= rating <= 10):
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Rating must be between 1 and 10")
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                detail="Rating must be between 1 and 10")
 
         film = await self.film_repo.get_by_tmdb_id(tmdb_id)
         if not film:
@@ -85,14 +68,15 @@ class UserFilmService:
 
         entry = await self.repo.get(user_id, film.id)
         if not entry:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Film not in your list")
-        if entry.status != WatchStatus.completed:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Can only rate completed films")
+            await self.repo.create(user_id, film.id, WatchStatus.completed)
+            await self.db.flush()
+            entry = await self.repo.get(user_id, film.id)
+            entry.watched_at = datetime.now(timezone.utc)
 
         entry.rating = rating
         await self.db.commit()
-        await self.db.refresh(entry)
-        return entry
+
+        return await self.repo.get(user_id, film.id)
 
 
     async def remove(self, user_id: int, tmdb_id: int) -> None:
@@ -136,14 +120,6 @@ class UserFilmService:
     async def get_dropped(self, user_id: int) -> list[UserFilm]:
         """Get all dropped films"""
         entries = await self.repo.get_by_status(user_id, WatchStatus.dropped)
-        for e in entries:
-            e.film.poster_url = tmdb_client.get_image_url(e.film.poster_path)
-        return entries
-
-
-    async def get_favorites(self, user_id: int) -> list[UserFilm]:
-        """Get all favorite films"""
-        entries = await self.repo.get_favorites(user_id)
         for e in entries:
             e.film.poster_url = tmdb_client.get_image_url(e.film.poster_path)
         return entries
