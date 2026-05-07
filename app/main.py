@@ -10,6 +10,7 @@ from app.routers.film_credits import router as credits_router
 from app.routers.person import router as person_router
 from app.routers.pages import router as pages_router
 from app.routers.search import router as search_router
+from app.routers.user_film import router as user_film_router
 from app.middleware.auth_middleware import AuthMiddleware
 from app.database import async_session_maker
 from app.utils.sync import sync_genres
@@ -52,6 +53,7 @@ app.include_router(genre_router, prefix="/api")
 app.include_router(credits_router, prefix="/api")
 app.include_router(person_router, prefix="/api")
 app.include_router(search_router, prefix="/api")
+app.include_router(user_film_router, prefix="/api")
 app.include_router(pages_router)
 
 

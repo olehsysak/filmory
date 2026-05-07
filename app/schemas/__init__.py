@@ -4,5 +4,6 @@ from .genre import GenreResponse
 from .person import PersonResponse, PersonFilmResponse
 from .film_credits import CastMemberResponse, CrewMemberResponse, FilmCreditsResponse
 from .search import PersonShort, SearchResults
+from .user_film import UserFilmResponse, UserFilmStatusUpdate, UserFilmRatingUpdate
 
 __all__ = ["UserRegister", "UserLogin", "UserResponse", "FilmCreate", "FilmResponse", "FilmShort"]
