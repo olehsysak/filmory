@@ -1,6 +1,4 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.models import Film
 from app.repositories.user_favorite_repo import UserFavoriteRepository
 from app.repositories.film_repo import FilmRepository
 from app.models.user_favorite import UserFavorite
@@ -44,6 +42,15 @@ class UserFavoriteService:
 
         await self.repo.delete(entry)
         await self.db.commit()
+
+
+    async def get_state(self, user_id: int, tmdb_id: int) -> bool:
+        """Check if film is in favorites — returns True/False."""
+        film = await self.film_repo.get_by_tmdb_id(tmdb_id)
+        if not film:
+            return False
+        entry = await self.repo.get(user_id, film.id)
+        return entry is not None
 
 
     async def get_all(self, user_id: int) -> list[UserFavorite]:

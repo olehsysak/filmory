@@ -24,3 +24,11 @@ class UserFilmStatusUpdate(BaseModel):
 class UserFilmRatingUpdate(BaseModel):
     """Schema for updating rating."""
     rating: int = Field(..., ge=1, le=10, description="User rating 1-10")
+
+
+class UserFilmStateResponse(BaseModel):
+    """Schema for user-film state response."""
+    status: WatchStatus | None = Field(None, description="Current watch status")
+    rating: int | None = Field(None, description="User rating 1-10")
+
+    model_config = ConfigDict(from_attributes=False)

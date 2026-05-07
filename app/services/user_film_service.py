@@ -93,6 +93,14 @@ class UserFilmService:
         await self.db.commit()
 
 
+    async def get_state(self, user_id: int, tmdb_id: int) -> UserFilm | None:
+        """Get current film state for user — None if not in list."""
+        film = await self.film_repo.get_by_tmdb_id(tmdb_id)
+        if not film:
+            return None
+        return await self.repo.get(user_id, film.id)
+
+
     async def get_watchlist(self, user_id: int) -> list[UserFilm]:
         """Get all films with want_to_watch status"""
         entries = await self.repo.get_by_status(user_id, WatchStatus.want_to_watch)

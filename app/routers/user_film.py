@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 from app.dependencies import get_user_film_service, get_current_user
-from app.schemas.user_film import UserFilmResponse, UserFilmStatusUpdate, UserFilmRatingUpdate
+from app.schemas.user_film import UserFilmResponse, UserFilmStatusUpdate, UserFilmRatingUpdate, UserFilmStateResponse
 from app.services.user_film_service import UserFilmService
 from app.models.user import User
 
@@ -9,6 +9,19 @@ router = APIRouter(
     prefix="/user/films",
     tags=["user-films"],
 )
+
+
+@router.get("/state/{tmdb_id}", response_model=UserFilmStateResponse)
+async def get_film_state(
+    tmdb_id: int,
+    current_user: User = Depends(get_current_user),
+    service: UserFilmService = Depends(get_user_film_service),
+):
+    """Get current watch state for a film."""
+    entry = await service.get_state(current_user.id, tmdb_id)
+    if not entry:
+        return UserFilmStateResponse(status=None, rating=None)
+    return UserFilmStateResponse(status=entry.status, rating=entry.rating)
 
 
 @router.get("/want-to-watch", response_model=list[UserFilmResponse])
