@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from app.models.genre import Genre
     from app.models.film_credit import FilmCredit
     from app.models.user_film import UserFilm
+    from app.models.user_favorite import UserFavorite
 
 
 class Film(Base):
@@ -37,4 +38,7 @@ class Film(Base):
     )
     user_entries: Mapped[list["UserFilm"]] = relationship(
         "UserFilm", back_populates="film", cascade="all, delete-orphan"
+    )
+    favorited_by: Mapped[list["UserFavorite"]] = relationship(
+        "UserFavorite", back_populates="film", cascade="all, delete-orphan"
     )

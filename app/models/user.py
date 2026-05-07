@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.user_film import UserFilm
+    from app.models.user_favorite import UserFavorite
 
 
 class User(Base):
@@ -23,4 +24,7 @@ class User(Base):
 
     films: Mapped[list["UserFilm"]] = relationship(
         "UserFilm", back_populates="user", cascade="all, delete-orphan"
+    )
+    favorites: Mapped[list["UserFavorite"]] = relationship(
+        "UserFavorite", back_populates="user", cascade="all, delete-orphan"
     )

@@ -8,7 +8,7 @@ from fastapi import status, HTTPException
 
 
 class UserFilmService:
-    """Service for user film interactions: watchlist, favorites, ratings"""
+    """Service for user film interactions: watchlist, and ratings"""
 
     def __init__(self, db: AsyncSession):
         self.db = db

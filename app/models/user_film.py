@@ -19,7 +19,7 @@ class WatchStatus(str, enum.Enum):
 
 
 class UserFilm(Base):
-    """User film relationship: watchlist, favorites, ratings"""
+    """User film relationship: watchlist, and ratings"""
     __tablename__ = "user_films"
     __table_args__ = (
         UniqueConstraint("user_id", "film_id", name="uq_user_film"),
