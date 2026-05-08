@@ -32,14 +32,40 @@
             <a href="/films" class="nav-link">Films</a>
 
             <div class="nav-dropdown">
-                <button class="nav-link nav-link--arrow">Lists ▾</button>
+                <button class="nav-link nav-link--arrow">Collection ▾</button>
                 <div class="nav-dropdown__menu">
-                    <a href="/favorites" class="nav-dropdown__item">Favorites</a>
-                    <a href="/lists" class="nav-dropdown__item">My Lists</a>
+
+                    <p class="nav-dropdown__group-label">Status</p>
+                    <a href="/collection?tab=want_to_watch" class="nav-dropdown__item">
+                        Want to watch
+                    </a>
+                    <a href="/collection?tab=watching" class="nav-dropdown__item">
+                        Watching
+                    </a>
+                    <a href="/collection?tab=completed" class="nav-dropdown__item">
+                        Completed
+                    </a>
+                    <a href="/collection?tab=dropped" class="nav-dropdown__item">
+                        Dropped
+                    </a>
+
+                    <div class="nav-dropdown__divider"></div>
+
+                    <p class="nav-dropdown__group-label">Favorites</p>
+                    <a href="/collection?tab=favorites" class="nav-dropdown__item">
+                        Favorites
+                    </a>
+
+                    <div class="nav-dropdown__divider"></div>
+
+                    <p class="nav-dropdown__group-label">Lists</p>
+                    <a href="#" class="nav-dropdown__item nav-dropdown__item--disabled">
+                        My Lists
+                    </a>
+
                 </div>
             </div>
 
-            <a href="/profile" class="nav-link">Profile</a>
         </nav>
 
         <div class="navbar__actions">
