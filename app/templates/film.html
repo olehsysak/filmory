@@ -26,7 +26,7 @@
 <!-- MAIN LAYOUT -->
 <div class="film-layout">
 
-    <!-- LEFT: Poster + Stats -->
+    <!-- LEFT: Poster + Actions -->
     <div class="film-poster-col">
         {% if film.poster_url %}
         <img class="film-poster" src="{{ film.poster_url }}" alt="{{ film.title }}">
@@ -34,47 +34,66 @@
         <div class="film-poster--placeholder">No Poster</div>
         {% endif %}
 
-        <div class="film-stats">
-            {% if film.release_date %}
-            <div class="film-stat">
-                <span class="film-stat__label">Release date</span>
-                <span class="film-stat__value">{{ film.release_date.strftime('%b %d, %Y') }}</span>
-            </div>
-            <div class="film-stat__divider"></div>
-            {% endif %}
+        <div class="film-actions" id="filmActions" data-tmdb-id="{{ film.tmdb_id }}">
 
-            {% if film.runtime %}
-            <div class="film-stat">
-                <span class="film-stat__label">Runtime</span>
-                <span class="film-stat__value">
-                    {% set h = film.runtime // 60 %}
-                    {% set m = film.runtime % 60 %}
-                    {% if h %}{{ h }}h {% endif %}{{ m }}m
-                </span>
+            <div class="film-action-status">
+                <p class="film-action-status__label">Status</p>
+                <div class="film-action-status__grid">
+                    <button class="film-status-btn" data-status="want_to_watch">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M6 2c-0.26522 0 -0.51957 0.10536 -0.70711 0.29289C5.10536 2.48043 5 2.73478 5 3v18.1958l6.47 -4.0438c0.3243 -0.2027 0.7357 -0.2027 1.06 0L19 21.1958V3c0 -0.26522 -0.1054 -0.51957 -0.2929 -0.70711C18.5196 2.10536 18.2652 2 18 2zM3.87868 0.87868C4.44129 0.316071 5.20435 0 6 0h12c0.7956 0 1.5587 0.316071 2.1213 0.87868C20.6839 1.44129 21 2.20435 21 3v20c0 0.3635 -0.1973 0.6984 -0.5152 0.8746 -0.318 0.1763 -0.7065 0.1661 -1.0148 -0.0266L12 19.1792 4.53 23.848c-0.30827 0.1927 -0.69681 0.2029 -1.01477 0.0266C3.19728 23.6984 3 23.3635 3 23V3c0 -0.79565 0.31607 -1.55871 0.87868 -2.12132"/>
+                        </svg>
+                        <span class="film-status-btn__text">Want to watch</span>
+                    </button>
+                    <button class="film-status-btn" data-status="watching">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14" width="20" height="20">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M13.23 6.2463c0.1658 0.20672 0.2576 0.47529 0.2576 0.75376s-0.0918 0.54704 -0.2576 0.75376c-1.05 1.27127 -3.44003 3.74628 -6.23003 3.74628s-5.18 -2.47501 -6.230002 -3.74628c-0.16584 -0.20672 -0.257639 -0.47529 -0.257639 -0.75376s0.091799 -0.54704 0.257639 -0.75376C1.81997 4.97503 4.20997 2.5 6.99997 2.5S12.18 4.97503 13.23 6.2463Z"/>
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 9c1.10457 0 2 -0.89543 2 -2s-0.89543 -2 -2 -2 -2 0.89543 -2 2 0.89543 2 2 2Z"/>
+                        </svg>
+                        <span class="film-status-btn__text">Watching</span>
+                    </button>
+                    <button class="film-status-btn" data-status="completed">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M0.85 15.65a1.21 1.21 0 0 0 0 1.7l5.8 5.8a1.2 1.2 0 0 0 1.7 0l14.8 -14.8a1.2 1.2 0 0 0 0 -1.7l-2.3 -2.3a1.2 1.2 0 0 0 -1.7 0L7.5 16l-2.65 -2.65a1.21 1.21 0 0 0 -1.7 0Z"/>
+                        </svg>
+                        <span class="film-status-btn__text">Completed</span>
+                    </button>
+                    <button class="film-status-btn" data-status="dropped">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" width="20" height="20">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="m7.5 12 -6.293 6.293a1 1 0 0 0 0 1.414l3.086 3.086a1 1 0 0 0 1.414 0L12 16.5l6.293 6.293a1 1 0 0 0 1.414 0l3.086 -3.086a1 1 0 0 0 0 -1.414L16.5 12l6.293 -6.293a1 1 0 0 0 0 -1.414l-3.086 -3.086a1 1 0 0 0 -1.414 0L12 7.5 5.707 1.207a1 1 0 0 0 -1.414 0L1.207 4.293a1 1 0 0 0 0 1.414Z"/>
+                        </svg>
+                        <span class="film-status-btn__text">Dropped</span>
+                    </button>
+                </div>
             </div>
-            <div class="film-stat__divider"></div>
-            {% endif %}
 
-            <div class="film-stat">
-                <span class="film-stat__label">Rating</span>
-                <span class="film-stat__value" style="color: var(--accent)">
-                    ★ {{ "%.2f"|format(film.vote_average) }} / 10
-                </span>
+            <div class="film-action-row">
+                <button class="film-action-addlist" id="addToListBtn" title="Add to list">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14" width="16" height="16">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 13.5c3.5899 0 6.5 -2.9101 6.5 -6.5C13.5 3.41015 10.5899 0.5 7 0.5 3.41015 0.5 0.5 3.41015 0.5 7c0 3.5899 2.91015 6.5 6.5 6.5Z"/>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 4v6"/>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 7h6"/>
+                    </svg>
+                    Add to list
+                </button>
+                <button class="film-action-favorite" id="favoriteBtn" data-active="false" title="Favorite">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                </button>
             </div>
-            <div class="film-stat__divider"></div>
 
-            <div class="film-stat">
-                <span class="film-stat__label">Votes</span>
-                <span class="film-stat__value">{{ "{:,}".format(film.vote_count) }}</span>
+            <div class="film-action-rating" id="ratingBlock" style="display:none">
+                <p class="film-action-status__label">Your rating</p>
+                <div class="film-rating-stars" id="ratingStars">
+                    {% for i in range(1, 11) %}
+                    <button class="film-rating-star" data-value="{{ i }}">{{ i }}</button>
+                    {% endfor %}
+                </div>
             </div>
-            <div class="film-stat__divider"></div>
 
-            <div class="film-stat">
-                <span class="film-stat__label">Popularity</span>
-                <span class="film-stat__value">{{ "%.1f"|format(film.popularity) }}</span>
-            </div>
         </div>
-    </div>
+    </div>  {# ← закриває film-poster-col #}
 
     <!-- RIGHT: Info -->
     <div class="film-info">
@@ -93,7 +112,6 @@
         <p class="film-tagline">{{ film.tagline }}</p>
         {% endif %}
 
-        <!-- Rating visual -->
         <div class="film-rating-row">
             <div class="film-rating">
                 <span class="film-rating__score">{{ "%.1f"|format(film.vote_average) }}</span>
@@ -107,7 +125,6 @@
             <span class="film-rating__votes">{{ "{:,}".format(film.vote_count) }} votes</span>
         </div>
 
-        <!-- Meta pills -->
         <div class="film-meta-pills">
             {% if film.release_date %}
             <span class="film-meta-pill">{{ film.release_date.year }}</span>
@@ -125,7 +142,6 @@
             {% endif %}
         </div>
 
-        <!-- Overview -->
         {% if film.overview %}
         <div>
             <p class="film-section-label">Overview</p>
@@ -133,7 +149,6 @@
         </div>
         {% endif %}
 
-        <!-- Popularity bar -->
         <div class="film-popularity">
             <p class="film-section-label">Popularity score</p>
             <div class="film-popularity__bar-track">
@@ -146,6 +161,7 @@
         </div>
 
     </div>
+
 </div>
 
 <!-- CREDITS -->

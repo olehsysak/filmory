@@ -5,6 +5,7 @@
     --text: #1a1a1a;
     --text-muted: #666666;
     --accent: #00c030;
+    --accent-rgb: 0, 192, 48;
     --accent-hover: #00a828;
     --border: #e0e0e0;
     --card-bg: #ffffff;
@@ -18,6 +19,7 @@
     --text: #e8e8e8;
     --text-muted: #777777;
     --accent: #00c030;
+    --accent-rgb: 0, 192, 48;
     --accent-hover: #00e838;
     --border: #252525;
     --card-bg: #1a1a1a;
