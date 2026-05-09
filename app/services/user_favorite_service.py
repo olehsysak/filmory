@@ -2,7 +2,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.user_favorite_repo import UserFavoriteRepository
 from app.repositories.film_repo import FilmRepository
 from app.models.user_favorite import UserFavorite
-from app.clients.tmdb_client import TMDBClient, tmdb_client
+from app.schemas.user_favorite import UserFavoriteResponse
+from app.schemas.film import FilmShort
+from app.clients.tmdb_client import tmdb_client
 from fastapi import status, HTTPException
 
 
@@ -52,10 +54,17 @@ class UserFavoriteService:
         entry = await self.repo.get(user_id, film.id)
         return entry is not None
 
-
-    async def get_all(self, user_id: int) -> list[UserFavorite]:
+    async def get_all(self, user_id: int) -> list[UserFavoriteResponse]:
         """Get all user favorites"""
-        entries = await self.repo.get_all(user_id)
-        for e in entries:
-            e.film.poster_url = tmdb_client.get_image_url(e.film.poster_path)
-        return entries
+        rows = await self.repo.get_all(user_id)
+        result = []
+        for favorite, rating, status in rows:
+            favorite.film.poster_url = tmdb_client.get_image_url(favorite.film.poster_path)
+            result.append(UserFavoriteResponse(
+                id=favorite.id,
+                film=FilmShort.model_validate(favorite.film),
+                added_at=favorite.added_at,
+                rating=rating,
+                status=status,
+            ))
+        return result

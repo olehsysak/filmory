@@ -2,6 +2,7 @@ from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from app.models.user_favorite import UserFavorite
+from app.models.user_film import UserFilm
 
 
 class UserFavoriteRepository:
@@ -21,14 +22,24 @@ class UserFavoriteRepository:
         return result.scalar_one_or_none()
 
 
-    async def get_all(self, user_id: int) -> list[UserFavorite]:
-        """Get all favorite films for a user"""
+    async def get_all(self, user_id: int) -> list[dict]:
         result = await self.db.execute(
-            select(UserFavorite)
+            select(
+                UserFavorite,
+                UserFilm.rating,
+                UserFilm.status,
+            )
             .options(joinedload(UserFavorite.film))
+            .outerjoin(
+                UserFilm,
+                and_(
+                    UserFilm.user_id == UserFavorite.user_id,
+                    UserFilm.film_id == UserFavorite.film_id,
+                )
+            )
             .where(UserFavorite.user_id == user_id)
         )
-        return list(result.scalars().all())
+        return result.all()
 
 
     async def create(self, user_id: int, film_id: int) -> UserFavorite:
