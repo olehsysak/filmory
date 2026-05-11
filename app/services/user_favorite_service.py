@@ -54,10 +54,12 @@ class UserFavoriteService:
         entry = await self.repo.get(user_id, film.id)
         return entry is not None
 
-    async def get_all(self, user_id: int) -> list[UserFavoriteResponse]:
-        """Get all user favorites"""
-        rows = await self.repo.get_all(user_id)
+
+    async def get_all(self, user_id: int, **filters) -> list[UserFavoriteResponse]:
+        """Get all user favorite films with filters and DTO mapping."""
+        rows = await self.repo.get_all(user_id, **filters)
         result = []
+
         for favorite, rating, status in rows:
             favorite.film.poster_url = tmdb_client.get_image_url(favorite.film.poster_path)
             result.append(UserFavoriteResponse(
@@ -67,4 +69,5 @@ class UserFavoriteService:
                 rating=rating,
                 status=status,
             ))
+
         return result

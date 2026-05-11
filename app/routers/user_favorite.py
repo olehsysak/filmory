@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from app.dependencies import get_user_favorite_service, get_current_user
 from app.schemas.user_favorite import UserFavoriteResponse, UserFavoriteStateResponse
 from app.services.user_favorite_service import UserFavoriteService
@@ -26,9 +26,25 @@ async def get_favorite_state(
 async def get_favorites(
     current_user: User = Depends(get_current_user),
     service: UserFavoriteService = Depends(get_user_favorite_service),
+    sort: str = Query(default="added_desc"),
+    genre_id: int | None = Query(default=None),
+    year: int | None = Query(default=None),
+    year_from: int | None = Query(default=None),
+    year_to: int | None = Query(default=None),
+    runtime_min: int | None = Query(default=None),
+    runtime_max: int | None = Query(default=None),
+    rated_only: bool = Query(default=False),
+    unrated_only: bool = Query(default=False),
+    search: str | None = Query(default=None),
 ):
-    """Get all favorite films."""
-    return await service.get_all(current_user.id)
+    """Get all user favorite films with filters and sorting."""
+    return await service.get_all(
+        current_user.id,
+        sort=sort, genre_id=genre_id, year=year,
+        year_from=year_from, year_to=year_to,
+        runtime_min=runtime_min, runtime_max=runtime_max,
+        rated_only=rated_only, unrated_only=unrated_only, search=search,
+    )
 
 
 @router.post("/{tmdb_id}", response_model=UserFavoriteResponse, status_code=status.HTTP_201_CREATED)
