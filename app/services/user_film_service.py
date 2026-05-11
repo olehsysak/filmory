@@ -101,33 +101,33 @@ class UserFilmService:
         return await self.repo.get(user_id, film.id)
 
 
-    async def get_watchlist(self, user_id: int) -> list[UserFilm]:
-        """Get all films with want_to_watch status"""
-        entries = await self.repo.get_by_status(user_id, WatchStatus.want_to_watch)
+    async def get_watchlist(self, user_id: int, **filters) -> list[UserFilm]:
+        """Get user's watchlist films with filters and poster URLs."""
+        entries = await self.repo.get_by_status(user_id, WatchStatus.want_to_watch, **filters)
         for e in entries:
             e.film.poster_url = tmdb_client.get_image_url(e.film.poster_path)
         return entries
 
 
-    async def get_watching(self, user_id: int) -> list[UserFilm]:
-        """Get all films with watching status"""
-        entries = await self.repo.get_by_status(user_id, WatchStatus.watching)
+    async def get_watching(self, user_id: int, **filters) -> list[UserFilm]:
+        """Get films the user is currently watching with filters and poster URLs."""
+        entries = await self.repo.get_by_status(user_id, WatchStatus.watching, **filters)
         for e in entries:
             e.film.poster_url = tmdb_client.get_image_url(e.film.poster_path)
         return entries
 
 
-    async def get_completed(self, user_id: int) -> list[UserFilm]:
-        """Get all completed films"""
-        entries = await self.repo.get_by_status(user_id, WatchStatus.completed)
+    async def get_completed(self, user_id: int, **filters) -> list[UserFilm]:
+        """Get completed films with filters and poster URLs."""
+        entries = await self.repo.get_by_status(user_id, WatchStatus.completed, **filters)
         for e in entries:
             e.film.poster_url = tmdb_client.get_image_url(e.film.poster_path)
         return entries
 
 
-    async def get_dropped(self, user_id: int) -> list[UserFilm]:
-        """Get all dropped films"""
-        entries = await self.repo.get_by_status(user_id, WatchStatus.dropped)
+    async def get_dropped(self, user_id: int, **filters) -> list[UserFilm]:
+        """Get dropped films with filters and poster URLs."""
+        entries = await self.repo.get_by_status(user_id, WatchStatus.dropped, **filters)
         for e in entries:
             e.film.poster_url = tmdb_client.get_image_url(e.film.poster_path)
         return entries

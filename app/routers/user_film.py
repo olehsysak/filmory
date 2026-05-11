@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from app.dependencies import get_user_film_service, get_current_user
 from app.schemas.user_film import UserFilmResponse, UserFilmStatusUpdate, UserFilmRatingUpdate, UserFilmStateResponse
 from app.services.user_film_service import UserFilmService
@@ -28,36 +28,94 @@ async def get_film_state(
 async def get_want_to_watch(
     current_user: User = Depends(get_current_user),
     service: UserFilmService = Depends(get_user_film_service),
+    sort: str = Query(default="added_desc"),
+    genre_id: int | None = Query(default=None),
+    year: int | None = Query(default=None),
+    year_from: int | None = Query(default=None),
+    year_to: int | None = Query(default=None),
+    runtime_min: int | None = Query(default=None),
+    runtime_max: int | None = Query(default=None),
+    search: str | None = Query(default=None),
 ):
-    """Get all films with want_to_watch status."""
-    return await service.get_watchlist(current_user.id)
+    """Get films with 'want to watch' status."""
+    return await service.get_watchlist(
+        current_user.id,
+        sort=sort, genre_id=genre_id, year=year,
+        year_from=year_from, year_to=year_to,
+        runtime_min=runtime_min, runtime_max=runtime_max,
+        search=search,
+    )
 
 
 @router.get("/watching", response_model=list[UserFilmResponse])
 async def get_watching(
     current_user: User = Depends(get_current_user),
     service: UserFilmService = Depends(get_user_film_service),
+    sort: str = Query(default="added_desc"),
+    genre_id: int | None = Query(default=None),
+    year: int | None = Query(default=None),
+    year_from: int | None = Query(default=None),
+    year_to: int | None = Query(default=None),
+    runtime_min: int | None = Query(default=None),
+    runtime_max: int | None = Query(default=None),
+    search: str | None = Query(default=None),
 ):
-    """Get all films currently being watched."""
-    return await service.get_watching(current_user.id)
+    """Get films with 'watching' status."""
+    return await service.get_watching(
+        current_user.id,
+        sort=sort, genre_id=genre_id, year=year,
+        year_from=year_from, year_to=year_to,
+        runtime_min=runtime_min, runtime_max=runtime_max,
+        search=search,
+    )
 
 
 @router.get("/completed", response_model=list[UserFilmResponse])
 async def get_completed(
     current_user: User = Depends(get_current_user),
     service: UserFilmService = Depends(get_user_film_service),
+    sort: str = Query(default="added_desc"),
+    genre_id: int | None = Query(default=None),
+    year: int | None = Query(default=None),
+    year_from: int | None = Query(default=None),
+    year_to: int | None = Query(default=None),
+    runtime_min: int | None = Query(default=None),
+    runtime_max: int | None = Query(default=None),
+    rated_only: bool = Query(default=False),
+    unrated_only: bool = Query(default=False),
+    search: str | None = Query(default=None),
 ):
-    """Get all completed films."""
-    return await service.get_completed(current_user.id)
+    """Get films with 'completed' status."""
+    return await service.get_completed(
+        current_user.id,
+        sort=sort, genre_id=genre_id, year=year,
+        year_from=year_from, year_to=year_to,
+        runtime_min=runtime_min, runtime_max=runtime_max,
+        rated_only=rated_only, unrated_only=unrated_only, search=search,
+    )
 
 
 @router.get("/dropped", response_model=list[UserFilmResponse])
 async def get_dropped(
     current_user: User = Depends(get_current_user),
     service: UserFilmService = Depends(get_user_film_service),
+    sort: str = Query(default="added_desc"),
+    genre_id: int | None = Query(default=None),
+    year: int | None = Query(default=None),
+    year_from: int | None = Query(default=None),
+    year_to: int | None = Query(default=None),
+    runtime_min: int | None = Query(default=None),
+    runtime_max: int | None = Query(default=None),
+    search: str | None = Query(default=None),
 ):
-    """Get all dropped films."""
-    return await service.get_dropped(current_user.id)
+    """Get films with 'dropped' status."""
+    return await service.get_dropped(
+        current_user.id,
+        sort=sort, genre_id=genre_id, year=year,
+        year_from=year_from, year_to=year_to,
+        runtime_min=runtime_min, runtime_max=runtime_max,
+        search=search,
+    )
 
 
 @router.post("/{tmdb_id}/watchlist", response_model=UserFilmResponse, status_code=status.HTTP_201_CREATED)
