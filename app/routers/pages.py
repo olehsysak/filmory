@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Request, Depends, status, HTTPException, Query
 from app.templates import templates
+from fastapi.responses import RedirectResponse
 from app.services.film_service import FilmService
 from app.services.person_service import PersonService
 from app.dependencies import get_film_service, get_async_db, get_person_service
@@ -12,6 +13,7 @@ router = APIRouter(tags=["pages"])
 
 @router.get("/")
 async def index(request: Request, service: FilmService = Depends(get_film_service)):
+    """Home page with popular and upcoming films."""
     popular = await service.get_popular()
     coming_soon = await service.get_top_upcoming()
     return templates.TemplateResponse("index.html", {
@@ -24,6 +26,7 @@ async def index(request: Request, service: FilmService = Depends(get_film_servic
 
 @router.get("/films")
 async def films_page(request: Request, db: AsyncSession = Depends(get_async_db)):
+    """Films catalog page with filtering and sorting options."""
     genre_repo = GenreRepository(db)
     genres = await genre_repo.get_all()
     return templates.TemplateResponse("films.html", {
@@ -33,8 +36,29 @@ async def films_page(request: Request, db: AsyncSession = Depends(get_async_db))
     })
 
 
+@router.get("/collection")
+async def collection_page(
+    request: Request,
+    tab: str = Query(default="want_to_watch"),
+):
+    """User collection page with tab-based navigation."""
+    if not request.state.user:
+        return RedirectResponse(url="/login", status_code=302)
+
+    valid_tabs = {"want_to_watch", "watching", "completed", "dropped", "favorites"}
+    if tab not in valid_tabs:
+        tab = "want_to_watch"
+
+    return templates.TemplateResponse("collection.html", {
+        "request": request,
+        "active_tab": tab,
+        "current_user": request.state.user,
+    })
+
+
 @router.get("/film/{tmdb_id}/credits")
 async def film_credits_page(request: Request, tmdb_id: int, service: FilmService = Depends(get_film_service)):
+    """Film credits page."""
     film = await service.get_or_fetch_film(tmdb_id)
     if not film:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Film not found")
@@ -47,6 +71,7 @@ async def film_credits_page(request: Request, tmdb_id: int, service: FilmService
 
 @router.get("/film/{tmdb_id}")
 async def film_detail(request: Request, tmdb_id: int, service: FilmService = Depends(get_film_service)):
+    """Film detail page."""
     film = await service.get_or_fetch_film(tmdb_id)
     if not film:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Film not found")
@@ -60,6 +85,7 @@ async def film_detail(request: Request, tmdb_id: int, service: FilmService = Dep
 
 @router.get("/person/{tmdb_id}")
 async def person_page(request: Request, tmdb_id: int, service: PersonService = Depends(get_person_service)):
+    """Person detail page (actor/crew)."""
     person = await service.get_person_detail(tmdb_id)
     if not person:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Person not found")
@@ -72,6 +98,7 @@ async def person_page(request: Request, tmdb_id: int, service: PersonService = D
 
 @router.get("/search")
 async def search_page(request: Request, q: str = Query(default="")):
+    """Search page."""
     return templates.TemplateResponse("search.html", {
         "request": request,
         "q": q,
@@ -81,9 +108,11 @@ async def search_page(request: Request, q: str = Query(default="")):
 
 @router.get("/login")
 async def login(request: Request):
+    """Login page."""
     return templates.TemplateResponse("login.html", {"request": request})
 
 
 @router.get("/register")
 async def register_page(request: Request):
+    """Register page."""
     return templates.TemplateResponse("register.html", {"request": request})
