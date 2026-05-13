@@ -44,5 +44,5 @@ class Film(Base):
         "UserFavorite", back_populates="film", cascade="all, delete-orphan"
     )
     list_entries: Mapped[list["UserListFilm"]] = relationship(
-        "UserListFilm", back_populates="film", cascade="all, delete-orphan"
+        "UserListFilm", back_populates="film"
     )

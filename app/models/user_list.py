@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class UserList(Base):
-    """"""
+    """User-created list of films. Can be private or public."""
     __tablename__ = "user_lists"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
