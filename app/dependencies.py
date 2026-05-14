@@ -9,6 +9,7 @@ from app.services.genre_service import GenreService
 from app.services.person_service import PersonService
 from app.services.user_film_service import UserFilmService
 from app.services.user_favorite_service import UserFavoriteService
+from app.services.user_list_service import UserListService
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
@@ -75,3 +76,8 @@ def get_user_film_service(db: AsyncSession = Depends(get_async_db)):
 def get_user_favorite_service(db: AsyncSession = Depends(get_async_db)):
     """FastAPI dependency for UserFavoriteService."""
     return UserFavoriteService(db)
+
+
+def get_user_list_service(db: AsyncSession = Depends(get_async_db)):
+    """FastAPI dependency for UserListService."""
+    return UserListService(db)

@@ -104,23 +104,30 @@ class UserListService:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Film already in this list")
 
         entry = await self.repo.add_film(list_id, film.id)
+
+        # Automatically set the cover if it doesn't already exist
+        if user_list.cover_film_id is None:
+            user_list.cover_film_id = film.id
+
         await self.db.commit()
         await self.db.refresh(entry)
         return entry
 
 
-    async def remove_film(self, list_id: int, user_id: int, film_id: int) -> None:
-        """Remove a film from list. Owner only. film_id here is the internal DB id."""
+    async def remove_film_by_tmdb(self, list_id: int, user_id: int, tmdb_id: int) -> None:
         user_list = await self.repo.get_by_id(list_id)
         self._check_exists(user_list)
         self._check_owner(user_list, user_id)
 
-        entry = await self.repo.get_list_film(list_id, film_id)
+        film = await self.film_repo.get_by_tmdb_id(tmdb_id)
+        if not film:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Film not found")
+
+        entry = await self.repo.get_list_film(list_id, film.id)
         if not entry:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Film not in this list")
 
-        # If we delete the cover film, we reset the cover
-        if user_list.cover_film_id == film_id:
+        if user_list.cover_film_id == film.id:
             user_list.cover_film_id = None
 
         await self.repo.remove_film(entry)
