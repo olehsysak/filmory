@@ -6,6 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', path='css/pages/film.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/components/add-to-list.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -241,5 +242,6 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', path='js/add-to-list.js') }}"></script>
 <script src="{{ url_for('static', path='js/film.js') }}"></script>
 {% endblock %}

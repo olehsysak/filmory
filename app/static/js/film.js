@@ -245,9 +245,7 @@ async function initFilmActions() {
         btn.addEventListener('click', () => setRating(parseInt(btn.dataset.value)));
     });
 
-    // Add to list — future functionality
-    document.getElementById('addToListBtn')
-        ?.addEventListener('click', () => {});
+    initAddToList();
 }
 
 // Prevent guest users from triggering film actions

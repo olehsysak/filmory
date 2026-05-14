@@ -214,6 +214,29 @@
     stroke: #e05c7a;
 }
 
+.film-actions--guest .film-action-addlist {
+    cursor: not-allowed;
+    opacity: 0.5;
+    position: relative;
+}
+
+.film-actions--guest .film-action-addlist:hover::after {
+    content: 'Sign in to use this feature';
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
+}
+
 /* Rating */
 .film-action-rating {
     animation: fadeIn 0.2s ease;
