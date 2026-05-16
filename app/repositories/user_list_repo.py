@@ -58,7 +58,9 @@ class UserListRepository:
             "created_desc": UserList.created_at.desc(),
             "created_asc": UserList.created_at.asc(),
             "name_asc": UserList.name.asc(),
+            "name_desc": UserList.name.desc(),
             "films_desc": film_count.desc(),
+            "films_asc": film_count.asc(),
         }
         query = query.order_by(sort_map.get(sort, UserList.updated_at.desc()))
 

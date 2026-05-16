@@ -5,6 +5,7 @@ const TAB_TITLES = {
     completed: 'Completed',
     dropped: 'Dropped',
     favorites: 'Favorites',
+    lists: 'My Lists',
 };
 
 // API endpoints mapped to each tab
@@ -29,6 +30,13 @@ const state = {
     year_to: null,
     runtime_min: null,
     runtime_max: null,
+    search: '',
+};
+
+// Separate filter state used only for custom user lists tab
+const listsState = {
+    sort: 'updated_desc',
+    is_public: null,   // null | true | false
     search: '',
 };
 
@@ -128,6 +136,180 @@ function renderCard(entry) {
     `;
 }
 
+// Fetches user-created lists from the API and renders them into the lists grid
+async function fetchLists() {
+    const grid = document.getElementById('listsGrid');
+    const empty = document.getElementById('listsEmpty');
+    const count = document.getElementById('collectionCount');
+
+    // Skeleton
+    grid.style.display = 'grid';
+    empty.style.display = 'none';
+    grid.innerHTML = Array(4).fill(`
+        <div class="list-card list-card--skeleton">
+            <div class="list-card__cover skeleton-box"></div>
+            <div class="list-card__info">
+                <div class="skeleton-box" style="height:14px;width:75%;margin-bottom:8px;"></div>
+                <div class="skeleton-box" style="height:12px;width:45%;"></div>
+            </div>
+        </div>
+    `).join('');
+
+    const params = new URLSearchParams();
+    params.set('sort', listsState.sort);
+    if (listsState.is_public !== null) params.set('is_public', listsState.is_public);
+    if (listsState.search) params.set('search', listsState.search);
+
+    try {
+        const res = await fetch(`/api/user/lists/?${params}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+
+        const countEl = document.getElementById('count-lists');
+        if (countEl) countEl.textContent = data.length;
+        count.textContent = `${data.length} lists`;
+
+        if (!data.length) {
+            grid.style.display = 'none';
+            empty.style.display = 'flex';
+            return;
+        }
+
+        grid.style.display = 'grid';
+        grid.innerHTML = data.map(renderListCard).join('');
+    } catch {
+        grid.style.display = 'none';
+        empty.style.display = 'flex';
+    }
+}
+
+// Renders a single custom user list card
+function renderListCard(list) {
+    const badge = list.is_public
+        ? '<span class="list-card__badge list-card__badge--public">Public</span>'
+        : '<span class="list-card__badge list-card__badge--private">Private</span>';
+
+    const updated = new Date(list.updated_at).toLocaleDateString('en-GB', {
+        day: 'numeric', month: 'short', year: 'numeric'
+    });
+
+    return `
+        <a href="/lists/${list.id}" class="list-card">
+            <div class="list-card__cover">
+                ${list.cover_url
+                    ? `<img src="${list.cover_url}" alt="${escapeHtml(list.name)}" loading="lazy">`
+                    : '<div class="list-card__cover-placeholder"></div>'
+                }
+                ${badge}
+            </div>
+            <div class="list-card__info">
+                <p class="list-card__name">${escapeHtml(list.name)}</p>
+                <p class="list-card__meta">${list.film_count} films · ${updated}</p>
+                ${list.description
+                    ? `<p class="list-card__desc">${escapeHtml(list.description)}</p>`
+                    : ''
+                }
+            </div>
+        </a>
+    `;
+}
+
+// Renders and initializes filters used specifically for custom user lists
+function renderListsFilters() {
+    const filtersArea = document.getElementById('collectionFilters');
+    filtersArea.innerHTML = `
+        <div class="lists-filters">
+            <div class="collection-search">
+                <span class="collection-search__icon">⌕</span>
+                <input type="text" class="collection-search__input" id="listsSearch"
+                    placeholder="Search lists..." autocomplete="off">
+                <button class="collection-search__clear" id="listsSearchClear" style="display:none">×</button>
+            </div>
+            <div class="collection-filters__row">
+                <div class="filter-dropdown" id="listsSortDropdown">
+                    <button class="filter-btn" id="listsSortBtn">
+                        <span id="listsSortLabel">Sort</span>
+                        <span class="filter-btn__arrow">▾</span>
+                    </button>
+                    <div class="filter-dropdown__menu">
+                        <div class="filter-dropdown__section">Last updated</div>
+                        <button class="lists-sort-option" data-value="updated_desc" data-label="Updated · Newest">Newest updated</button>
+                        <button class="lists-sort-option" data-value="updated_asc" data-label="Updated · Oldest">Oldest updated</button>
+                        <div class="filter-dropdown__section">Created</div>
+                        <button class="lists-sort-option" data-value="created_desc" data-label="Created · Newest">Newest created</button>
+                        <button class="lists-sort-option" data-value="created_asc" data-label="Created · Oldest">Oldest created</button>
+                        <div class="filter-dropdown__section">Other</div>
+                        <button class="lists-sort-option" data-value="name_asc" data-label="Name · A–Z">Name A–Z</button>
+                        <button class="lists-sort-option" data-value="name_desc" data-label="Name · Z–A">Name Z–A</button>
+                        <button class="lists-sort-option" data-value="films_desc" data-label="Films · Most">Most films</button>
+                        <button class="lists-sort-option" data-value="films_asc" data-label="Films · Fewest">Fewest films</button>
+                    </div>
+                </div>
+
+                <div class="lists-visibility-toggle">
+                    <button class="lists-vis-btn lists-vis-btn--active" data-value="">All</button>
+                    <button class="lists-vis-btn" data-value="false">Private</button>
+                    <button class="lists-vis-btn" data-value="true">Public</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Sort dropdown
+    const sortDropdown = document.getElementById('listsSortDropdown');
+    sortDropdown.querySelector('.filter-btn').addEventListener('click', e => {
+        e.stopPropagation();
+        sortDropdown.classList.toggle('open');
+    });
+    document.addEventListener('click', () => sortDropdown.classList.remove('open'));
+
+    document.querySelectorAll('.lists-sort-option').forEach(btn => {
+        if (btn.dataset.value === listsState.sort) btn.classList.add('selected');
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            document.querySelectorAll('.lists-sort-option').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            listsState.sort = btn.dataset.value;
+            document.getElementById('listsSortLabel').textContent = btn.dataset.label;
+            document.getElementById('listsSortBtn').classList.add('active');
+            sortDropdown.classList.remove('open');
+            fetchLists();
+        });
+    });
+
+    // Visibility toggle
+    document.querySelectorAll('.lists-vis-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.lists-vis-btn').forEach(b => b.classList.remove('lists-vis-btn--active'));
+            btn.classList.add('lists-vis-btn--active');
+            listsState.is_public = btn.dataset.value === '' ? null : btn.dataset.value === 'true';
+            fetchLists();
+        });
+    });
+
+    // Search
+    const searchInput = document.getElementById('listsSearch');
+    const searchClear = document.getElementById('listsSearchClear');
+    let searchTimer;
+    searchInput.addEventListener('input', () => {
+        listsState.search = searchInput.value.trim();
+        searchClear.style.display = listsState.search ? '' : 'none';
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(fetchLists, 300);
+    });
+    searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        listsState.search = '';
+        searchClear.style.display = 'none';
+        fetchLists();
+    });
+}
+
+// Restores the original collection filters after leaving the custom lists tab
+function restoreCollectionFilters() {
+    window.location.href = `/collection?tab=${state.tab}`;
+}
+
 // Renders skeleton placeholders while data is loading
 function renderSkeletons() {
     const grid = document.getElementById('collectionGrid');
@@ -143,29 +325,42 @@ function renderSkeletons() {
     `).join('');
 }
 
-// Switches active collection tab and reloads data
+// Switches active collection tab, updates visible layouts, and loads matching content
 function switchTab(tab) {
     const prevCountEl = document.getElementById(`count-${state.tab}`);
     if (prevCountEl) prevCountEl.textContent = '—';
 
     state.tab = tab;
-    resetFilters(false);
 
     document.getElementById('collectionTitle').textContent = TAB_TITLES[tab] || tab;
 
-    // Update active tab in sidebar navigation
     document.querySelectorAll('.collection-nav__item[href]').forEach(item => {
         const href = item.getAttribute('href');
         item.classList.toggle('collection-nav__item--active', href.includes(`tab=${tab}`));
     });
 
-    updateRatingSection(tab);
-
     const url = new URL(window.location);
     url.searchParams.set('tab', tab);
     window.history.pushState({}, '', url);
 
-    fetchCollection();
+    // Показуємо потрібний контейнер
+    const isLists = tab === 'lists';
+    document.getElementById('collectionGrid').style.display = isLists ? 'none' : '';
+    document.getElementById('collectionEmpty').style.display = 'none';
+    document.getElementById('listsGrid').style.display = isLists ? 'grid' : 'none';
+    document.getElementById('listsEmpty').style.display = 'none';
+
+    if (isLists) {
+        renderListsFilters();
+        fetchLists();
+    } else {
+        // Відновлюємо стандартні фільтри якщо повертаємось із lists
+        // (найпростіше — reload фільтрів через існуючі init функції)
+        restoreCollectionFilters();
+        updateRatingSection(tab);
+        resetFilters(false);
+        fetchCollection();
+    }
 }
 
 // Loads available genres from API and injects them into dropdown
@@ -535,7 +730,43 @@ function escapeHtml(str) {
 async function init() {
     document.getElementById('collectionTitle').textContent = TAB_TITLES[ACTIVE_TAB];
 
-    updateRatingSection(ACTIVE_TAB);
+    // Handle initial state for custom lists tab
+    if (ACTIVE_TAB === 'lists') {
+        document.getElementById('collectionGrid').style.display = 'none';
+        document.getElementById('listsGrid').style.display = 'grid';
+
+        renderListsFilters();
+        updateRatingSection(ACTIVE_TAB);
+
+        document.querySelectorAll('.collection-nav__item[href]').forEach(item => {
+            const href = item.getAttribute('href');
+            item.classList.toggle('collection-nav__item--active', href.includes('tab=lists'));
+        });
+
+        fetchLists();
+    } else {
+        updateRatingSection(ACTIVE_TAB);
+
+        // Reset button
+        document.getElementById('colResetFilters')
+            .addEventListener('click', () => resetFilters(true));
+
+        initDropdowns();
+        initSortOptions();
+        initYearOptions();
+        initDurationOptions();
+        initSearch();
+
+        // Mark default sort option
+        const defaultSortBtn = document.querySelector(
+            `.col-filter-option[data-filter="sort"][data-value="${state.sort}"]`
+        );
+
+        if (defaultSortBtn) defaultSortBtn.classList.add('selected');
+
+        await loadGenres();
+        fetchCollection();
+    }
 
     // Sidebar navigation tab switching
     document.querySelectorAll('.collection-nav__item[href]').forEach(item => {
@@ -546,22 +777,6 @@ async function init() {
             if (tab) switchTab(tab);
         });
     });
-
-    // Reset button
-    document.getElementById('colResetFilters').addEventListener('click', () => resetFilters(true));
-
-    initDropdowns();
-    initSortOptions();
-    initYearOptions();
-    initDurationOptions();
-    initSearch();
-
-    // Mark default sort option
-    const defaultSortBtn = document.querySelector(`.col-filter-option[data-filter="sort"][data-value="${state.sort}"]`);
-    if (defaultSortBtn) defaultSortBtn.classList.add('selected');
-
-    await loadGenres();
-    fetchCollection();
 }
 
 init();
