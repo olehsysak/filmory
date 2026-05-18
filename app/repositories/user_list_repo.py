@@ -166,6 +166,25 @@ class UserListRepository:
         return list(result.scalars().unique().all())
 
 
+    async def add_film(self, list_id: int, film_id: int) -> UserListFilm:
+        """Add film to list, auto-assign next position."""
+        # Get current max position
+        result = await self.db.execute(
+            select(func.max(UserListFilm.position))
+            .where(UserListFilm.list_id == list_id)
+        )
+        max_pos = result.scalar() or 0
+
+        entry = UserListFilm(
+            list_id=list_id,
+            film_id=film_id,
+            position=max_pos + 1,
+        )
+        self.db.add(entry)
+        await self.db.flush()
+        return entry
+
+
     async def remove_film(self, entry: UserListFilm) -> None:
         """Remove film from list."""
         await self.db.delete(entry)

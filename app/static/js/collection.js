@@ -194,7 +194,7 @@ function renderListCard(list) {
     });
 
     return `
-        <a href="/lists/${list.id}" class="list-card">
+        <a href="/list/${list.id}" class="list-card">
             <div class="list-card__cover">
                 ${list.cover_url
                     ? `<img src="${list.cover_url}" alt="${escapeHtml(list.name)}" loading="lazy">`

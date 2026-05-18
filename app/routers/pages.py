@@ -56,6 +56,41 @@ async def collection_page(
     })
 
 
+@router.get("/list/{list_id}")
+async def list_detail_page(
+        request: Request,
+        list_id: int,
+        db: AsyncSession = Depends(get_async_db),
+):
+    """User list detail page."""
+    from app.services.user_list_service import UserListService
+    from app.repositories.genre_repo import GenreRepository
+
+    service = UserListService(db)
+    user = request.state.user
+    user_id = user.id if user else None
+
+    try:
+        list_data = await service.get_detail(list_id, user_id)
+    except HTTPException as e:
+        if e.status_code == 404:
+            raise
+        # Private list — redirect to login if not authenticated
+        if not user:
+            return RedirectResponse(url="/login", status_code=302)
+        raise
+
+    genre_repo = GenreRepository(db)
+    genres = await genre_repo.get_all()
+
+    return templates.TemplateResponse("list_detail.html", {
+        "request": request,
+        "list_data": list_data,
+        "genres": genres,
+        "current_user": user,
+    })
+
+
 @router.get("/film/{tmdb_id}/credits")
 async def film_credits_page(request: Request, tmdb_id: int, service: FilmService = Depends(get_film_service)):
     """Film credits page."""
