@@ -31,6 +31,21 @@ class UserListResponse(BaseModel):
     model_config = ConfigDict(from_attributes=False)
 
 
+class UserListDetailResponse(BaseModel):
+    """Full list detail for the list detail page."""
+    id: int = Field(..., description="List ID")
+    name: str = Field(..., description="List name")
+    description: str | None = Field(None, description="Optional description")
+    is_public: bool = Field(..., description="Public visibility")
+    film_count: int = Field(0, description="Number of films in list")
+    cover_url: str | None = Field(None, description="Cover poster URL")
+    created_at: datetime = Field(..., description="Creation date")
+    updated_at: datetime = Field(..., description="Last update date")
+    is_owner: bool = Field(False, description="True if current user owns this list")
+
+    model_config = ConfigDict(from_attributes=False)
+
+
 class UserListFilmResponse(BaseModel):
     """Schema for a film inside a list."""
     id: int = Field(..., description="Internal film ID")
@@ -42,6 +57,7 @@ class UserListFilmResponse(BaseModel):
     overview: str | None = Field(None, description="Film overview")
     added_at: datetime = Field(..., description="When film was added to list")
     position: int = Field(..., description="Position in list")
+    user_rating: int | None = Field(None, description="User's rating (from 1 to 10)")
 
     model_config = ConfigDict(from_attributes=False)
 

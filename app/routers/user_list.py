@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, Query, status, Request
 from app.dependencies import get_async_db, get_current_user
 from app.schemas.user_list import (
     UserListCreate, UserListUpdate,
-    UserListResponse, UserListFilmResponse, FilmMembershipResponse,
+    UserListResponse, UserListFilmResponse,
+    FilmMembershipResponse, UserListDetailResponse
 )
 from app.services.user_list_service import UserListService
 from app.models.user import User
@@ -46,6 +47,30 @@ async def get_lists(
     return await service.get_all(current_user.id, sort=sort, is_public=is_public, search=search)
 
 
+@router.get("/membership/{tmdb_id}", response_model=FilmMembershipResponse)
+async def get_film_membership(
+    tmdb_id: int,
+    current_user: User = Depends(get_current_user),
+    service: UserListService = Depends(get_user_list_service),
+):
+    """Return all user lists with has_film flag — for the 'Add to list' modal."""
+    data = await service.get_film_membership(current_user.id, tmdb_id)
+    return FilmMembershipResponse(**data)
+
+
+@router.get("/{list_id}", response_model=UserListDetailResponse)
+async def get_list_detail(
+    list_id: int,
+    request: Request,
+    service: UserListService = Depends(get_user_list_service),
+):
+    """Get list metadata. Public lists accessible without auth."""
+    user = request.state.user
+    user_id = user.id if user else None
+    data = await service.get_detail(list_id, user_id)
+    return UserListDetailResponse(**data)
+
+
 @router.patch("/{list_id}", response_model=UserListResponse)
 async def update_list(
     list_id: int,
@@ -76,6 +101,48 @@ async def delete_list(
     await service.delete(list_id, current_user.id)
 
 
+@router.get("/{list_id}/films", response_model=list[UserListFilmResponse])
+async def get_list_films(
+    list_id: int,
+    request: Request,
+    service: UserListService = Depends(get_user_list_service),
+    sort: str = Query(default="added_desc"),
+    genre_id: int | None = Query(default=None),
+    year_from: int | None = Query(default=None),
+    year_to: int | None = Query(default=None),
+    runtime_min: int | None = Query(default=None),
+    runtime_max: int | None = Query(default=None),
+    search: str | None = Query(default=None),
+    rated_only: bool = Query(default=False),
+    unrated_only: bool = Query(default=False),
+):
+    """Get films in a list. Public lists accessible without auth."""
+    user = request.state.user
+    user_id = user.id if user else None
+
+    entries, user_ratings = await service.get_films(
+        list_id, user_id,
+        sort=sort, genre_id=genre_id, year_from=year_from, year_to=year_to,
+        runtime_min=runtime_min, runtime_max=runtime_max, search=search,
+        rated_only=rated_only, unrated_only=unrated_only,
+    )
+    return [
+        UserListFilmResponse(
+            id=entry.film.id,
+            tmdb_id=entry.film.tmdb_id,
+            title=entry.film.title,
+            poster_url=entry.film.poster_url,
+            release_date=entry.film.release_date,
+            vote_average=entry.film.vote_average,
+            overview=entry.film.overview,
+            added_at=entry.added_at,
+            position=entry.position,
+            user_rating=user_ratings.get(entry.film.id),
+        )
+        for entry in entries
+    ]
+
+
 @router.post("/{list_id}/films/{tmdb_id}", status_code=status.HTTP_201_CREATED)
 async def add_film(
     list_id: int,
@@ -97,52 +164,3 @@ async def remove_film(
 ):
     """Remove film from list by TMDB ID."""
     await service.remove_film_by_tmdb(list_id, current_user.id, tmdb_id)
-
-
-@router.get("/{list_id}/films", response_model=list[UserListFilmResponse])
-async def get_list_films(
-    list_id: int,
-    request: Request,
-    service: UserListService = Depends(get_user_list_service),
-    sort: str = Query(default="added_desc"),
-    genre_id: int | None = Query(default=None),
-    year_from: int | None = Query(default=None),
-    year_to: int | None = Query(default=None),
-    runtime_min: int | None = Query(default=None),
-    runtime_max: int | None = Query(default=None),
-    search: str | None = Query(default=None),
-):
-    """Get films in a list. Public lists accessible without auth."""
-    user = request.state.user
-    user_id = user.id if user else None
-
-    entries = await service.get_films(
-        list_id, user_id,
-        sort=sort, genre_id=genre_id, year_from=year_from, year_to=year_to,
-        runtime_min=runtime_min, runtime_max=runtime_max, search=search,
-    )
-    return [
-        UserListFilmResponse(
-            id=entry.film.id,
-            tmdb_id=entry.film.tmdb_id,
-            title=entry.film.title,
-            poster_url=entry.film.poster_url,
-            release_date=entry.film.release_date,
-            vote_average=entry.film.vote_average,
-            overview=entry.film.overview,
-            added_at=entry.added_at,
-            position=entry.position,
-        )
-        for entry in entries
-    ]
-
-
-@router.get("/membership/{tmdb_id}", response_model=FilmMembershipResponse)
-async def get_film_membership(
-    tmdb_id: int,
-    current_user: User = Depends(get_current_user),
-    service: UserListService = Depends(get_user_list_service),
-):
-    """Return all user lists with has_film flag — for the 'Add to list' modal."""
-    data = await service.get_film_membership(current_user.id, tmdb_id)
-    return FilmMembershipResponse(**data)

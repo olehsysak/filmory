@@ -5,6 +5,7 @@ from app.models.user_list import UserList
 from app.models.user_list_film import UserListFilm
 from app.models.film_genre import film_genre
 from app.models.film import Film
+from app.models.user_film import UserFilm
 
 
 class UserListRepository:
@@ -96,18 +97,19 @@ class UserListRepository:
 
 
     async def get_films(
-        self,
-        list_id: int,
-        sort: str = "added_desc",
-        genre_id: int | None = None,
-        year_from: int | None = None,
-        year_to: int | None = None,
-        runtime_min: int | None = None,
-        runtime_max: int | None = None,
-        search: str | None = None,
+            self,
+            list_id: int,
+            user_id: int | None = None,
+            sort: str = "added_desc",
+            genre_id: int | None = None,
+            year_from: int | None = None,
+            year_to: int | None = None,
+            runtime_min: int | None = None,
+            runtime_max: int | None = None,
+            search: str | None = None,
+            rated_only: bool = False,
+            unrated_only: bool = False,
     ) -> list[UserListFilm]:
-        """Get all films in a list with optional filters."""
-        # Select association rows (UserListFilm) and join Film for filtering + sorting
         query = (
             select(UserListFilm)
             .join(Film, Film.id == UserListFilm.film_id)
@@ -115,7 +117,21 @@ class UserListRepository:
             .where(UserListFilm.list_id == list_id)
         )
 
-        # Filters — the same as in the collection, but without rated_only *
+        # Join UserFilm if needed for rating
+        needs_user_film = user_id and (
+                sort in ("user_rating_desc", "user_rating_asc")
+                or rated_only or unrated_only
+        )
+        if needs_user_film:
+            query = query.outerjoin(
+                UserFilm,
+                and_(UserFilm.user_id == user_id, UserFilm.film_id == Film.id)
+            )
+            if rated_only:
+                query = query.where(UserFilm.rating.isnot(None))
+            if unrated_only:
+                query = query.where(UserFilm.rating.is_(None))
+
         if genre_id:
             query = query.join(
                 film_genre, film_genre.c.film_id == Film.id
@@ -134,29 +150,20 @@ class UserListRepository:
         sort_map = {
             "added_desc": UserListFilm.added_at.desc(),
             "added_asc": UserListFilm.added_at.asc(),
-            "position": UserListFilm.position.asc(),
             "release_desc": Film.release_date.desc(),
             "release_asc": Film.release_date.asc(),
             "rating_desc": Film.vote_average.desc(),
-            "title_asc": Film.title.asc(),
+            "rating_asc": Film.vote_average.asc(),
+            "popularity_desc": Film.popularity.desc(),
+            "runtime_desc": Film.runtime.desc(),
+            "runtime_asc": Film.runtime.asc(),
+            "user_rating_desc": UserFilm.rating.desc().nulls_last(),
+            "user_rating_asc": UserFilm.rating.asc().nulls_last(),
         }
         query = query.order_by(sort_map.get(sort, UserListFilm.added_at.desc()))
 
         result = await self.db.execute(query)
         return list(result.scalars().unique().all())
-
-
-    async def add_film(self, list_id: int, film_id: int) -> UserListFilm:
-        """Add film to list with auto-incremented position."""
-        max_pos_result = await self.db.execute(
-            select(func.coalesce(func.max(UserListFilm.position), 0))
-            .where(UserListFilm.list_id == list_id)
-        )
-        next_position = max_pos_result.scalar_one() + 1
-
-        entry = UserListFilm(list_id=list_id, film_id=film_id, position=next_position)
-        self.db.add(entry)
-        return entry
 
 
     async def remove_film(self, entry: UserListFilm) -> None:

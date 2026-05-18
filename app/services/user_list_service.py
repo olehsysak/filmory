@@ -1,9 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, and_
 from fastapi import HTTPException, status
 from app.repositories.user_list_repo import UserListRepository
 from app.repositories.film_repo import FilmRepository
 from app.models.user_list import UserList
 from app.models.user_list_film import UserListFilm
+from app.models.user_film import UserFilm
 from app.clients.tmdb_client import tmdb_client
 
 
@@ -37,6 +39,29 @@ class UserListService:
         for user_list, film_count in rows:
             result.append(self._serialize_list(user_list, film_count))
         return result
+
+
+    async def get_detail(self, list_id: int, user_id: int | None) -> dict:
+        """Get full list detail. Private lists only for owner."""
+        user_list = await self.repo.get_by_id(list_id)
+        self._check_exists(user_list)
+
+        is_owner = user_id is not None and user_list.user_id == user_id
+
+        if not user_list.is_public and not is_owner:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="This list is private")
+
+        # Count films
+        rows = await self.repo.get_all_for_user(user_list.user_id)
+        film_count = 0
+        for ul, fc in rows:
+            if ul.id == list_id:
+                film_count = fc
+                break
+
+        data = self._serialize_list(user_list, film_count)
+        data["is_owner"] = is_owner
+        return data
 
 
     async def get_public(self, list_id: int) -> UserList:
@@ -139,7 +164,7 @@ class UserListService:
             list_id: int,
             user_id: int | None,
             **filters,
-    ) -> list[UserListFilm]:
+    ) -> tuple[list[UserListFilm], dict[int, int | None]]:
         """Get films in list. The public list is available without auth."""
         user_list = await self.repo.get_by_id(list_id)
         self._check_exists(user_list)
@@ -148,10 +173,26 @@ class UserListService:
             if user_id is None or user_list.user_id != user_id:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="This list is private")
 
-        entries = await self.repo.get_films(list_id, **filters)
+        entries = await self.repo.get_films(list_id, user_id=user_id, **filters)
+
+        # Fetch user ratings for all films in one query
+        user_ratings: dict[int, int | None] = {}
+        if user_id:
+            film_ids = [e.film.id for e in entries]
+            if film_ids:
+                result = await self.db.execute(
+                    select(UserFilm.film_id, UserFilm.rating)
+                    .where(and_(
+                        UserFilm.user_id == user_id,
+                        UserFilm.film_id.in_(film_ids),
+                    ))
+                )
+                user_ratings = {row.film_id: row.rating for row in result.all()}
+
         for entry in entries:
             entry.film.poster_url = tmdb_client.get_image_url(entry.film.poster_path)
-        return entries
+
+        return entries, user_ratings
 
 
     async def get_film_membership(self, user_id: int, tmdb_id: int) -> dict:
