@@ -10,14 +10,13 @@ from app.services.person_service import PersonService
 from app.services.user_film_service import UserFilmService
 from app.services.user_favorite_service import UserFavoriteService
 from app.services.user_list_service import UserListService
+from app.services.profile_service import ProfileService
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
-    """
-    Asynchronous SQLAlchemy session for database operations
-    """
+    """Asynchronous SQLAlchemy session for database operations."""
     async with async_session_maker() as session:
         yield session
 
@@ -81,3 +80,8 @@ def get_user_favorite_service(db: AsyncSession = Depends(get_async_db)):
 def get_user_list_service(db: AsyncSession = Depends(get_async_db)):
     """FastAPI dependency for UserListService."""
     return UserListService(db)
+
+
+def get_profile_service(db: AsyncSession = Depends(get_async_db)):
+    """FastAPI dependency for ProfileService."""
+    return ProfileService(db)

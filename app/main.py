@@ -13,12 +13,14 @@ from app.routers.search import router as search_router
 from app.routers.user_film import router as user_film_router
 from app.routers.user_favorite import router as user_favorite_router
 from app.routers.user_list import router as user_list_router
+from app.routers.profile import router as profile_router
+from app.routers.profile import router as users_router
+from app.routers.user_collection import router as user_collection_router
 from app.middleware.auth_middleware import AuthMiddleware
 from app.database import async_session_maker
 from app.utils.sync import sync_genres
 
 
-# connecting lifespan to FastAPI
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # startup
@@ -26,12 +28,10 @@ async def lifespan(app: FastAPI):
     async with async_session_maker() as db:
         await sync_genres(db)
     yield
-
     # shutdown
     await close_redis()
 
 
-# application
 app = FastAPI(
     title="Filmory API",
     description="Filmory API",
@@ -39,16 +39,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-
-# connecting templates
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-
-# middleware
 app.add_middleware(AuthMiddleware)
 
-
-# connecting routers
+# API routers
 app.include_router(auth_router, prefix="/api")
 app.include_router(film_router, prefix="/api")
 app.include_router(genre_router, prefix="/api")
@@ -58,6 +53,11 @@ app.include_router(search_router, prefix="/api")
 app.include_router(user_film_router, prefix="/api")
 app.include_router(user_favorite_router, prefix="/api")
 app.include_router(user_list_router, prefix="/api")
+app.include_router(profile_router, prefix="/api")
+app.include_router(users_router, prefix="/api")
+app.include_router(user_collection_router, prefix="/api")
+
+# Page routers
 app.include_router(pages_router)
 
 
