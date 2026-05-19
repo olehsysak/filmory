@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile.username }} — Filmory{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/pages/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+<div class="profile-container">
+
+    <!-- HERO -->
+    <section class="profile-hero">
+        <div class="profile-avatar">
+            {% if profile.avatar_url %}
+            <img class="profile-avatar__img" src="{{ profile.avatar_url }}" alt="{{ profile.username }}">
+            {% else %}
+            <div class="profile-avatar__fallback">{{ profile.username[0].upper() }}</div>
+            {% endif %}
+        </div>
+
+        <div class="profile-hero__info">
+            <div class="profile-hero__top">
+                <h1 class="profile-username">{{ profile.username }}</h1>
+                {% if profile.is_owner %}
+                <a href="/profile/edit" class="profile-edit-btn">
+                    <span class="profile-edit-btn__icon">✦</span>Edit profile
+                </a>
+                {% endif %}
+            </div>
+            <p class="profile-since">Member since {{ profile.created_at.strftime('%b %Y') }}</p>
+            {% if profile.bio %}
+            <p class="profile-bio">{{ profile.bio }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Inline stats — always visible -->
+        <div class="profile-hero-stats">
+            <div class="profile-hero-stat">
+                <span class="profile-hero-stat__value">{{ profile.stats.films_seen }}</span>
+                <span class="profile-hero-stat__label">Films</span>
+            </div>
+            <div class="profile-hero-stat__divider"></div>
+            <div class="profile-hero-stat">
+                <span class="profile-hero-stat__value">{{ profile.stats.this_year }}</span>
+                <span class="profile-hero-stat__label">This year</span>
+            </div>
+            <div class="profile-hero-stat__divider"></div>
+            <div class="profile-hero-stat">
+                <span class="profile-hero-stat__value">
+                    {{ profile.stats.hours_watched }}h{% if profile.stats.minutes_watched %} {{ profile.stats.minutes_watched }}m{% endif %}
+                </span>
+                <span class="profile-hero-stat__label">Watched</span>
+            </div>
+            <div class="profile-hero-stat__divider"></div>
+            <div class="profile-hero-stat">
+                <span class="profile-hero-stat__value">{{ profile.stats.favorites_count }}</span>
+                <span class="profile-hero-stat__label">Favorites</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- BODY -->
+    <div class="profile-body">
+
+        <!-- SIDEBAR -->
+        <aside class="profile-sidebar">
+
+            <!-- Collection -->
+            <div class="profile-scard">
+                <h2 class="profile-scard__title">Collection</h2>
+                {% set base = "/collection" if profile.is_owner else "/users/" + profile.username + "/collection" %}
+
+                {% if profile.is_owner or profile.want_to_watch_public %}
+                <a class="profile-srow" href="{{ base }}?tab=want_to_watch">
+                    <span class="profile-srow__label">Want to watch</span>
+                    <span class="profile-srow__value">{{ profile.stats.want_to_watch }}</span>
+                </a>
+                {% endif %}
+
+                {% if profile.is_owner or profile.watching_public %}
+                <a class="profile-srow" href="{{ base }}?tab=watching">
+                    <span class="profile-srow__label">Watching</span>
+                    <span class="profile-srow__value">{{ profile.stats.watching }}</span>
+                </a>
+                {% endif %}
+
+                {% if profile.is_owner or profile.completed_public %}
+                <a class="profile-srow" href="{{ base }}?tab=completed">
+                    <span class="profile-srow__label">Completed</span>
+                    <span class="profile-srow__value profile-srow__value--accent">{{ profile.stats.films_seen }}</span>
+                </a>
+                {% endif %}
+
+                {% if profile.is_owner or profile.dropped_public %}
+                <a class="profile-srow" href="{{ base }}?tab=dropped">
+                    <span class="profile-srow__label">Dropped</span>
+                    <span class="profile-srow__value">{{ profile.stats.dropped }}</span>
+                </a>
+                {% endif %}
+
+                {% set total = profile.stats.want_to_watch + profile.stats.watching + profile.stats.films_seen + profile.stats.dropped %}
+                <div class="profile-srow profile-srow--total">
+                    <span class="profile-srow__label">Total films</span>
+                    <span class="profile-srow__value">{{ total }}</span>
+                </div>
+
+                <div class="profile-srow-separator"></div>
+
+                {% if profile.is_owner or profile.lists_public %}
+                <a class="profile-srow" href="{{ base }}?tab=lists">
+                    <span class="profile-srow__label">Public lists</span>
+                    <span class="profile-srow__value">{{ profile.stats.public_lists_count }}</span>
+                </a>
+                {% endif %}
+
+                <div class="profile-srow profile-srow--private"
+                     title="Private lists are not visible to others">
+                    <span class="profile-srow__label">
+                        Private lists
+                        <span class="profile-srow__lock">🔒</span>
+                    </span>
+                    <span class="profile-srow__value">{{ profile.stats.private_lists_count }}</span>
+                </div>
+                <div class="profile-srow profile-srow--total">
+                    <span class="profile-srow__label">Total lists</span>
+                    <span class="profile-srow__value">{{ profile.stats.total_lists_count }}</span>
+                </div>
+            </div>
+
+            <!-- Ratings chart — always visible -->
+            {% if profile.stats.avg_rating and profile.rating_distribution %}
+            <div class="profile-scard">
+                <h2 class="profile-scard__title">Ratings</h2>
+                <div class="profile-rating-chart">
+                    {% for rating in range(1, 11) %}
+                    {% set count = profile.rating_distribution.get(rating, 0) %}
+                    {% set height_pct = (count / profile.rating_max * 100) | int %}
+                    <div class="profile-rating-bar"
+                         title="{{ count }} film{% if count != 1 %}s{% endif %} rated {{ rating }}">
+                        <div class="profile-rating-bar__fill"
+                             style="height: {{ height_pct if height_pct > 0 else 2 }}%"></div>
+                        <span class="profile-rating-bar__label">{{ rating }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="profile-rating-avg">
+                    <span class="profile-rating-avg__value">{{ profile.stats.avg_rating }}</span>
+                    <span class="profile-rating-avg__label">avg · {{ profile.stats.rated_count }} rated</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Top genres — always visible -->
+            {% if profile.top_genres %}
+            <div class="profile-scard">
+                <h2 class="profile-scard__title">Top genres</h2>
+                <div class="profile-genres">
+                    {% for genre in profile.top_genres %}
+                    <span class="profile-genre-tag">{{ genre }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+        </aside>
+
+        <!-- MAIN -->
+        <div class="profile-main">
+
+            <!-- Nav tabs -->
+            <nav class="profile-nav">
+                {% set base = "/collection" if profile.is_owner else "/users/" + profile.username + "/collection" %}
+
+                {% if profile.is_owner or profile.want_to_watch_public %}
+                <a class="profile-nav__tab" href="{{ base }}?tab=want_to_watch">Want to watch</a>
+                {% endif %}
+                {% if profile.is_owner or profile.watching_public %}
+                <a class="profile-nav__tab" href="{{ base }}?tab=watching">Watching</a>
+                {% endif %}
+                {% if profile.is_owner or profile.completed_public %}
+                <a class="profile-nav__tab" href="{{ base }}?tab=completed">Completed</a>
+                {% endif %}
+                {% if profile.is_owner or profile.dropped_public %}
+                <a class="profile-nav__tab" href="{{ base }}?tab=dropped">Dropped</a>
+                {% endif %}
+                {% if profile.is_owner or profile.favorites_public %}
+                <a class="profile-nav__tab" href="{{ base }}?tab=favorites">Favorites</a>
+                {% endif %}
+                {% if profile.is_owner or profile.lists_public %}
+                <a class="profile-nav__tab" href="{{ base }}?tab=lists">Lists</a>
+                {% endif %}
+            </nav>
+
+            <!-- Pinned films -->
+            <section class="profile-section">
+                <h2 class="profile-section__title">Favourite films</h2>
+                <div class="profile-pinned-films">
+                    {% for film in profile.pinned_films %}
+                    <a href="/film/{{ film.tmdb_id }}" class="profile-pinned-film">
+                        {% if film.poster_url %}
+                        <img class="profile-pinned-film__poster"
+                             src="{{ film.poster_url }}"
+                             alt="{{ film.title }}"
+                             loading="lazy">
+                        {% else %}
+                        <div class="profile-pinned-film__poster profile-pinned-film__poster--empty">
+                            No poster
+                        </div>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+
+                    {% set filled = profile.pinned_films | length %}
+                    {% set empty_slots = profile.pinned_films_max - filled %}
+
+                    {% if empty_slots > 0 %}
+                        {% if filled == 0 and profile.is_owner %}
+                        {# CTA тільки власнику і тільки для першого слота #}
+                        <a href="/profile/edit?tab=pinned" class="profile-pinned-film profile-pinned-slot profile-pinned-slot--cta">
+                            <div class="profile-pinned-slot__inner">
+                                <span class="profile-pinned-slot__plus">+</span>
+                                <span class="profile-pinned-slot__label">Add films</span>
+                            </div>
+                        </a>
+                        {% for _ in range(empty_slots - 1) %}
+                        <div class="profile-pinned-film profile-pinned-slot">
+                            <div class="profile-pinned-slot__inner"></div>
+                        </div>
+                        {% endfor %}
+                        {% elif profile.is_owner %}
+                        {% for _ in range(empty_slots) %}
+                        <a href="/profile/edit?tab=pinned" class="profile-pinned-film profile-pinned-slot">
+                            <div class="profile-pinned-slot__inner">
+                                <span class="profile-pinned-slot__plus">+</span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                        {% else %}
+                        {# Відвідувач — просто порожні слоти без CTA #}
+                        {% for _ in range(empty_slots) %}
+                        <div class="profile-pinned-film profile-pinned-slot">
+                            <div class="profile-pinned-slot__inner"></div>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Pinned lists -->
+            <section class="profile-section">
+                <h2 class="profile-section__title">Lists</h2>
+                <div class="profile-lists">
+                    {% for lst in profile.pinned_lists %}
+                    <a href="/list/{{ lst.id }}" class="profile-list-card">
+                        <div class="profile-list-card__cover">
+                            {% if lst.cover_url %}
+                            <img src="{{ lst.cover_url }}" alt="{{ lst.name }}"
+                                 class="profile-list-card__cover-img">
+                            {% else %}
+                            <div class="profile-list-card__cover-empty">☰</div>
+                            {% endif %}
+                        </div>
+                        <div class="profile-list-card__info">
+                            <p class="profile-list-card__name">{{ lst.name }}</p>
+                            {% if lst.description %}
+                            <p class="profile-list-card__desc">{{ lst.description }}</p>
+                            {% endif %}
+                        </div>
+                    </a>
+                    {% endfor %}
+
+                    {% set filled_lists = profile.pinned_lists | length %}
+                    {% set empty_list_slots = profile.pinned_lists_max - filled_lists %}
+
+                    {% if empty_list_slots > 0 %}
+                        {% if filled_lists == 0 and profile.is_owner %}
+                        <a href="/profile/edit?tab=pinned" class="profile-list-card profile-list-slot profile-list-slot--cta">
+                            <div class="profile-list-slot__inner">
+                                <span class="profile-pinned-slot__plus">+</span>
+                                <span class="profile-pinned-slot__label">Add lists</span>
+                            </div>
+                        </a>
+                        {% for _ in range(empty_list_slots - 1) %}
+                        <div class="profile-list-card profile-list-slot">
+                            <div class="profile-list-slot__inner"></div>
+                        </div>
+                        {% endfor %}
+                        {% elif profile.is_owner %}
+                        {% for _ in range(empty_list_slots) %}
+                        <a href="/profile/edit?tab=pinned" class="profile-list-card profile-list-slot">
+                            <div class="profile-list-slot__inner">
+                                <span class="profile-pinned-slot__plus">+</span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                        {% else %}
+                        {# Відвідувач — просто порожні слоти #}
+                        {% for _ in range(empty_list_slots) %}
+                        <div class="profile-list-card profile-list-slot">
+                            <div class="profile-list-slot__inner"></div>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Recent activity -->
+            {% if profile.activity %}
+            <section class="profile-section">
+                <h2 class="profile-section__title">Recent activity</h2>
+                <div class="profile-activity">
+                    {% for item in profile.activity %}
+                    <div class="activity-item">
+                        <div class="activity-item__bar"></div>
+                        <div class="activity-item__content">
+                            {% if item.film_poster_url %}
+                            <a href="/film/{{ item.film_tmdb_id }}" class="activity-item__poster-link">
+                                <img class="activity-item__poster"
+                                     src="{{ item.film_poster_url }}"
+                                     alt="{{ item.film_title }}"
+                                     loading="lazy">
+                            </a>
+                            {% elif item.type == 'list' %}
+                            <div class="activity-item__list-icon">☰</div>
+                            {% endif %}
+                            <div class="activity-item__text">
+                                <p class="activity-item__action">
+                                    {{ item.action }}
+                                    {% if item.film_title %}
+                                    — <a href="/film/{{ item.film_tmdb_id }}"
+                                         class="activity-item__film-link">{{ item.film_title }}</a>
+                                    {% endif %}
+                                    {% if item.list_name %}
+                                    — <a href="/list/{{ item.list_id }}"
+                                         class="activity-item__film-link">{{ item.list_name }}</a>
+                                    {% endif %}
+                                </p>
+                                <div class="activity-item__meta">
+                                    {% if item.rating %}
+                                    <span class="activity-item__rating">★ {{ item.rating }}/10</span>
+                                    {% endif %}
+                                    <span class="activity-item__date"
+                                          data-date="{{ item.date.isoformat() }}">
+                                        {{ item.date.strftime('%d %b %Y') }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='js/profile.js') }}"></script>
+{% endblock %}
