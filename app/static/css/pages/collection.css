@@ -595,6 +595,26 @@
     color: var(--text-muted);
 }
 
+/* Private tab message */
+.collection-private-msg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.collection-private-msg__icon {
+    font-size: 32px;
+}
+
+.collection-private-msg__text {
+    font-size: 15px;
+    color: var(--text-muted);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .collection-layout {

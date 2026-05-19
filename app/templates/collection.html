@@ -16,11 +16,23 @@
         <!-- User info -->
         <div class="collection-user">
             <div class="collection-user__avatar">
-                {{ current_user.username[0].upper() }}
+                {% if is_owner and current_user %}
+                    {{ current_user.username[0].upper() }}
+                {% else %}
+                    {{ profile_display[0].upper() }}
+                {% endif %}
             </div>
             <div class="collection-user__info">
-                <p class="collection-user__name">{{ current_user.username }}</p>
-                <p class="collection-user__sub">My Collection</p>
+                <p class="collection-user__name">
+                    {% if is_owner and current_user %}
+                        {{ current_user.username }}
+                    {% else %}
+                        {{ profile_display }}
+                    {% endif %}
+                </p>
+                <p class="collection-user__sub">
+                    {% if is_owner %}My Collection{% else %}Collection{% endif %}
+                </p>
             </div>
         </div>
 
@@ -29,7 +41,7 @@
 
             <p class="collection-nav__label">Status</p>
 
-            <a href="/collection?tab=want_to_watch"
+            <a href="{% if is_owner %}/collection{% else %}/users/{{ profile_username }}/collection{% endif %}?tab=want_to_watch"
             class="collection-nav__item {% if active_tab == 'want_to_watch' %}collection-nav__item--active{% endif %}">
                 <span class="collection-nav__icon">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" width="18" height="18">
@@ -40,7 +52,7 @@
                 <span class="collection-nav__count" id="count-want_to_watch">—</span>
             </a>
 
-            <a href="/collection?tab=watching"
+            <a href="{% if is_owner %}/collection{% else %}/users/{{ profile_username }}/collection{% endif %}?tab=watching"
             class="collection-nav__item {% if active_tab == 'watching' %}collection-nav__item--active{% endif %}">
                 <span class="collection-nav__icon">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14" width="18" height="18">
@@ -52,7 +64,7 @@
                 <span class="collection-nav__count" id="count-watching">—</span>
             </a>
 
-            <a href="/collection?tab=completed"
+            <a href="{% if is_owner %}/collection{% else %}/users/{{ profile_username }}/collection{% endif %}?tab=completed"
             class="collection-nav__item {% if active_tab == 'completed' %}collection-nav__item--active{% endif %}">
                 <span class="collection-nav__icon">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" width="18" height="18">
@@ -63,7 +75,7 @@
                 <span class="collection-nav__count" id="count-completed">—</span>
             </a>
 
-            <a href="/collection?tab=dropped"
+            <a href="{% if is_owner %}/collection{% else %}/users/{{ profile_username }}/collection{% endif %}?tab=dropped"
             class="collection-nav__item {% if active_tab == 'dropped' %}collection-nav__item--active{% endif %}">
                 <span class="collection-nav__icon">
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" width="18" height="18">
@@ -78,7 +90,7 @@
 
             <p class="collection-nav__label">Favorites</p>
 
-            <a href="/collection?tab=favorites"
+            <a href="{% if is_owner %}/collection{% else %}/users/{{ profile_username }}/collection{% endif %}?tab=favorites"
             class="collection-nav__item {% if active_tab == 'favorites' %}collection-nav__item--active{% endif %}">
                 <span class="collection-nav__icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -93,7 +105,7 @@
 
             <p class="collection-nav__label">Lists</p>
 
-            <a href="/collection?tab=lists"
+            <a href="{% if is_owner %}/collection{% else %}/users/{{ profile_username }}/collection{% endif %}?tab=lists"
             class="collection-nav__item {% if active_tab == 'lists' %}collection-nav__item--active{% endif %}">
                 <span class="collection-nav__icon">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14" width="18" height="18">
@@ -263,6 +275,16 @@
 {% block extra_js %}
 <script>
     const ACTIVE_TAB = "{{ active_tab }}";
+    const IS_OWNER = {{ 'true' if is_owner else 'false' }};
+    const PROFILE_USERNAME = {{ profile_username | tojson }};
+    const PRIVACY = {
+        want_to_watch: {{ privacy['want_to_watch'] | lower if privacy else 'true' }},
+        watching:      {{ privacy['watching'] | lower if privacy else 'true' }},
+        completed:     {{ privacy['completed'] | lower if privacy else 'true' }},
+        dropped:       {{ privacy['dropped'] | lower if privacy else 'true' }},
+        favorites:     {{ privacy['favorites'] | lower if privacy else 'true' }},
+        lists:         {{ privacy['lists'] | lower if privacy else 'true' }},
+    };
 </script>
 <script src="{{ url_for('static', path='js/collection.js') }}"></script>
 {% endblock %}

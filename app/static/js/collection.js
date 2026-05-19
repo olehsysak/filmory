@@ -9,13 +9,21 @@ const TAB_TITLES = {
 };
 
 // API endpoints mapped to each tab
+const _base = PROFILE_USERNAME
+    ? `/api/users/${PROFILE_USERNAME}`
+    : '/api/user';
+
 const TAB_ENDPOINTS = {
-    want_to_watch: '/api/user/films/want-to-watch',
-    watching: '/api/user/films/watching',
-    completed: '/api/user/films/completed',
-    dropped: '/api/user/films/dropped',
-    favorites: '/api/user/favorites/',
+    want_to_watch: `${_base}/films/want-to-watch`,
+    watching:      `${_base}/films/watching`,
+    completed:     `${_base}/films/completed`,
+    dropped:       `${_base}/films/dropped`,
+    favorites:     PROFILE_USERNAME ? `${_base}/favorites` : '/api/user/favorites/',
 };
+
+const LISTS_ENDPOINT = PROFILE_USERNAME
+    ? `/api/users/${PROFILE_USERNAME}/lists`
+    : '/api/user/lists/';
 
 // Tabs that support user-specific rating filters
 const RATED_ONLY_TABS = new Set(['completed', 'favorites']);
@@ -52,6 +60,10 @@ async function fetchCollection() {
     const grid = document.getElementById('collectionGrid');
     const empty = document.getElementById('collectionEmpty');
     const count = document.getElementById('collectionCount');
+
+    // Hide private message if visible
+    const privateMsg = document.getElementById('collectionPrivateMsg');
+    if (privateMsg) privateMsg.style.display = 'none';
 
     renderSkeletons();
     empty.style.display = 'none';
@@ -142,6 +154,10 @@ async function fetchLists() {
     const empty = document.getElementById('listsEmpty');
     const count = document.getElementById('collectionCount');
 
+    // Hide private message if visible
+    const privateMsg = document.getElementById('collectionPrivateMsg');
+    if (privateMsg) privateMsg.style.display = 'none';
+
     // Skeleton
     grid.style.display = 'grid';
     empty.style.display = 'none';
@@ -161,7 +177,7 @@ async function fetchLists() {
     if (listsState.search) params.set('search', listsState.search);
 
     try {
-        const res = await fetch(`/api/user/lists/?${params}`);
+        const res = await fetch(`${LISTS_ENDPOINT}?${params}`);
         if (!res.ok) throw new Error();
         const data = await res.json();
 
@@ -246,11 +262,13 @@ function renderListsFilters() {
                     </div>
                 </div>
 
-                <div class="lists-visibility-toggle">
-                    <button class="lists-vis-btn lists-vis-btn--active" data-value="">All</button>
-                    <button class="lists-vis-btn" data-value="false">Private</button>
-                    <button class="lists-vis-btn" data-value="true">Public</button>
-                </div>
+                ${IS_OWNER ? `
+                    <div class="lists-visibility-toggle">
+                        <button class="lists-vis-btn lists-vis-btn--active" data-value="">All</button>
+                        <button class="lists-vis-btn" data-value="false">Private</button>
+                        <button class="lists-vis-btn" data-value="true">Public</button>
+                    </div>
+                ` : ''}
             </div>
         </div>
     `;
@@ -287,6 +305,10 @@ function renderListsFilters() {
         });
     });
 
+    if (!IS_OWNER) {
+    document.querySelector('.lists-vis-btn[data-value="false"]')?.remove();
+    }
+
     // Search
     const searchInput = document.getElementById('listsSearch');
     const searchClear = document.getElementById('listsSearchClear');
@@ -305,9 +327,13 @@ function renderListsFilters() {
     });
 }
 
-// Restores the original collection filters after leaving the custom lists tab
+//
 function restoreCollectionFilters() {
-    window.location.href = `/collection?tab=${state.tab}`;
+    // Для обох режимів — простий redirect, без re-init
+    const base = IS_OWNER
+        ? '/collection'
+        : `/users/${PROFILE_USERNAME}/collection`;
+    window.location.href = `${base}?tab=${state.tab}`;
 }
 
 // Renders skeleton placeholders while data is loading
@@ -327,6 +353,12 @@ function renderSkeletons() {
 
 // Switches active collection tab, updates visible layouts, and loads matching content
 function switchTab(tab) {
+    // Block access to private tabs for non-owners
+    if (!IS_OWNER && !PRIVACY[tab]) {
+        showPrivateTab(tab);
+        return;
+    }
+
     const prevCountEl = document.getElementById(`count-${state.tab}`);
     if (prevCountEl) prevCountEl.textContent = '—';
 
@@ -343,7 +375,6 @@ function switchTab(tab) {
     url.searchParams.set('tab', tab);
     window.history.pushState({}, '', url);
 
-    // Показуємо потрібний контейнер
     const isLists = tab === 'lists';
     document.getElementById('collectionGrid').style.display = isLists ? 'none' : '';
     document.getElementById('collectionEmpty').style.display = 'none';
@@ -354,13 +385,45 @@ function switchTab(tab) {
         renderListsFilters();
         fetchLists();
     } else {
-        // Відновлюємо стандартні фільтри якщо повертаємось із lists
-        // (найпростіше — reload фільтрів через існуючі init функції)
         restoreCollectionFilters();
         updateRatingSection(tab);
-        resetFilters(false);
-        fetchCollection();
     }
+}
+
+// Shows a "private" message when a non-owner visits a private tab
+function showPrivateTab(tab) {
+    state.tab = tab;
+
+    document.getElementById('collectionTitle').textContent = TAB_TITLES[tab] || tab;
+
+    document.querySelectorAll('.collection-nav__item[href]').forEach(item => {
+        const href = item.getAttribute('href');
+        item.classList.toggle('collection-nav__item--active', href.includes(`tab=${tab}`));
+    });
+
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tab);
+    window.history.pushState({}, '', url);
+
+    document.getElementById('collectionGrid').style.display = 'none';
+    document.getElementById('listsGrid').style.display = 'none';
+    document.getElementById('collectionEmpty').style.display = 'none';
+    document.getElementById('listsGrid').style.display = 'none';
+    document.getElementById('listsEmpty').style.display = 'none';
+    document.getElementById('collectionCount').textContent = '';
+
+    let privateMsg = document.getElementById('collectionPrivateMsg');
+    if (!privateMsg) {
+        privateMsg = document.createElement('div');
+        privateMsg.id = 'collectionPrivateMsg';
+        privateMsg.className = 'collection-private-msg';
+        document.querySelector('.collection-main').appendChild(privateMsg);
+    }
+    privateMsg.style.display = 'flex';
+    privateMsg.innerHTML = `
+        <span class="collection-private-msg__icon">🔒</span>
+        <p class="collection-private-msg__text">This section is private</p>
+    `;
 }
 
 // Loads available genres from API and injects them into dropdown
@@ -370,6 +433,8 @@ async function loadGenres() {
         if (!res.ok) return;
         const genres = await res.json();
         const menu = document.getElementById('colGenreMenu');
+        // Remove any genres already injected to avoid duplicates on re-init
+        menu.querySelectorAll('.col-filter-option[data-filter="genre"]:not([data-value=""])').forEach(el => el.remove());
         genres.forEach(g => {
             const btn = document.createElement('button');
             btn.className = 'col-filter-option';
@@ -729,6 +794,12 @@ function escapeHtml(str) {
 // Initializes full collection page
 async function init() {
     document.getElementById('collectionTitle').textContent = TAB_TITLES[ACTIVE_TAB];
+
+    // Block access to private tabs for non-owners on initial load
+    if (!IS_OWNER && !PRIVACY[ACTIVE_TAB]) {
+        showPrivateTab(ACTIVE_TAB);
+        return;
+    }
 
     // Handle initial state for custom lists tab
     if (ACTIVE_TAB === 'lists') {
