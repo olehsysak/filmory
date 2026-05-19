@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, Text, Boolean, DateTime, func
+from sqlalchemy import Integer, String, Boolean, DateTime, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
@@ -16,14 +16,13 @@ class User(Base):
     """User account model."""
     __tablename__ = 'users'
 
-    # Core
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     role: Mapped[str] = mapped_column(String(20), default='user', nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default = func.now(), default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Profile
     bio: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -33,11 +32,14 @@ class User(Base):
     pinned_film_ids: Mapped[list] = mapped_column(JSONB, default=list, server_default='[]', nullable=False)
     pinned_list_ids: Mapped[list] = mapped_column(JSONB, default=list, server_default='[]', nullable=False)
 
-    # Privacy settings
-    watchlist_public: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    favorites_public: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    activity_public: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    stats_public: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # Privacy — all public by default
+    want_to_watch_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    watching_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    completed_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    dropped_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    favorites_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    lists_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    activity_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     films: Mapped[list["UserFilm"]] = relationship(
         "UserFilm", back_populates="user", cascade="all, delete-orphan"
