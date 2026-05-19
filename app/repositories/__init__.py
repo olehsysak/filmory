@@ -6,5 +6,6 @@ from .film_credit_repo import FilmCreditRepository
 from .user_film_repo import UserFilmRepository
 from .user_favorite_repo import UserFavoriteRepository
 from .user_list_repo import UserListRepository
+from .profile_repo import ProfileRepository
 
-__all__ = ["UserRepository", "FilmRepository", "GenreRepository", "PersonRepository", "FilmCreditRepository", "UserFilmRepository", "UserFavoriteRepository", "UserListRepository"]
+__all__ = ["UserRepository", "FilmRepository", "GenreRepository", "PersonRepository", "FilmCreditRepository", "UserFilmRepository", "UserFavoriteRepository", "UserListRepository", "ProfileRepository"]
