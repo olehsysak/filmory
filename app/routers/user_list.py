@@ -81,14 +81,16 @@ async def update_list(
     """Update list metadata."""
     entry = await service.update(
         list_id, current_user.id,
-        name=data.name, description=data.description,
-        is_public=data.is_public, cover_film_id=data.cover_film_id,
+        name=data.name,
+        description=data.description,
+        is_public=data.is_public,
+        cover_film_id=data.cover_film_id,
+        cover_film_ids=data.cover_film_ids,
     )
-    return UserListResponse(
-        id=entry.id, name=entry.name, description=entry.description,
-        is_public=entry.is_public, film_count=0, cover_url=None,
-        created_at=entry.created_at, updated_at=entry.updated_at,
-    )
+    rows = await service.repo.get_all_for_user(entry.user_id)
+    film_count = next((fc for ul, fc in rows if ul.id == list_id), 0)
+
+    return UserListResponse(**service._serialize_list(entry, film_count))
 
 
 @router.delete("/{list_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -218,15 +218,18 @@ class ProfileService:
 
     def _serialize_list(self, user_list) -> dict:
         """Convert UserList ORM model to API-ready dict."""
-        cover_url = None
-
-        if hasattr(user_list, "cover_film") and user_list.cover_film and user_list.cover_film.poster_path:
-            cover_url = tmdb_client.get_image_url(user_list.cover_film.poster_path)
+        cover_urls = [
+            tmdb_client.get_image_url(p)
+            for p in (user_list.cover_poster_paths or [])
+            if p
+        ]
 
         return {
             "id": user_list.id,
             "name": user_list.name,
             "description": user_list.description,
             "is_public": user_list.is_public,
-            "cover_url": cover_url,
+            "cover_url": cover_urls[0] if cover_urls else None,
+            "cover_urls": cover_urls,
+            "cover_film_ids": user_list.cover_film_ids or [],
         }

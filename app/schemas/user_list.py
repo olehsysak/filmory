@@ -15,6 +15,7 @@ class UserListUpdate(BaseModel):
     description: str | None = Field(None, description="Optional description")
     is_public: bool | None = Field(None, description="Public visibility")
     cover_film_id: int | None = Field(None, description="Internal film ID to use as cover")
+    cover_film_ids: list[int] | None = Field(None, max_length=3, description="Up to 3 film IDs for cover")
 
 
 class UserListResponse(BaseModel):
@@ -24,7 +25,9 @@ class UserListResponse(BaseModel):
     description: str | None = Field(None, description="Optional description")
     is_public: bool = Field(..., description="Public visibility")
     film_count: int = Field(0, description="Number of films in list")
-    cover_url: str | None = Field(None, description="Cover poster URL")
+    cover_url: str | None = Field(None, description="Primary cover poster URL")
+    cover_urls: list[str] = Field(default_factory=list, description="URLs to cover list")
+    cover_film_ids: list[int] = Field(default_factory=list, description="Internal film IDs for cover")
     created_at: datetime = Field(..., description="Creation date")
     updated_at: datetime = Field(..., description="Last update date")
 
@@ -38,7 +41,8 @@ class UserListDetailResponse(BaseModel):
     description: str | None = Field(None, description="Optional description")
     is_public: bool = Field(..., description="Public visibility")
     film_count: int = Field(0, description="Number of films in list")
-    cover_url: str | None = Field(None, description="Cover poster URL")
+    cover_url: str | None = Field(None, description="Primary cover poster URL")
+    cover_urls: list[str] = Field(default_factory=list, description="Up to 3 cover poster URLs")
     created_at: datetime = Field(..., description="Creation date")
     updated_at: datetime = Field(..., description="Last update date")
     is_owner: bool = Field(False, description="True if current user owns this list")

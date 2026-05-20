@@ -6,6 +6,7 @@ from app.repositories.film_repo import FilmRepository
 from app.models.user_list import UserList
 from app.models.user_list_film import UserListFilm
 from app.models.user_film import UserFilm
+from app.models.film import Film
 from app.clients.tmdb_client import tmdb_client
 
 
@@ -81,6 +82,7 @@ class UserListService:
             description: str | None = None,
             is_public: bool | None = None,
             cover_film_id: int | None = None,
+            cover_film_ids: list[int] | None = None,
     ) -> UserList:
         """Update list metadata. Owner only."""
         user_list = await self.repo.get_by_id(list_id)
@@ -93,23 +95,57 @@ class UserListService:
             user_list.description = description
         if is_public is not None:
             user_list.is_public = is_public
-        if cover_film_id is not None:
-            # Check that the movie is actually in this list
-            film_entry = await self.repo.get_list_film(list_id, cover_film_id)
-            if not film_entry:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cover film must be in the list")
+
+        if cover_film_ids is not None:
+            # Check that all movies are in the list
+            for film_id in cover_film_ids:
+                entry = await self.repo.get_list_film(list_id, film_id)
+
+                if not entry:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Film {film_id} is not in this list"
+                    )
+
+            # Store the ID and get poster_paths
+            result = await self.db.execute(
+                select(Film.id, Film.poster_path)
+                .where(Film.id.in_(cover_film_ids))
+            )
+
+            film_map = {row[0]: row[1] for row in result.all()}
+            user_list.cover_film_ids = cover_film_ids
+
+            user_list.cover_poster_paths = [
+                film_map[fid] for fid in cover_film_ids
+                if fid in film_map and film_map[fid]
+            ]
+
+        elif cover_film_id is not None:
+
+            # Backward compatibility - one movie
+            entry = await self.repo.get_list_film(list_id, cover_film_id)
+
+            if not entry:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Cover film must be in the list"
+                )
             user_list.cover_film_id = cover_film_id
 
         await self.db.commit()
         await self.db.refresh(user_list)
+
         return user_list
 
 
     async def delete(self, list_id: int, user_id: int) -> None:
         """Delete a list. Owner only."""
         user_list = await self.repo.get_by_id(list_id)
+
         self._check_exists(user_list)
         self._check_owner(user_list, user_id)
+
         await self.repo.delete(user_list)
         await self.db.commit()
 
@@ -130,16 +166,18 @@ class UserListService:
 
         entry = await self.repo.add_film(list_id, film.id)
 
-        # Automatically set the cover if it doesn't already exist
         if user_list.cover_film_id is None:
             user_list.cover_film_id = film.id
 
+        await self.repo.refresh_cover_poster_paths(user_list)
         await self.db.commit()
         await self.db.refresh(entry)
+
         return entry
 
 
     async def remove_film_by_tmdb(self, list_id: int, user_id: int, tmdb_id: int) -> None:
+        """Remove a film from a user list by TMDb ID and refresh cover posters."""
         user_list = await self.repo.get_by_id(list_id)
         self._check_exists(user_list)
         self._check_owner(user_list, user_id)
@@ -156,6 +194,8 @@ class UserListService:
             user_list.cover_film_id = None
 
         await self.repo.remove_film(entry)
+        await self.repo.refresh_cover_poster_paths(user_list)
+
         await self.db.commit()
 
 
@@ -232,10 +272,12 @@ class UserListService:
 
 
     def _serialize_list(self, user_list: UserList, film_count: int = 0) -> dict:
-        """Serialize UserList to dict with computed poster URL."""
-        cover_url = None
-        if user_list.cover_film:
-            cover_url = tmdb_client.get_image_url(user_list.cover_film.poster_path)
+        """Serialize UserList to dict with computed poster URLs."""
+        cover_urls = [
+            tmdb_client.get_image_url(p)
+            for p in (user_list.cover_poster_paths or [])
+            if p
+        ]
 
         return {
             "id": user_list.id,
@@ -243,7 +285,9 @@ class UserListService:
             "description": user_list.description,
             "is_public": user_list.is_public,
             "film_count": film_count,
-            "cover_url": cover_url,
+            "cover_url": cover_urls[0] if cover_urls else None,
+            "cover_urls": cover_urls,
+            "cover_film_ids": user_list.cover_film_ids or [],
             "created_at": user_list.created_at,
             "updated_at": user_list.updated_at,
         }

@@ -1,4 +1,5 @@
 from sqlalchemy import Integer, String, Text, Boolean, DateTime, ForeignKey, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 from app.database import Base
@@ -20,6 +21,8 @@ class UserList(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_public: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     cover_film_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("films.id", ondelete="SET NULL"), nullable=True)
+    cover_film_ids: Mapped[list] = mapped_column(JSONB, default=list, server_default='[]', nullable=False)
+    cover_poster_paths: Mapped[list] = mapped_column(JSONB, default=list, server_default='[]', nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
