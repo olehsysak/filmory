@@ -255,12 +255,19 @@
                 <div class="profile-lists">
                     {% for lst in profile.pinned_lists %}
                     <a href="/list/{{ lst.id }}" class="profile-list-card">
-                        <div class="profile-list-card__cover">
-                            {% if lst.cover_url %}
-                            <img src="{{ lst.cover_url }}" alt="{{ lst.name }}"
-                                 class="profile-list-card__cover-img">
+                        <div class="profile-list-card__cover profile-list-card__cover--grid"
+                            data-count="{{ lst.cover_urls | length }}">
+                            {% if lst.cover_urls %}
+                                {% for url in lst.cover_urls %}
+                                <img src="{{ url }}" alt="" loading="lazy">
+                                {% endfor %}
+                                {% for i in range(3 - lst.cover_urls|length) %}
+                                <div class="profile-list-card__cover-empty"></div>
+                                {% endfor %}
                             {% else %}
-                            <div class="profile-list-card__cover-empty">☰</div>
+                                <div class="profile-list-card__cover-empty"></div>
+                                <div class="profile-list-card__cover-empty"></div>
+                                <div class="profile-list-card__cover-empty"></div>
                             {% endif %}
                         </div>
                         <div class="profile-list-card__info">
@@ -297,7 +304,6 @@
                         </a>
                         {% endfor %}
                         {% else %}
-                        {# Відвідувач — просто порожні слоти #}
                         {% for _ in range(empty_list_slots) %}
                         <div class="profile-list-card profile-list-slot">
                             <div class="profile-list-slot__inner"></div>

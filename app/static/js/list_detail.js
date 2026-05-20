@@ -19,9 +19,9 @@ const durationLabels = {
 
 // Edit modal state
 let editIsPublic = null;    // set on modal open
-let editCoverFilmId = null; // internal film id selected in cover picker
+let editCoverFilmIds = []; // internal film id selected in cover picker
 
-// ── Fetch & Render ────────────────────────────────────────────────
+// Fetch films from API based on current filter state
 async function fetchFilms() {
     const grid = document.getElementById('ldGrid');
     const empty = document.getElementById('ldEmpty');
@@ -31,6 +31,7 @@ async function fetchFilms() {
 
     const params = new URLSearchParams();
 
+    // Handle special sort modes (rated/unrated)
     if (state.sort === 'rated_only') {
         params.set('rated_only', 'true');
         params.set('sort', 'added_desc');
@@ -41,6 +42,7 @@ async function fetchFilms() {
         params.set('sort', state.sort);
     }
 
+    // Apply filters only if they exist
     if (state.genre_id)    params.set('genre_id', state.genre_id);
     if (state.year_from)   params.set('year_from', state.year_from);
     if (state.year_to)     params.set('year_to', state.year_to);
@@ -81,19 +83,26 @@ async function fetchFilms() {
     }
 }
 
+// Render a single film card inside list grid.
 function renderFilmCard(film) {
     const year = film.release_date
         ? `<span class="ld-film-card__year">${film.release_date.substring(0, 4)}</span>`
         : '';
+
     const tmdbRating = film.vote_average
         ? `<span class="ld-film-card__rating">★ ${film.vote_average.toFixed(1)}</span>`
         : '';
+
     const userRating = film.user_rating
         ? `<span class="ld-film-card__user-rating">★ ${film.user_rating}</span>`
         : '';
+
+    // Poster fallback for missing images
     const poster = film.poster_url
         ? `<img class="ld-film-card__poster" src="${film.poster_url}" alt="${escapeHtml(film.title)}" loading="lazy">`
         : `<div class="ld-film-card__poster" style="display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-muted)">No poster</div>`;
+
+    // Owner-only remove button
     const removeBtn = IS_OWNER
         ? `<button class="ld-film-card__remove" data-tmdb="${film.tmdb_id}" data-title="${escapeHtml(film.title)}" title="Remove from list">×</button>`
         : '';
@@ -116,6 +125,7 @@ function renderFilmCard(film) {
     `;
 }
 
+// Render loading skeleton cards while films are being fetched
 function renderSkeletons(grid) {
     grid.innerHTML = Array(12).fill(`
         <div class="ld-skeleton-card">
@@ -126,7 +136,7 @@ function renderSkeletons(grid) {
     `).join('');
 }
 
-// ── Active filter tags ────────────────────────────────────────────
+// Render active filter tags based on current state
 function renderActiveFilters() {
     const container = document.getElementById('ldActiveFilters');
     const tags = [];
@@ -163,6 +173,7 @@ function renderActiveFilters() {
     if (resetBtn) resetBtn.style.display = tags.length ? 'block' : 'none';
 }
 
+// Remove a specific filter from state and UI
 function removeFilter(key) {
     if (key === 'sort') {
         state.sort = 'added_desc';
@@ -198,7 +209,7 @@ function removeFilter(key) {
     fetchFilms();
 }
 
-// ── Dropdowns ─────────────────────────────────────────────────────
+// Initialize dropdown open/close behavior
 function initDropdowns() {
     // Close all menus on outside click
     document.addEventListener('click', (e) => {
@@ -224,6 +235,7 @@ function initDropdowns() {
     });
 }
 
+// Initialize filter option click handlers
 function initFilterOptions() {
     // Sort
     document.querySelectorAll('.ld-filter-option[data-filter="sort"]').forEach(btn => {
@@ -311,6 +323,7 @@ function initFilterOptions() {
     });
 }
 
+// Initializes decade buttons in the year filter dropdown
 function initDecadeButtons() {
     document.querySelectorAll('.ld-decade-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -324,6 +337,7 @@ function initDecadeButtons() {
     });
 }
 
+// Creates and displays a year submenu for a given decade
 function showYearSubmenu(decade) {
     removeYearSubmenu();
 
@@ -374,15 +388,17 @@ function showYearSubmenu(decade) {
     });
 }
 
+// Removes the currently opened year submenu if it exists
 function removeYearSubmenu() {
     document.getElementById('ldYearSubmenu')?.remove();
 }
 
+// Closes all open filter dropdown menus
 function closeAllMenus() {
     document.querySelectorAll('.filter-dropdown__menu').forEach(m => m.classList.remove('open'));
 }
 
-// ── Search ────────────────────────────────────────────────────────
+// Initializes search input behavior with debounce
 function initSearch() {
     const input = document.getElementById('ldSearch');
     const clear = document.getElementById('ldSearchClear');
@@ -407,12 +423,13 @@ function initSearch() {
     });
 }
 
-// ── Reset filters ─────────────────────────────────────────────────
+// Resets all active filters to their default state
 function initReset() {
     const btn = document.getElementById('ldResetBtn');
     if (!btn) return;
 
     btn.addEventListener('click', () => {
+        // Reset internal filter state
         state.sort = 'added_desc';
         state.genre_id = null;
         state.year_from = null;
@@ -421,25 +438,32 @@ function initReset() {
         state.runtime_max = null;
         state.search = '';
 
+        // Reset UI labels and active states
         document.getElementById('ldSortLabel').textContent = 'Sort';
         document.getElementById('ldSortBtn').classList.remove('active');
+
         document.getElementById('ldGenreLabel').textContent = 'Genre';
         document.getElementById('ldGenreBtn').classList.remove('active');
+
         document.getElementById('ldYearLabel').textContent = 'Year';
         document.getElementById('ldYearBtn').classList.remove('active');
+
         document.getElementById('ldDurationLabel').textContent = 'Duration';
         document.getElementById('ldDurationBtn').classList.remove('active');
+
         document.getElementById('ldSearch').value = '';
         document.getElementById('ldSearchClear').style.display = 'none';
 
+        // Clear selected filter UI states
         document.querySelectorAll('.ld-filter-option.selected, .ld-decade-btn.selected').forEach(b => b.classList.remove('selected'));
+
         removeYearSubmenu();
         renderActiveFilters();
         fetchFilms();
     });
 }
 
-// ── Edit Modal ────────────────────────────────────────────────────
+// Initializes edit modal behavior for list owner
 function initEditModal() {
     if (!IS_OWNER) return;
 
@@ -452,9 +476,12 @@ function initEditModal() {
     openBtn.addEventListener('click', openEditModal);
     closeBtn.addEventListener('click', closeEditModal);
     cancelBtn.addEventListener('click', closeEditModal);
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeEditModal(); });
 
-    // Visibility toggle
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeEditModal();
+    });
+
+    // VToggle list visibility (public/private)
     document.querySelectorAll('.ld-vis-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             editIsPublic = btn.dataset.value === 'true';
@@ -466,6 +493,7 @@ function initEditModal() {
     saveBtn.addEventListener('click', saveEdit);
 }
 
+// Opens edit modal and syncs current state
 function openEditModal() {
     const overlay = document.getElementById('ldEditOverlay');
     overlay.style.display = 'flex';
@@ -478,11 +506,13 @@ function openEditModal() {
     loadCoverPicker();
 }
 
+// Closes edit modal and restores page scroll
 function closeEditModal() {
     document.getElementById('ldEditOverlay').style.display = 'none';
     document.body.style.overflow = '';
 }
 
+// Loads films and initializes cover picker grid
 async function loadCoverPicker() {
     const picker = document.getElementById('ldCoverPicker');
     picker.innerHTML = '<div class="ld-cover-picker__empty">Loading...</div>';
@@ -497,42 +527,59 @@ async function loadCoverPicker() {
             return;
         }
 
-        picker.innerHTML = films.map(f => {
-            const isSelected = CURRENT_COVER_URL && f.poster_url === CURRENT_COVER_URL;
-            return `
-                <div class="ld-cover-item ${isSelected ? 'ld-cover-item--selected' : ''}"
-                     data-film-id="${f.id}"
-                     title="${escapeHtml(f.title)}">
-                    ${f.poster_url
-                        ? `<img src="${f.poster_url}" alt="${escapeHtml(f.title)}" loading="lazy">`
-                        : `<div class="ld-cover-item__placeholder">No img</div>`
-                    }
-                    <div class="ld-cover-item__check">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                            <path d="M20 6L9 17L4 12" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        // Set initial cover selection
-        const firstSelected = picker.querySelector('.ld-cover-item--selected');
-        if (firstSelected) editCoverFilmId = parseInt(firstSelected.dataset.filmId);
-
-        picker.querySelectorAll('.ld-cover-item').forEach(item => {
-            item.addEventListener('click', () => {
-                picker.querySelectorAll('.ld-cover-item').forEach(i => i.classList.remove('ld-cover-item--selected'));
-                item.classList.add('ld-cover-item--selected');
-                editCoverFilmId = parseInt(item.dataset.filmId);
-            });
-        });
+        editCoverFilmIds = CURRENT_COVER_FILM_IDS ? [...CURRENT_COVER_FILM_IDS] : [];
+        renderCoverPicker(picker, films);
 
     } catch {
         picker.innerHTML = '<div class="ld-cover-picker__empty">Failed to load films.</div>';
     }
 }
 
+// Renders selectable film posters for list cover selection
+function renderCoverPicker(picker, films) {
+    picker.innerHTML = films.map(f => {
+        const pos = editCoverFilmIds.indexOf(f.id);
+        const isSelected = pos !== -1;
+
+        return `
+            <div class="ld-cover-item ${isSelected ? 'ld-cover-item--selected' : ''}"
+                 data-film-id="${f.id}"
+                 data-poster="${f.poster_url || ''}"
+                 title="${escapeHtml(f.title)}">
+                ${f.poster_url
+                    ? `<img src="${f.poster_url}" alt="${escapeHtml(f.title)}" loading="lazy">`
+                    : `<div class="ld-cover-item__placeholder">No img</div>`
+                }
+                <div class="ld-cover-item__check" style="display:${isSelected ? 'flex' : 'none'}">
+                    <span class="ld-cover-item__num">${isSelected ? pos + 1 : ''}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    picker.querySelectorAll('.ld-cover-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const filmId = parseInt(item.dataset.filmId);
+            const pos = editCoverFilmIds.indexOf(filmId);
+
+            if (pos !== -1) {
+                editCoverFilmIds.splice(pos, 1);
+            } else {
+                if (editCoverFilmIds.length >= 3) return;
+                editCoverFilmIds.push(filmId);
+            }
+
+            const allFilms = [...picker.querySelectorAll('.ld-cover-item')].map(el => ({
+                id: parseInt(el.dataset.filmId),
+                title: el.title,
+                poster_url: el.dataset.poster || null,
+            }));
+            renderCoverPicker(picker, allFilms);
+        });
+    });
+}
+
+// Sends updated list metadata to backend and reloads page on success
 async function saveEdit() {
     const saveBtn = document.getElementById('ldEditSave');
     const name = document.getElementById('ldEditName').value.trim();
@@ -550,8 +597,8 @@ async function saveEdit() {
         name,
         description: description || null,
         is_public: editIsPublic,
+        cover_film_ids: editCoverFilmIds,
     };
-    if (editCoverFilmId) body.cover_film_id = editCoverFilmId;
 
     try {
         const res = await fetch(`/api/user/lists/${LIST_ID}`, {
@@ -559,8 +606,10 @@ async function saveEdit() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
         });
+
         if (!res.ok) throw new Error();
         window.location.reload();
+
     } catch {
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save changes';
@@ -568,7 +617,7 @@ async function saveEdit() {
     }
 }
 
-// ── Delete Modal ──────────────────────────────────────────────────
+// Handles confirmation modal for deleting a list
 function initDeleteModal() {
     if (!IS_OWNER) return;
 
@@ -578,27 +627,34 @@ function initDeleteModal() {
     const cancelBtn = document.getElementById('ldDeleteCancel');
     const confirmBtn = document.getElementById('ldDeleteConfirm');
 
+    // Open modal
     openBtn.addEventListener('click', () => {
         overlay.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     });
 
+    // Close modal helper
     const close = () => {
         overlay.style.display = 'none';
         document.body.style.overflow = '';
     };
 
+    // Close handlers
     closeBtn.addEventListener('click', close);
     cancelBtn.addEventListener('click', close);
     overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
 
+    // Confirm delete request
     confirmBtn.addEventListener('click', async () => {
         confirmBtn.disabled = true;
         confirmBtn.textContent = 'Deleting...';
+
         try {
             const res = await fetch(`/api/user/lists/${LIST_ID}`, { method: 'DELETE' });
+
             if (!res.ok && res.status !== 204) throw new Error();
             window.location.href = '/collection?tab=lists';
+
         } catch {
             confirmBtn.disabled = false;
             confirmBtn.textContent = 'Delete';
@@ -607,7 +663,7 @@ function initDeleteModal() {
     });
 }
 
-// ── Add Film Modal ────────────────────────────────────────────────
+// Allows searching and adding films to the current list
 function initAddFilmModal() {
     if (!IS_OWNER) return;
 
@@ -620,12 +676,14 @@ function initAddFilmModal() {
 
     if (!openBtn) return;
 
+    // Open modal
     openBtn.addEventListener('click', () => {
         overlay.style.display = 'flex';
         document.body.style.overflow = 'hidden';
         setTimeout(() => searchInput.focus(), 50);
     });
 
+    // Close modal + reset state
     const close = () => {
         overlay.style.display = 'none';
         document.body.style.overflow = '';
@@ -637,6 +695,7 @@ function initAddFilmModal() {
     closeBtn.addEventListener('click', close);
     overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
 
+    // Clear search input
     clearBtn.addEventListener('click', () => {
         searchInput.value = '';
         clearBtn.style.display = 'none';
@@ -644,11 +703,14 @@ function initAddFilmModal() {
         searchInput.focus();
     });
 
+    // Debounced search input
     let debounce;
+
     searchInput.addEventListener('input', () => {
         const q = searchInput.value.trim();
         clearBtn.style.display = q ? 'block' : 'none';
         clearTimeout(debounce);
+
         if (q.length < 2) {
             results.innerHTML = '<p class="ld-add-results__hint">Start typing to search films</p>';
             return;
@@ -656,15 +718,19 @@ function initAddFilmModal() {
         debounce = setTimeout(() => searchFilms(q), 300);
     });
 
+    // Search API + render results
     async function searchFilms(q) {
         results.innerHTML = '<p class="ld-add-results__hint">Searching...</p>';
+
         try {
             const [searchRes, listRes] = await Promise.all([
                 fetch(`/api/search?q=${encodeURIComponent(q)}&type=film&limit=20`),
                 fetch(`/api/user/lists/${LIST_ID}/films`),
             ]);
+
             const data = await searchRes.json();
             const listFilms = await listRes.json();
+
             const films = data.films || [];
             const addedTmdbIds = new Set(listFilms.map(f => f.tmdb_id));
 
@@ -673,6 +739,7 @@ function initAddFilmModal() {
                 return;
             }
 
+            // Render search results
             results.innerHTML = films.map(f => {
                 const year = f.release_date ? new Date(f.release_date).getFullYear() : '';
                 const rating = f.vote_average ? `★ ${Number(f.vote_average).toFixed(1)}` : '';
@@ -694,6 +761,7 @@ function initAddFilmModal() {
                 `;
             }).join('');
 
+            // Bind add-to-list actions
             results.querySelectorAll('.ld-add-result-item:not(.ld-add-result-item--added)').forEach(item => {
                 item.addEventListener('click', async () => {
                     const tmdbId = item.dataset.tmdb;
@@ -717,7 +785,7 @@ function initAddFilmModal() {
     }
 }
 
-// ── Remove Film Modal ─────────────────────────────────────────────
+// Handles confirmation modal for removing a film from the list
 function initRemoveFilmModal() {
     if (!IS_OWNER) return;
 
@@ -728,6 +796,7 @@ function initRemoveFilmModal() {
 
     let pendingTmdbId = null;
 
+    // Expose global handler used by film card
     window.openRemoveFilmModal = (tmdbId, title) => {
         pendingTmdbId = tmdbId;
         document.getElementById('ldRemoveFilmTitle').textContent = title;
@@ -735,6 +804,7 @@ function initRemoveFilmModal() {
         document.body.style.overflow = 'hidden';
     };
 
+    // Close modal helper
     const close = () => {
         overlay.style.display = 'none';
         document.body.style.overflow = '';
@@ -745,16 +815,20 @@ function initRemoveFilmModal() {
     cancelBtn.addEventListener('click', close);
     overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
 
+    // Confirm removal
     confirmBtn.addEventListener('click', async () => {
         if (!pendingTmdbId) return;
         confirmBtn.disabled = true;
         confirmBtn.textContent = 'Removing...';
+
         try {
             await fetch(`/api/user/lists/${LIST_ID}/films/${pendingTmdbId}`, { method: 'DELETE' });
             close();
             fetchFilms();
+
         } catch {
             alert('Failed to remove film.');
+
         } finally {
             confirmBtn.disabled = false;
             confirmBtn.textContent = 'Remove';
@@ -762,7 +836,7 @@ function initRemoveFilmModal() {
     });
 }
 
-// ── Utils ─────────────────────────────────────────────────────────
+// Escapes HTML special characters to prevent XSS in dynamically rendered content
 function escapeHtml(str) {
     return String(str)
         .replace(/&/g, '&amp;')
@@ -771,7 +845,7 @@ function escapeHtml(str) {
         .replace(/"/g, '&quot;');
 }
 
-// ── Init ──────────────────────────────────────────────────────────
+// Initializes all UI modules and triggers initial data loading
 function init() {
     initDropdowns();
     initFilterOptions();

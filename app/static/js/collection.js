@@ -209,13 +209,21 @@ function renderListCard(list) {
         day: 'numeric', month: 'short', year: 'numeric'
     });
 
+    const covers = list.cover_urls && list.cover_urls.length > 0
+        ? list.cover_urls
+        : (list.cover_url ? [list.cover_url] : []);
+
+    const coverHtml = covers.length > 0
+        ? [
+            ...covers.map(url => `<img src="${url}" alt="" loading="lazy">`),
+            ...Array(3 - covers.length).fill(`<div class="list-card__cover-empty"></div>`)
+          ].join('')
+        : '<div class="list-card__cover-placeholder"></div>';
+
     return `
         <a href="/list/${list.id}" class="list-card">
-            <div class="list-card__cover">
-                ${list.cover_url
-                    ? `<img src="${list.cover_url}" alt="${escapeHtml(list.name)}" loading="lazy">`
-                    : '<div class="list-card__cover-placeholder"></div>'
-                }
+            <div class="list-card__cover list-card__cover--grid" data-count="${covers.length}">
+                ${coverHtml}
                 ${badge}
             </div>
             <div class="list-card__info">
