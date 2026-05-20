@@ -9,5 +9,6 @@ from .user_film import UserFilm
 from .user_favorite import UserFavorite
 from .user_list import UserList
 from .user_list_film import UserListFilm
+from .user_list_like import UserListLike
 
-__all__ = ["User", "film_genre", "Film", "Genre", "Person", "FilmCredit", "UserFilm", "UserFavorite", "UserList", "UserListFilm"]
+__all__ = ["User", "film_genre", "Film", "Genre", "Person", "FilmCredit", "UserFilm", "UserFavorite", "UserList", "UserListFilm", "UserListLike"]

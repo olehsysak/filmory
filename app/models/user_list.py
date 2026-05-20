@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from app.models.user import User
     from app.models.film import Film
     from app.models.user_list_film import UserListFilm
+    from app.models.user_list_like import UserListLike
 
 
 class UserList(Base):
@@ -23,6 +24,8 @@ class UserList(Base):
     cover_film_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("films.id", ondelete="SET NULL"), nullable=True)
     cover_film_ids: Mapped[list] = mapped_column(JSONB, default=list, server_default='[]', nullable=False)
     cover_poster_paths: Mapped[list] = mapped_column(JSONB, default=list, server_default='[]', nullable=False)
+    likes_count: Mapped[int] = mapped_column(Integer, default=0, server_default='0', nullable=False)
+    views_count: Mapped[int] = mapped_column(Integer, default=0, server_default='0', nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -33,4 +36,9 @@ class UserList(Base):
         back_populates="user_list",
         cascade="all, delete-orphan",
         order_by="UserListFilm.position",
+    )
+    likes: Mapped[list["UserListLike"]] = relationship(
+        "UserListLike",
+        back_populates="user_list",
+        cascade="all, delete-orphan",
     )
