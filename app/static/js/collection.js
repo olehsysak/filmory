@@ -164,15 +164,7 @@ async function fetchLists() {
     // Skeleton
     grid.style.display = 'grid';
     empty.style.display = 'none';
-    grid.innerHTML = Array(4).fill(`
-        <div class="list-card list-card--skeleton">
-            <div class="list-card__cover skeleton-box"></div>
-            <div class="list-card__info">
-                <div class="skeleton-box" style="height:14px;width:75%;margin-bottom:8px;"></div>
-                <div class="skeleton-box" style="height:12px;width:45%;"></div>
-            </div>
-        </div>
-    `).join('');
+    renderListSkeletons(grid, 4);
 
     const params = new URLSearchParams();
     params.set('sort', listsState.sort);
@@ -195,50 +187,14 @@ async function fetchLists() {
         }
 
         grid.style.display = 'grid';
-        grid.innerHTML = data.map(renderListCard).join('');
+        grid.innerHTML = data.map(list => renderListCard(list, {
+            showBadge: true, showDesc: true, showDate: true,
+        })).join('');
+
     } catch {
         grid.style.display = 'none';
         empty.style.display = 'flex';
     }
-}
-
-// Renders a single custom user list card
-function renderListCard(list) {
-    const badge = list.is_public
-        ? '<span class="list-card__badge list-card__badge--public">Public</span>'
-        : '<span class="list-card__badge list-card__badge--private">Private</span>';
-
-    const updated = new Date(list.updated_at).toLocaleDateString('en-GB', {
-        day: 'numeric', month: 'short', year: 'numeric'
-    });
-
-    const covers = list.cover_urls && list.cover_urls.length > 0
-        ? list.cover_urls
-        : (list.cover_url ? [list.cover_url] : []);
-
-    const coverHtml = covers.length > 0
-        ? [
-            ...covers.map(url => `<img src="${url}" alt="" loading="lazy">`),
-            ...Array(Math.max(0, 5 - covers.length)).fill(`<div class="list-card__cover-empty"></div>`)
-          ].join('')
-        : '<div class="list-card__cover-placeholder"></div>';
-
-    return `
-        <a href="/list/${list.id}" class="list-card">
-            <div class="list-card__cover list-card__cover--grid" data-count="${covers.length}">
-                ${coverHtml}
-                ${badge}
-            </div>
-            <div class="list-card__info">
-                <p class="list-card__name">${escapeHtml(list.name)}</p>
-                <p class="list-card__meta">${list.film_count} films · ${updated}</p>
-                ${list.description
-                    ? `<p class="list-card__desc">${escapeHtml(list.description)}</p>`
-                    : ''
-                }
-            </div>
-        </a>
-    `;
 }
 
 // Fetches liked lists from the API and renders them
@@ -250,18 +206,9 @@ async function fetchLikedLists() {
     const privateMsg = document.getElementById('collectionPrivateMsg');
     if (privateMsg) privateMsg.style.display = 'none';
 
-    // Skeleton
     grid.style.display = 'grid';
     empty.style.display = 'none';
-    grid.innerHTML = Array(4).fill(`
-        <div class="list-card list-card--skeleton">
-            <div class="list-card__cover skeleton-box"></div>
-            <div class="list-card__info">
-                <div class="skeleton-box" style="height:14px;width:75%;margin-bottom:8px;"></div>
-                <div class="skeleton-box" style="height:12px;width:45%;"></div>
-            </div>
-        </div>
-    `).join('');
+    renderListSkeletons(grid, 4);
 
     try {
         const res = await fetch(LIKED_LISTS_ENDPOINT);
@@ -279,46 +226,13 @@ async function fetchLikedLists() {
         }
 
         grid.style.display = 'grid';
-        grid.innerHTML = data.map(renderLikedListCard).join('');
+        grid.innerHTML = data.map(list => renderListCard(list, {
+            showAuthor: true, showDesc: true,
+        })).join('');
     } catch {
         grid.style.display = 'none';
         empty.style.display = 'flex';
     }
-}
-
-// Renders a single liked list card (shows author, not owner controls)
-function renderLikedListCard(list) {
-    const covers = list.cover_urls || [];
-    const slots = covers.slice(0, 5);
-    const placeholders = Math.max(0, 5 - slots.length);
-    const coverHtml = [
-        ...slots.map(url => `<img src="${escapeHtml(url)}" alt="" loading="lazy" class="list-card__cover-img">`),
-        ...Array(placeholders).fill('<div class="list-card__cover-placeholder"></div>'),
-    ].join('');
-
-    const likes = list.likes_count
-        ? `<span class="list-card__stat">♥ ${list.likes_count}</span>`
-        : '';
-
-    return `
-        <a href="/list/${list.id}" class="list-card">
-            <div class="list-card__cover list-card__cover--grid" data-count="${covers.length}">
-                ${coverHtml}
-            </div>
-            <div class="list-card__info">
-                <p class="list-card__name">${escapeHtml(list.name)}</p>
-                <p class="list-card__author">by ${escapeHtml(list.author_username)}</p>
-                ${list.description
-                    ? `<p class="list-card__desc">${escapeHtml(list.description)}</p>`
-                    : ''
-                }
-                <div class="list-card__meta">
-                    <span class="list-card__stat">${list.film_count} films</span>
-                    ${likes}
-                </div>
-            </div>
-        </a>
-    `;
 }
 
 // Renders minimal filters for liked lists tab (search only, no sort needed for now)

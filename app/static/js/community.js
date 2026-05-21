@@ -126,17 +126,7 @@ function renderPeopleSkeletons() {
 // Fetches and renders most liked lists (top 6)
 async function fetchMostLiked() {
     const grid = document.getElementById('cmLikedGrid');
-
-    // Show skeleton loaders while data is loading
-    grid.innerHTML = Array(6).fill(`
-        <div class="cm-liked-card" style="pointer-events:none;">
-            <div class="skeleton-box" style="height:100px;border-radius:0;"></div>
-            <div style="padding:10px 12px;">
-                <div class="skeleton-box" style="height:12px;width:75%;margin-bottom:6px;border-radius:4px;"></div>
-                <div class="skeleton-box" style="height:10px;width:45%;border-radius:4px;"></div>
-            </div>
-        </div>
-    `).join('');
+    renderListSkeletons(grid, 6);
 
     try {
         const res = await fetch('/api/community/lists/most-liked');
@@ -148,49 +138,20 @@ async function fetchMostLiked() {
             return;
         }
 
-        // Render grid (max 6 items)
         grid.className = 'cm-liked-grid-6';
-        grid.innerHTML = data.slice(0, 6).map(renderLikedCard).join('');
+        grid.innerHTML = data.slice(0, 6).map(list => renderListCard(list, {
+            showAuthor: true,
+            showViews: true,
+        })).join('');
     } catch {
         grid.innerHTML = `<p class="cm-empty">Failed to load.</p>`;
     }
 }
 
-// Renders a single liked list card
-function renderLikedCard(list) {
-    const covers = buildCovers(list.cover_urls, 5);
-    return `
-        <a href="/list/${list.id}" class="cm-liked-card">
-            <div class="cm-liked-card__cover">${covers}</div>
-            <div class="cm-liked-card__info">
-                <p class="cm-liked-card__name">${esc(list.name)}</p>
-                <p class="cm-liked-card__author">by ${esc(list.author_username)}</p>
-                <div class="cm-meta">
-                    <span>${list.film_count} films</span>
-                    <span class="cm-meta__dot">·</span>
-                    <span>♥ ${list.likes_count}</span>
-                    <span class="cm-meta__dot">·</span>
-                    <span>👁 ${list.views_count}</span>
-                </div>
-            </div>
-        </a>
-    `;
-}
-
 // Fetches and renders most viewed lists (top 8)
 async function fetchMostViewed() {
-    const list = document.getElementById('cmViewedList');
-
-    // Skeleton UI while loading
-    list.innerHTML = Array(8).fill(`
-        <div class="cm-viewed-card cm-viewed-card--skeleton">
-            <div class="skeleton-box" style="width:100px;height:70px;border-radius:8px;flex-shrink:0;"></div>
-            <div style="flex:1;padding:4px 0;">
-                <div class="skeleton-box" style="height:12px;width:80%;margin-bottom:6px;border-radius:4px;"></div>
-                <div class="skeleton-box" style="height:10px;width:55%;border-radius:4px;"></div>
-            </div>
-        </div>
-    `).join('');
+    const container = document.getElementById('cmViewedList');
+    renderListSkeletons(container, 8);
 
     try {
         const res = await fetch('/api/community/lists/most-viewed');
@@ -198,56 +159,25 @@ async function fetchMostViewed() {
         const data = await res.json();
 
         if (!data.length) {
-            list.innerHTML = `<p class="cm-empty">No views recorded yet this month.</p>`;
+            container.innerHTML = `<p class="cm-empty">No views recorded yet this month.</p>`;
             return;
         }
 
-        list.innerHTML = data.map(renderViewedCard).join('');
+        container.innerHTML = data.map(list => renderListCard(list, {
+            showAuthor: true,
+            showDesc: true,
+            showViews: true,
+            row: true,
+        })).join('');
     } catch {
-        list.innerHTML = `<p class="cm-empty">Failed to load.</p>`;
+        container.innerHTML = `<p class="cm-empty">Failed to load.</p>`;
     }
-}
-
-// Renders a single viewed list card
-function renderViewedCard(item) {
-    const covers = buildCovers(item.cover_urls, 5);
-
-    // Optional description block
-    const desc = item.description
-        ? `<p class="cm-viewed-card__desc">${esc(item.description)}</p>`
-        : '';
-
-    return `
-        <a href="/list/${item.id}" class="cm-viewed-card">
-            <div class="cm-viewed-cover">${covers}</div>
-            <div class="cm-viewed-card__info">
-                <p class="cm-viewed-card__name">${esc(item.name)}</p>
-                <p class="cm-viewed-card__author">by ${esc(item.author_username)} · ${item.film_count} films</p>
-                ${desc}
-                <div class="cm-meta">
-                    <span>♥ ${item.likes_count}</span>
-                    <span class="cm-meta__dot">·</span>
-                    <span>👁 ${item.recent_views ?? item.views_count}</span>
-                </div>
-            </div>
-        </a>
-    `;
 }
 
 // Fetches and renders newly created lists (top 6)
 async function fetchNew() {
-    const list = document.getElementById('cmNewList');
-
-    // Skeleton loader
-    list.innerHTML = Array(6).fill(`
-        <div class="cm-new-card cm-new-card--skeleton">
-            <div class="skeleton-box" style="height:72px;border-radius:8px 8px 0 0;"></div>
-            <div style="padding:8px;">
-                <div class="skeleton-box" style="height:10px;width:70%;border-radius:4px;margin-bottom:4px;"></div>
-                <div class="skeleton-box" style="height:9px;width:45%;border-radius:4px;"></div>
-            </div>
-        </div>
-    `).join('');
+    const container = document.getElementById('cmNewList');
+    renderListSkeletons(container, 6);
 
     try {
         const res = await fetch('/api/community/lists/new');
@@ -255,43 +185,19 @@ async function fetchNew() {
         const data = await res.json();
 
         if (!data.length) {
-            list.innerHTML = `<p class="cm-empty">No new lists this month.</p>`;
+            container.innerHTML = `<p class="cm-empty">No new lists this month.</p>`;
             return;
         }
 
-        list.innerHTML = data.map(renderNewCard).join('');
+        container.innerHTML = data.map(list => renderListCard(list, {
+            showAuthor: true,
+            showFilmCount: true,
+            showLikes: false,
+            showNewBadge: true,
+        })).join('');
     } catch {
-        list.innerHTML = `<p class="cm-empty">Failed to load.</p>`;
+        container.innerHTML = `<p class="cm-empty">Failed to load.</p>`;
     }
-}
-
-// Renders a single "new list" card
-function renderNewCard(item) {
-    const covers = buildCovers(item.cover_urls, 5);
-
-    return `
-        <a href="/list/${item.id}" class="cm-new-card">
-            <div class="cm-new-cover">${covers}</div>
-            <div class="cm-new-card__info">
-                <div class="cm-new-card__title-row">
-                    <p class="cm-new-card__name">${esc(item.name)}</p>
-                    <span class="cm-new-badge">New</span>
-                </div>
-                <p class="cm-new-card__author">${esc(item.author_username)} · ${item.film_count} films</p>
-            </div>
-        </a>
-    `;
-}
-
-// Builds a grid of cover images with placeholders
-function buildCovers(urls, count) {
-    const items = (urls || []).slice(0, count);
-    const placeholders = count - items.length;
-
-    return [
-        ...items.map(url => `<img src="${esc(url)}" alt="" loading="lazy" class="cm-cover-img">`),
-        ...Array(placeholders).fill('<div class="cm-cover-placeholder"></div>'),
-    ].join('');
 }
 
 // Escapes HTML to prevent XSS

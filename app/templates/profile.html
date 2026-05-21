@@ -255,19 +255,24 @@
                 <div class="profile-lists">
                     {% for lst in profile.pinned_lists %}
                     <a href="/list/{{ lst.id }}" class="profile-list-card">
-                        <div class="profile-list-card__cover profile-list-card__cover--grid"
-                            data-count="{{ lst.cover_urls | length }}">
+                        <div class="profile-list-card__covers">
                             {% if lst.cover_urls %}
                                 {% for url in lst.cover_urls %}
-                                <img src="{{ url }}" alt="" loading="lazy">
+                                <div class="profile-list-card__wrap">
+                                    <img src="{{ url }}" alt="" loading="lazy" class="profile-list-card__img">
+                                </div>
                                 {% endfor %}
-                                {% for i in range(3 - lst.cover_urls|length) %}
-                                <div class="profile-list-card__cover-empty"></div>
+                                {% for i in range(5 - lst.cover_urls|length) %}
+                                <div class="profile-list-card__wrap">
+                                    <div class="profile-list-card__placeholder"></div>
+                                </div>
                                 {% endfor %}
                             {% else %}
-                                <div class="profile-list-card__cover-empty"></div>
-                                <div class="profile-list-card__cover-empty"></div>
-                                <div class="profile-list-card__cover-empty"></div>
+                                {% for i in range(5) %}
+                                <div class="profile-list-card__wrap">
+                                    <div class="profile-list-card__placeholder"></div>
+                                </div>
+                                {% endfor %}
                             {% endif %}
                         </div>
                         <div class="profile-list-card__info">

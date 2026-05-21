@@ -20,17 +20,21 @@
             <div class="ld-cover__grid" data-count="{{ list_data.cover_urls | length }}">
                 {% if list_data.cover_urls %}
                     {% for url in list_data.cover_urls %}
-                    <img src="{{ url }}" alt="" loading="lazy" class="ld-cover__img">
+                    <div class="ld-cover__wrap">
+                        <img src="{{ url }}" alt="" loading="lazy" class="ld-cover__img">
+                    </div>
                     {% endfor %}
                     {% for i in range(5 - list_data.cover_urls|length) %}
-                    <div class="ld-cover__placeholder"></div>
+                    <div class="ld-cover__wrap">
+                        <div class="ld-cover__placeholder"></div>
+                    </div>
                     {% endfor %}
                 {% else %}
-                    <div class="ld-cover__placeholder ld-cover__placeholder--full"></div>
-                    <div class="ld-cover__placeholder ld-cover__placeholder--full"></div>
-                    <div class="ld-cover__placeholder ld-cover__placeholder--full"></div>
-                    <div class="ld-cover__placeholder ld-cover__placeholder--full"></div>
-                    <div class="ld-cover__placeholder ld-cover__placeholder--full"></div>
+                    {% for i in range(5) %}
+                    <div class="ld-cover__wrap">
+                        <div class="ld-cover__placeholder ld-cover__placeholder--full"></div>
+                    </div>
+                    {% endfor %}
                 {% endif %}
             </div>
         </div>
