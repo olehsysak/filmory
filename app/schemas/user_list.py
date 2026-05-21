@@ -28,6 +28,8 @@ class UserListResponse(BaseModel):
     cover_url: str | None = Field(None, description="Primary cover poster URL")
     cover_urls: list[str] = Field(default_factory=list, description="URLs to cover list")
     cover_film_ids: list[int] = Field(default_factory=list, description="Internal film IDs for cover")
+    likes_count: int = Field(0, description="Number of likes")
+    views_count: int = Field(0, description="Number of views")
     created_at: datetime = Field(..., description="Creation date")
     updated_at: datetime = Field(..., description="Last update date")
 
@@ -43,9 +45,12 @@ class UserListDetailResponse(BaseModel):
     film_count: int = Field(0, description="Number of films in list")
     cover_url: str | None = Field(None, description="Primary cover poster URL")
     cover_urls: list[str] = Field(default_factory=list, description="Up to 3 cover poster URLs")
+    likes_count: int = Field(0, description="Number of likes")
+    views_count: int = Field(0, description="Number of views")
+    is_liked: bool = Field(False, description="True if current user has liked this list")
+    is_owner: bool = Field(False, description="True if current user owns this list")
     created_at: datetime = Field(..., description="Creation date")
     updated_at: datetime = Field(..., description="Last update date")
-    is_owner: bool = Field(False, description="True if current user owns this list")
 
     model_config = ConfigDict(from_attributes=False)
 
@@ -81,5 +86,29 @@ class FilmMembershipItem(BaseModel):
 class FilmMembershipResponse(BaseModel):
     """Response for the 'add to list' modal."""
     lists: list[FilmMembershipItem]
+
+    model_config = ConfigDict(from_attributes=False)
+
+
+class LikeToggleResponse(BaseModel):
+    """Response after toggling a like on a list."""
+    liked: bool = Field(..., description="True if list is now liked, False if unliked")
+    likes_count: int = Field(..., description="Updated total likes count")
+
+    model_config = ConfigDict(from_attributes=False)
+
+
+class LikedListResponse(BaseModel):
+    """Schema for a liked list entry in the user's collection tab."""
+    id: int = Field(..., description="List ID")
+    name: str = Field(..., description="List name")
+    description: str | None = Field(None, description="Optional description")
+    author_username: str = Field(..., description="Username of the list author")
+    author_avatar_url: str | None = Field(None, description="Avatar URL of the list author")
+    film_count: int = Field(0, description="Number of films in list")
+    cover_url: str | None = Field(None, description="Primary cover poster URL")
+    cover_urls: list[str] = Field(default_factory=list, description="Up to 3 cover poster URLs")
+    likes_count: int = Field(0, description="Number of likes")
+    updated_at: datetime = Field(..., description="Last update date by the author")
 
     model_config = ConfigDict(from_attributes=False)

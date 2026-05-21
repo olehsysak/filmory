@@ -6,6 +6,6 @@ from .film_credits import CastMemberResponse, CrewMemberResponse, FilmCreditsRes
 from .search import PersonShort, SearchResults
 from .user_film import UserFilmResponse, UserFilmStatusUpdate, UserFilmRatingUpdate
 from .user_favorite import UserFavoriteResponse, UserFavoriteStateResponse
-from .user_list import UserListCreate, UserListUpdate, UserListResponse, UserListFilmResponse, FilmMembershipItem, FilmMembershipResponse
+from .user_list import UserListCreate, UserListUpdate, UserListResponse, UserListFilmResponse, FilmMembershipItem, FilmMembershipResponse, LikeToggleResponse, LikedListResponse
 
 __all__ = ["UserRegister", "UserLogin", "UserResponse", "FilmCreate", "FilmResponse", "FilmShort"]

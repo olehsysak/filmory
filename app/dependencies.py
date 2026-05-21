@@ -11,6 +11,7 @@ from app.services.user_film_service import UserFilmService
 from app.services.user_favorite_service import UserFavoriteService
 from app.services.user_list_service import UserListService
 from app.services.profile_service import ProfileService
+from app.services.user_list_like_service import UserListLikeService
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
@@ -85,3 +86,7 @@ def get_user_list_service(db: AsyncSession = Depends(get_async_db)):
 def get_profile_service(db: AsyncSession = Depends(get_async_db)):
     """FastAPI dependency for ProfileService."""
     return ProfileService(db)
+
+def get_user_list_like_service(db: AsyncSession = Depends(get_async_db)):
+    """FastAPI dependency for UserListLikeService."""
+    return UserListLikeService(db)
