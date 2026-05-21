@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Community — Filmory{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/pages/community.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="cm-page">
+
+    <div class="cm-header">
+        <h1 class="cm-header__title">Community</h1>
+        <p class="cm-header__sub">Discover people and lists · this month</p>
+    </div>
+
+    <!-- ── PEOPLE ── -->
+    <section class="cm-section" id="cmPeopleSection">
+        <div class="cm-section__head">
+            <h2 class="cm-section__title">Most active members</h2>
+        </div>
+        <div class="cm-section__divider"></div>
+        <div class="cm-people-grid" id="cmPeopleGrid"></div>
+    </section>
+
+    <!-- ── COMMUNITY FAVORITES ── -->
+    <section class="cm-section" id="cmLikedSection">
+        <div class="cm-section__head">
+            <h2 class="cm-section__title">Community favorites this month</h2>
+        </div>
+        <div class="cm-section__divider"></div>
+        <div class="cm-liked-grid-6" id="cmLikedGrid"></div>
+    </section>
+
+    <!-- ── MOST VIEWED + NEW ── -->
+    <div class="cm-bottom">
+
+        <section class="cm-section cm-section--viewed">
+            <div class="cm-section__head">
+                <h2 class="cm-section__title">Popular this month</h2>
+            </div>
+            <div class="cm-section__divider"></div>
+            <div class="cm-viewed-list" id="cmViewedList"></div>
+        </section>
+
+        <section class="cm-section cm-section--new">
+            <div class="cm-section__head">
+                <h2 class="cm-section__title">New & noteworthy</h2>
+            </div>
+            <div class="cm-section__divider"></div>
+            <div class="cm-new-list" id="cmNewList"></div>
+        </section>
+
+    </div>
+
+    <!-- ── FOOTER ── -->
+    <div class="cm-footer">
+        <p class="cm-footer__text">
+            Looking for something specific?
+            <a href="/search?type=lists" class="cm-footer__link">Search all public lists</a>
+        </p>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const IS_LOGGED_IN = {{ 'true' if current_user else 'false' }};
+</script>
+<script src="{{ url_for('static', path='js/community.js') }}"></script>
+{% endblock %}
