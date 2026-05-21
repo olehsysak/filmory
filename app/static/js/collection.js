@@ -6,6 +6,7 @@ const TAB_TITLES = {
     dropped: 'Dropped',
     favorites: 'Favorites',
     lists: 'My Lists',
+    liked_lists: 'Liked Lists',
 };
 
 // API endpoints mapped to each tab
@@ -24,6 +25,8 @@ const TAB_ENDPOINTS = {
 const LISTS_ENDPOINT = PROFILE_USERNAME
     ? `/api/users/${PROFILE_USERNAME}/lists`
     : '/api/user/lists/';
+
+const LIKED_LISTS_ENDPOINT = '/api/user/lists/liked';
 
 // Tabs that support user-specific rating filters
 const RATED_ONLY_TABS = new Set(['completed', 'favorites']);
@@ -238,6 +241,121 @@ function renderListCard(list) {
     `;
 }
 
+// Fetches liked lists from the API and renders them
+async function fetchLikedLists() {
+    const grid = document.getElementById('listsGrid');
+    const empty = document.getElementById('listsEmpty');
+    const count = document.getElementById('collectionCount');
+
+    const privateMsg = document.getElementById('collectionPrivateMsg');
+    if (privateMsg) privateMsg.style.display = 'none';
+
+    // Skeleton
+    grid.style.display = 'grid';
+    empty.style.display = 'none';
+    grid.innerHTML = Array(4).fill(`
+        <div class="list-card list-card--skeleton">
+            <div class="list-card__cover skeleton-box"></div>
+            <div class="list-card__info">
+                <div class="skeleton-box" style="height:14px;width:75%;margin-bottom:8px;"></div>
+                <div class="skeleton-box" style="height:12px;width:45%;"></div>
+            </div>
+        </div>
+    `).join('');
+
+    try {
+        const res = await fetch(LIKED_LISTS_ENDPOINT);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+
+        const countEl = document.getElementById('count-liked_lists');
+        if (countEl) countEl.textContent = data.length;
+        count.textContent = `${data.length} lists`;
+
+        if (!data.length) {
+            grid.style.display = 'none';
+            empty.style.display = 'flex';
+            return;
+        }
+
+        grid.style.display = 'grid';
+        grid.innerHTML = data.map(renderLikedListCard).join('');
+    } catch {
+        grid.style.display = 'none';
+        empty.style.display = 'flex';
+    }
+}
+
+// Renders a single liked list card (shows author, not owner controls)
+function renderLikedListCard(list) {
+    const covers = list.cover_urls || [];
+    const coverHtml = covers.length
+        ? covers.map(url => `<img src="${escapeHtml(url)}" alt="" loading="lazy" class="list-card__cover-img">`).join('')
+        : '<div class="list-card__cover-placeholder"></div>';
+
+    const likes = list.likes_count
+        ? `<span class="list-card__stat">♥ ${list.likes_count}</span>`
+        : '';
+
+    return `
+        <a href="/list/${list.id}" class="list-card">
+            <div class="list-card__cover list-card__cover--grid" data-count="${covers.length}">
+                ${coverHtml}
+            </div>
+            <div class="list-card__info">
+                <p class="list-card__name">${escapeHtml(list.name)}</p>
+                <p class="list-card__author">by ${escapeHtml(list.author_username)}</p>
+                ${list.description
+                    ? `<p class="list-card__desc">${escapeHtml(list.description)}</p>`
+                    : ''
+                }
+                <div class="list-card__meta">
+                    <span class="list-card__stat">${list.film_count} films</span>
+                    ${likes}
+                </div>
+            </div>
+        </a>
+    `;
+}
+
+// Renders minimal filters for liked lists tab (search only, no sort needed for now)
+function renderLikedListsFilters() {
+    const filtersArea = document.getElementById('collectionFilters');
+    filtersArea.innerHTML = `
+        <div class="lists-filters">
+            <div class="collection-search">
+                <span class="collection-search__icon">⌕</span>
+                <input type="text" class="collection-search__input" id="likedListsSearch"
+                    placeholder="Search liked lists..." autocomplete="off">
+                <button class="collection-search__clear" id="likedListsSearchClear" style="display:none">×</button>
+            </div>
+        </div>
+    `;
+
+    // Client-side search (filter already loaded cards)
+    const searchInput = document.getElementById('likedListsSearch');
+    const searchClear = document.getElementById('likedListsSearchClear');
+
+    searchInput.addEventListener('input', () => {
+        const q = searchInput.value.trim().toLowerCase();
+        searchClear.style.display = q ? '' : 'none';
+
+        document.querySelectorAll('#listsGrid .list-card').forEach(card => {
+            const name = card.querySelector('.list-card__name')?.textContent.toLowerCase() || '';
+            const author = card.querySelector('.list-card__author')?.textContent.toLowerCase() || '';
+            card.style.display = (name.includes(q) || author.includes(q)) ? '' : 'none';
+        });
+    });
+
+    searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        searchClear.style.display = 'none';
+        document.querySelectorAll('#listsGrid .list-card').forEach(card => {
+            card.style.display = '';
+        });
+    });
+}
+
 // Renders and initializes filters used specifically for custom user lists
 function renderListsFilters() {
     const filtersArea = document.getElementById('collectionFilters');
@@ -335,9 +453,8 @@ function renderListsFilters() {
     });
 }
 
-//
+// Redirects to the collection page while preserving the current tab (filters reset)
 function restoreCollectionFilters() {
-    // Для обох режимів — простий redirect, без re-init
     const base = IS_OWNER
         ? '/collection'
         : `/users/${PROFILE_USERNAME}/collection`;
@@ -361,7 +478,6 @@ function renderSkeletons() {
 
 // Switches active collection tab, updates visible layouts, and loads matching content
 function switchTab(tab) {
-    // Block access to private tabs for non-owners
     if (!IS_OWNER && !PRIVACY[tab]) {
         showPrivateTab(tab);
         return;
@@ -383,13 +499,16 @@ function switchTab(tab) {
     url.searchParams.set('tab', tab);
     window.history.pushState({}, '', url);
 
-    const isLists = tab === 'lists';
+    const isLists = tab === 'lists' || tab === 'liked_lists';
     document.getElementById('collectionGrid').style.display = isLists ? 'none' : '';
     document.getElementById('collectionEmpty').style.display = 'none';
     document.getElementById('listsGrid').style.display = isLists ? 'grid' : 'none';
     document.getElementById('listsEmpty').style.display = 'none';
 
-    if (isLists) {
+    if (tab === 'liked_lists') {
+        renderLikedListsFilters();
+        fetchLikedLists();
+    } else if (tab === 'lists') {
         renderListsFilters();
         fetchLists();
     } else {
@@ -803,13 +922,11 @@ function escapeHtml(str) {
 async function init() {
     document.getElementById('collectionTitle').textContent = TAB_TITLES[ACTIVE_TAB];
 
-    // Block access to private tabs for non-owners on initial load
     if (!IS_OWNER && !PRIVACY[ACTIVE_TAB]) {
         showPrivateTab(ACTIVE_TAB);
         return;
     }
 
-    // Handle initial state for custom lists tab
     if (ACTIVE_TAB === 'lists') {
         document.getElementById('collectionGrid').style.display = 'none';
         document.getElementById('listsGrid').style.display = 'grid';
@@ -823,10 +940,24 @@ async function init() {
         });
 
         fetchLists();
+
+    } else if (ACTIVE_TAB === 'liked_lists') {
+        document.getElementById('collectionGrid').style.display = 'none';
+        document.getElementById('listsGrid').style.display = 'grid';
+
+        renderLikedListsFilters();
+        updateRatingSection(ACTIVE_TAB);
+
+        document.querySelectorAll('.collection-nav__item[href]').forEach(item => {
+            const href = item.getAttribute('href');
+            item.classList.toggle('collection-nav__item--active', href.includes('tab=liked_lists'));
+        });
+
+        fetchLikedLists();
+
     } else {
         updateRatingSection(ACTIVE_TAB);
 
-        // Reset button
         document.getElementById('colResetFilters')
             .addEventListener('click', () => resetFilters(true));
 
@@ -836,18 +967,15 @@ async function init() {
         initDurationOptions();
         initSearch();
 
-        // Mark default sort option
         const defaultSortBtn = document.querySelector(
             `.col-filter-option[data-filter="sort"][data-value="${state.sort}"]`
         );
-
         if (defaultSortBtn) defaultSortBtn.classList.add('selected');
 
         await loadGenres();
         fetchCollection();
     }
 
-    // Sidebar navigation tab switching
     document.querySelectorAll('.collection-nav__item[href]').forEach(item => {
         item.addEventListener('click', e => {
             e.preventDefault();
