@@ -287,15 +287,16 @@ class UserListRepository:
 
 
     async def refresh_cover_poster_paths(self, user_list: UserList) -> None:
-        """Recalculate cover_poster_paths and cover_film_ids from first 3 films by position."""
+        """Recalculate cover_poster_paths and cover_film_ids from first 5 films by position."""
         result = await self.db.execute(
             select(Film.id, Film.poster_path)
             .join(UserListFilm, UserListFilm.film_id == Film.id)
             .where(UserListFilm.list_id == user_list.id)
             .order_by(UserListFilm.position)
-            .limit(3)
+            .limit(5)
         )
         rows = [(row[0], row[1]) for row in result.all()]
+
         user_list.cover_film_ids = [r[0] for r in rows]
         user_list.cover_poster_paths = [r[1] for r in rows if r[1]]
 

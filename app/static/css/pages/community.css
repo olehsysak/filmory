@@ -222,7 +222,7 @@
 .cm-liked-card__cover {
     flex-shrink: 0;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
     grid-template-rows: 1fr;
     gap: 2px;
     height: 180px;
@@ -283,7 +283,7 @@
 
 .cm-viewed-cover {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
     gap: 2px;
     width: 130px;
     min-height: 90px;
@@ -354,7 +354,7 @@
 .cm-new-cover {
     flex-shrink: 0;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
     grid-template-rows: 1fr;
     gap: 2px;
     height: 90px;

@@ -15,7 +15,7 @@ class UserListUpdate(BaseModel):
     description: str | None = Field(None, description="Optional description")
     is_public: bool | None = Field(None, description="Public visibility")
     cover_film_id: int | None = Field(None, description="Internal film ID to use as cover")
-    cover_film_ids: list[int] | None = Field(None, max_length=3, description="Up to 3 film IDs for cover")
+    cover_film_ids: list[int] | None = Field(None, max_length=5, description="Up to 5 film IDs for cover")
 
 
 class UserListResponse(BaseModel):

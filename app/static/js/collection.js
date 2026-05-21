@@ -219,7 +219,7 @@ function renderListCard(list) {
     const coverHtml = covers.length > 0
         ? [
             ...covers.map(url => `<img src="${url}" alt="" loading="lazy">`),
-            ...Array(3 - covers.length).fill(`<div class="list-card__cover-empty"></div>`)
+            ...Array(Math.max(0, 5 - covers.length)).fill(`<div class="list-card__cover-empty"></div>`)
           ].join('')
         : '<div class="list-card__cover-placeholder"></div>';
 
@@ -289,9 +289,12 @@ async function fetchLikedLists() {
 // Renders a single liked list card (shows author, not owner controls)
 function renderLikedListCard(list) {
     const covers = list.cover_urls || [];
-    const coverHtml = covers.length
-        ? covers.map(url => `<img src="${escapeHtml(url)}" alt="" loading="lazy" class="list-card__cover-img">`).join('')
-        : '<div class="list-card__cover-placeholder"></div>';
+    const slots = covers.slice(0, 5);
+    const placeholders = Math.max(0, 5 - slots.length);
+    const coverHtml = [
+        ...slots.map(url => `<img src="${escapeHtml(url)}" alt="" loading="lazy" class="list-card__cover-img">`),
+        ...Array(placeholders).fill('<div class="list-card__cover-placeholder"></div>'),
+    ].join('');
 
     const likes = list.likes_count
         ? `<span class="list-card__stat">♥ ${list.likes_count}</span>`

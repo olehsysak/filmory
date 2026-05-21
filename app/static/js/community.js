@@ -158,7 +158,7 @@ async function fetchMostLiked() {
 
 // Renders a single liked list card
 function renderLikedCard(list) {
-    const covers = buildCovers(list.cover_urls, 3);
+    const covers = buildCovers(list.cover_urls, 5);
     return `
         <a href="/list/${list.id}" class="cm-liked-card">
             <div class="cm-liked-card__cover">${covers}</div>
@@ -210,7 +210,7 @@ async function fetchMostViewed() {
 
 // Renders a single viewed list card
 function renderViewedCard(item) {
-    const covers = buildCovers(item.cover_urls, 3);
+    const covers = buildCovers(item.cover_urls, 5);
 
     // Optional description block
     const desc = item.description
@@ -267,7 +267,7 @@ async function fetchNew() {
 
 // Renders a single "new list" card
 function renderNewCard(item) {
-    const covers = buildCovers(item.cover_urls, 3);
+    const covers = buildCovers(item.cover_urls, 5);
 
     return `
         <a href="/list/${item.id}" class="cm-new-card">

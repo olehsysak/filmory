@@ -565,7 +565,7 @@ function renderCoverPicker(picker, films) {
             if (pos !== -1) {
                 editCoverFilmIds.splice(pos, 1);
             } else {
-                if (editCoverFilmIds.length >= 3) return;
+                if (editCoverFilmIds.length >= 5) return;
                 editCoverFilmIds.push(filmId);
             }
 

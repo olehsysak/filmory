@@ -22,10 +22,12 @@
                     {% for url in list_data.cover_urls %}
                     <img src="{{ url }}" alt="" loading="lazy" class="ld-cover__img">
                     {% endfor %}
-                    {% for i in range(3 - list_data.cover_urls|length) %}
+                    {% for i in range(5 - list_data.cover_urls|length) %}
                     <div class="ld-cover__placeholder"></div>
                     {% endfor %}
                 {% else %}
+                    <div class="ld-cover__placeholder ld-cover__placeholder--full"></div>
+                    <div class="ld-cover__placeholder ld-cover__placeholder--full"></div>
                     <div class="ld-cover__placeholder ld-cover__placeholder--full"></div>
                     <div class="ld-cover__placeholder ld-cover__placeholder--full"></div>
                     <div class="ld-cover__placeholder ld-cover__placeholder--full"></div>
