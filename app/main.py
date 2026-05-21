@@ -16,6 +16,7 @@ from app.routers.user_list import router as user_list_router
 from app.routers.profile import router as profile_router
 from app.routers.profile import router as users_router
 from app.routers.user_collection import router as user_collection_router
+from app.routers.community import router as community_router
 from app.middleware.auth_middleware import AuthMiddleware
 from app.database import async_session_maker
 from app.utils.sync import sync_genres
@@ -56,6 +57,7 @@ app.include_router(user_list_router, prefix="/api")
 app.include_router(profile_router, prefix="/api")
 app.include_router(users_router, prefix="/api")
 app.include_router(user_collection_router, prefix="/api")
+app.include_router(community_router, prefix="/api")
 
 # Page routers
 app.include_router(pages_router)

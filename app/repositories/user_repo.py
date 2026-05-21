@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import User
+from datetime import datetime, timezone
 
 
 class UserRepository:
@@ -33,6 +34,7 @@ class UserRepository:
             username=username,
             email=email,
             hashed_password=hashed_password,
+            created_at=datetime.now(timezone.utc),
         )
         self.db.add(user)
         await self.db.commit()

@@ -50,7 +50,7 @@ async def collection_page(
     if not request.state.user:
         return RedirectResponse(url="/login", status_code=302)
 
-    valid_tabs = {"want_to_watch", "watching", "completed", "dropped", "favorites", "lists"}
+    valid_tabs = {"want_to_watch", "watching", "completed", "dropped", "favorites", "lists", "liked_lists"}
 
     if tab not in valid_tabs:
         tab = "want_to_watch"
@@ -198,6 +198,15 @@ async def search_page(request: Request, q: str = Query(default="")):
         "request": request,
         "q": q,
         "current_user": request.state.user if hasattr(request.state, 'user') else None,
+    })
+
+
+@router.get("/community")
+async def community_page(request: Request):
+    """Renders community page with people and public lists."""
+    return templates.TemplateResponse("community.html", {
+        "request": request,
+        "current_user": request.state.user if hasattr(request.state, "user") else None,
     })
 
 
