@@ -61,6 +61,23 @@
                 <span class="ld-meta__stat">
                     Updated {{ list_data.updated_at.strftime('%b %d, %Y') }}
                 </span>
+                {% if list_data.is_public %}
+                <span class="ld-meta__dot">·</span>
+                <span class="ld-meta__stat">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                        <path d="M20.84 4.61C20.3292 4.09896 19.7228 3.69365 19.0554 3.41708C18.3879 3.14052 17.6725 2.99817 16.95 2.99817C16.2275 2.99817 15.5121 3.14052 14.8446 3.41708C14.1772 3.69365 13.5708 4.09896 13.06 4.61L12 5.67L10.94 4.61C9.9083 3.5783 8.50903 2.9987 7.05 2.9987C5.59096 2.9987 4.19169 3.5783 3.16 4.61C2.1283 5.6417 1.5487 7.04097 1.5487 8.5C1.5487 9.95903 2.1283 11.3583 3.16 12.39L12 21.23L20.84 12.39C21.351 11.8792 21.7563 11.2728 22.0329 10.6054C22.3095 9.93789 22.4518 9.22248 22.4518 8.5C22.4518 7.77752 22.3095 7.06211 22.0329 6.39464C21.7563 5.72718 21.351 5.12083 20.84 4.61Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span id="ldLikesCountStat">{{ list_data.likes_count }}</span>
+                </span>
+                <span class="ld-meta__dot">·</span>
+                <span class="ld-meta__stat">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                        <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="currentColor" stroke-width="2"/>
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span id="ldViewsCount">{{ list_data.views_count }}</span>
+                </span>
+                {% endif %}
             </div>
 
             <!-- Owner actions -->
@@ -88,6 +105,55 @@
                         <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
                     Delete
+                </button>
+            </div>
+
+            <!-- Non-owner actions (public list only) -->
+            {% elif list_data.is_public %}
+            <div class="ld-meta__actions">
+
+                {% if current_user %}
+                <!-- Like -->
+                <button class="ld-btn ld-btn--like {% if list_data.is_liked %}ld-btn--like--active{% endif %}" id="ldLikeBtn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="{% if list_data.is_liked %}currentColor{% else %}none{% endif %}">
+                        <path d="M20.84 4.61C20.3292 4.09896 19.7228 3.69365 19.0554 3.41708C18.3879 3.14052 17.6725 2.99817 16.95 2.99817C16.2275 2.99817 15.5121 3.14052 14.8446 3.41708C14.1772 3.69365 13.5708 4.09896 13.06 4.61L12 5.67L10.94 4.61C9.9083 3.5783 8.50903 2.9987 7.05 2.9987C5.59096 2.9987 4.19169 3.5783 3.16 4.61C2.1283 5.6417 1.5487 7.04097 1.5487 8.5C1.5487 9.95903 2.1283 11.3583 3.16 12.39L12 21.23L20.84 12.39C21.351 11.8792 21.7563 11.2728 22.0329 10.6054C22.3095 9.93789 22.4518 9.22248 22.4518 8.5C22.4518 7.77752 22.3095 7.06211 22.0329 6.39464C21.7563 5.72718 21.351 5.12083 20.84 4.61Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span id="ldLikeCount">{{ list_data.likes_count }}</span>
+                </button>
+
+                <!-- Fork -->
+                <button class="ld-btn ld-btn--fork" id="ldForkBtn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                        <path d="M7 3C7 4.10457 6.10457 5 5 5C3.89543 5 3 4.10457 3 3C3 1.89543 3.89543 1 5 1C6.10457 1 7 1.89543 7 3Z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M21 3C21 4.10457 20.1046 5 19 5C17.8954 5 17 4.10457 17 3C17 1.89543 17.8954 1 19 1C20.1046 1 21 1.89543 21 3Z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M12 21C12 22.1046 11.1046 23 10 23C8.89543 23 8 22.1046 8 21C8 19.8954 8.89543 19 10 19C11.1046 19 12 19.8954 12 21Z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M5 5V12C5 13.6569 6.34315 15 8 15H10M19 5V12C19 13.6569 17.6569 15 16 15H10M10 15V19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span id="ldForkLabel">Copy to my lists</span>
+                </button>
+
+                {% else %}
+                <!-- Guest: like count, no button -->
+                <span class="ld-btn ld-btn--like ld-btn--like--guest">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                        <path d="M20.84 4.61C20.3292 4.09896 19.7228 3.69365 19.0554 3.41708C18.3879 3.14052 17.6725 2.99817 16.95 2.99817C16.2275 2.99817 15.5121 3.14052 14.8446 3.41708C14.1772 3.69365 13.5708 4.09896 13.06 4.61L12 5.67L10.94 4.61C9.9083 3.5783 8.50903 2.9987 7.05 2.9987C5.59096 2.9987 4.19169 3.5783 3.16 4.61C2.1283 5.6417 1.5487 7.04097 1.5487 8.5C1.5487 9.95903 2.1283 11.3583 3.16 12.39L12 21.23L20.84 12.39C21.351 11.8792 21.7563 11.2728 22.0329 10.6054C22.3095 9.93789 22.4518 9.22248 22.4518 8.5C22.4518 7.77752 22.3095 7.06211 22.0329 6.39464C21.7563 5.72718 21.351 5.12083 20.84 4.61Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{ list_data.likes_count }}
+                </span>
+                {% endif %}
+
+            </div>
+            {% endif %}
+
+            <!-- Copy link — visible for all on public lists -->
+            {% if list_data.is_public %}
+            <div class="ld-meta__copy">
+                <button class="ld-btn ld-btn--copy" id="ldCopyLinkBtn" title="Copy link">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                        <path d="M10 13C10.8333 14.1667 12.5 16 15 16C17.5 16 19.5 14 19.5 12C19.5 10 17.5 8 15 8L13 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M14 11C13.1667 9.83333 11.5 8 9 8C6.5 8 4.5 10 4.5 12C4.5 14 6.5 16 9 16H11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span id="ldCopyLinkLabel">Copy link</span>
                 </button>
             </div>
             {% endif %}
@@ -221,8 +287,10 @@
     </div>
 </div>
 
-<!-- EDIT MODAL -->
+<!-- OWNER MODALS -->
 {% if list_data.is_owner %}
+
+<!-- EDIT MODAL -->
 <div class="ld-modal-overlay" id="ldEditOverlay" style="display:none">
     <div class="ld-modal" id="ldEditModal">
         <div class="ld-modal__header">
@@ -348,6 +416,29 @@
         </div>
     </div>
 </div>
+
+{% endif %}
+
+<!-- FORK MODAL (non-owner, logged in) -->
+{% if current_user and not list_data.is_owner %}
+<div class="ld-modal-overlay" id="ldForkOverlay" style="display:none">
+    <div class="ld-modal ld-modal--sm">
+        <div class="ld-modal__header">
+            <h2 class="ld-modal__title">Copy list?</h2>
+            <button class="ld-modal__close" id="ldForkClose">×</button>
+        </div>
+        <div class="ld-modal__body">
+            <p class="ld-delete__msg">
+                A copy of <strong>{{ list_data.name }}</strong> will be added to your lists as a private list.
+                You can rename and edit it freely.
+            </p>
+        </div>
+        <div class="ld-modal__footer">
+            <button class="ld-modal-btn ld-modal-btn--cancel" id="ldForkCancel">Cancel</button>
+            <button class="ld-modal-btn ld-modal-btn--confirm" id="ldForkConfirm">Copy list</button>
+        </div>
+    </div>
+</div>
 {% endif %}
 
 {% endblock %}
@@ -356,6 +447,8 @@
 <script>
     const LIST_ID = {{ list_data.id }};
     const IS_OWNER = {{ 'true' if list_data.is_owner else 'false' }};
+    const IS_LOGGED_IN = {{ 'true' if current_user else 'false' }};
+    const IS_LIKED = {{ 'true' if list_data.is_liked else 'false' }};
     const CURRENT_COVER_URL = {{ ('"' + list_data.cover_url + '"') | safe if list_data.cover_url else 'null' }};
     const CURRENT_COVER_FILM_IDS = {{ list_data.cover_film_ids | tojson }};
     const GENRES = [

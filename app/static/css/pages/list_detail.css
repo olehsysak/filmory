@@ -204,6 +204,94 @@
     color: #e05c5c;
 }
 
+/* Like button */
+.ld-btn--like {
+    color: var(--text-muted);
+    gap: 6px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.ld-btn--like:hover {
+    color: #e05555;
+    background: rgba(224, 85, 85, 0.08);
+}
+
+.ld-btn--like--active {
+    color: #e05555 !important;
+}
+
+.ld-btn--like--active svg path {
+    fill: #e05555;
+    stroke: #e05555;
+}
+
+/* Guest like — not clickable */
+.ld-btn--like--guest {
+    cursor: default;
+    opacity: 0.6;
+    pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+}
+
+/* Fork button */
+.ld-btn--fork {
+    color: var(--text-muted);
+    gap: 6px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.ld-btn--fork:hover {
+    color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.08);
+}
+
+/* Copy link button */
+.ld-btn--copy {
+    color: var(--text-muted);
+    gap: 6px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.ld-btn--copy:hover {
+    color: var(--text);
+    background: var(--bg);
+}
+
+.ld-btn--copy--success {
+    color: var(--accent) !important;
+}
+
+/* Fork confirm modal button */
+.ld-modal-btn--confirm {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.ld-modal-btn--confirm:hover {
+    background: var(--accent-hover);
+}
+
+.ld-modal-btn--confirm:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* Films Section */
 .ld-films {
     display: flex;

@@ -836,6 +836,144 @@ function initRemoveFilmModal() {
     });
 }
 
+// Handles like toggle for non-owner authenticated users
+function initLike() {
+    const btn = document.getElementById('ldLikeBtn');
+    if (!btn) return; // owner or guest — no button
+
+    let liked = IS_LIKED;
+    let processing = false;
+
+    btn.addEventListener('click', async () => {
+        if (processing) return;
+        processing = true;
+        btn.style.opacity = '0.6';
+
+        try {
+            const res = await fetch(`/api/user/lists/${LIST_ID}/like`, { method: 'POST' });
+            if (!res.ok) throw new Error();
+
+            const data = await res.json();
+            liked = data.liked;
+
+            // Update count in actions and in stats row
+            document.getElementById('ldLikeCount').textContent = data.likes_count;
+            const statCount = document.getElementById('ldLikesCountStat');
+            if (statCount) statCount.textContent = data.likes_count;
+
+            // Toggle active state and SVG fill
+            const svg = btn.querySelector('path');
+            if (liked) {
+                btn.classList.add('ld-btn--like--active');
+                if (svg) svg.setAttribute('fill', 'currentColor');
+            } else {
+                btn.classList.remove('ld-btn--like--active');
+                if (svg) svg.setAttribute('fill', 'none');
+            }
+
+        } catch {
+            // silent fail — don't break the page
+        } finally {
+            processing = false;
+            btn.style.opacity = '';
+        }
+    });
+}
+
+// Handles fork (copy list) with confirmation modal
+function initFork() {
+    const forkBtn = document.getElementById('ldForkBtn');
+    if (!forkBtn) return;
+
+    const overlay = document.getElementById('ldForkOverlay');
+    const closeBtn = document.getElementById('ldForkClose');
+    const cancelBtn = document.getElementById('ldForkCancel');
+    const confirmBtn = document.getElementById('ldForkConfirm');
+
+    const openOverlay = () => {
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    };
+
+    const closeOverlay = () => {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+    };
+
+    forkBtn.addEventListener('click', openOverlay);
+    closeBtn.addEventListener('click', closeOverlay);
+    cancelBtn.addEventListener('click', closeOverlay);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeOverlay(); });
+
+    confirmBtn.addEventListener('click', async () => {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Copying...';
+
+        try {
+            const res = await fetch(`/api/user/lists/${LIST_ID}/fork`, { method: 'POST' });
+            if (!res.ok) throw new Error();
+
+            const data = await res.json();
+            closeOverlay();
+
+            // Redirect to the new list
+            window.location.href = `/list/${data.id}`;
+
+        } catch {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Copy list';
+            alert('Failed to copy list. Please try again.');
+        }
+    });
+}
+
+// Handles copy link to clipboard for both owner and non-owner
+function initCopyLink() {
+    const btn = document.getElementById('ldCopyLinkBtn');
+    if (!btn) return;
+
+    const label = document.getElementById('ldCopyLinkLabel');
+
+    btn.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+
+            // Visual feedback
+            if (label) label.textContent = 'Copied!';
+            btn.classList.add('ld-btn--copy--success');
+
+            setTimeout(() => {
+                if (label) label.textContent = 'Copy link';
+                btn.classList.remove('ld-btn--copy--success');
+            }, 2000);
+
+        } catch {
+            // Fallback for older browsers
+            const input = document.createElement('input');
+            input.value = window.location.href;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            if (label) label.textContent = 'Copied!';
+            setTimeout(() => { if (label) label.textContent = 'Copy link'; }, 2000);
+        }
+    });
+}
+
+// Tracks guest views via sessionStorage — called once per session per list
+function initGuestView() {
+    if (IS_LOGGED_IN) return; // authenticated users are counted on backend
+
+    const key = `viewed_list_${LIST_ID}`;
+    if (sessionStorage.getItem(key)) return; // already counted this session
+
+    sessionStorage.setItem(key, '1');
+
+    // Fire and forget — don't await, don't block UI
+    fetch(`/api/user/lists/${LIST_ID}/view`, { method: 'POST' }).catch(() => {});
+}
+
 // Escapes HTML special characters to prevent XSS in dynamically rendered content
 function escapeHtml(str) {
     return String(str)
@@ -856,6 +994,10 @@ function init() {
     initDeleteModal();
     initAddFilmModal();
     initRemoveFilmModal();
+    initLike();
+    initFork();
+    initCopyLink();
+    initGuestView();
     fetchFilms();
 }
 
