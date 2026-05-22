@@ -269,6 +269,31 @@ class ProfileRepository:
 
         return activity[:limit]
 
+
+    async def search_users(
+        self,
+        q: str,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> list[User]:
+        """Search active users by username. Prefix matches ranked first."""
+        result = await self.db.execute(
+            select(User)
+            .where(
+                User.is_active == True,
+                User.username.ilike(f"%{q}%"),
+            )
+            .order_by(
+                # Prefix match ranks higher than mid-string match
+                User.username.ilike(f"{q}%").desc(),
+                User.username.asc(),
+            )
+            .limit(limit)
+            .offset(offset)
+        )
+        return list(result.scalars().all())
+
+
     async def update(self, user: User, **fields) -> User:
         """Update user profile fields."""
         for key, value in fields.items():

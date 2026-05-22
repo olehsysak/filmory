@@ -173,7 +173,7 @@
 }
 
 .ld-meta__dot {
-    color: var(--border);
+    color: var(--text-muted);
     font-size: 16px;
 }
 

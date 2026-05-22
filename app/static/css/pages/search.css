@@ -88,7 +88,7 @@
     display: flex;
     align-items: baseline;
     gap: 12px;
-    margin-bottom: 4px;
+    margin-bottom: 30px;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border);
 }
@@ -278,6 +278,28 @@
     font-size: 12px;
     color: var(--text-muted);
     margin-top: 2px;
+}
+
+/* List grid */
+.search-list-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.search-list-separator {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+}
+
+.search-list-grid .list-card--row .list-card__covers {
+    min-height: unset;
+    height: 120px;
+}
+
+.search-list-grid .list-card__body {
+    gap: 8px;
 }
 
 /* Empty */

@@ -144,7 +144,7 @@
 
 .list-card__dot {
     font-size: 10px;
-    color: var(--border);
+    color: var(--text-muted);
     line-height: 1;
 }
 
