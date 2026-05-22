@@ -472,6 +472,68 @@ function loadFromURL() {
     if (params.get('page')) state.page = parseInt(params.get('page'));
 }
 
+// Synchronizes filter UI elements with the current application state
+function syncUIFromState() {
+    // Labels for each sort option displayed in the UI
+    var sortLabels = {
+        'popular':       'Popular · All Time',
+        'trending_day':  'Trending · Today',
+        'trending_week': 'Trending · This Week',
+        'top_rated':     'Rating · Highest',
+        'lowest_rated':  'Rating · Lowest',
+        'newest':        'Release · Newest',
+        'oldest':        'Release · Oldest',
+        'upcoming':      'Release · Upcoming',
+    };
+
+    var sortBtn   = document.getElementById('sortBtn');
+    var sortLabel = document.getElementById('sortLabel');
+
+    var activeValue = null;
+
+    if (state.trending_period === 'day')  activeValue = 'trending_day';
+    if (state.trending_period === 'week') activeValue = 'trending_week';
+
+    if (state.upcoming)                   activeValue = 'upcoming';
+
+    if (!activeValue && state.sort !== 'popular') activeValue = state.sort;
+
+    // If sort=popular is explicitly set in the URL, highlight it as an active filter
+    var params = new URLSearchParams(window.location.search);
+    if (!activeValue && params.get('sort') === 'popular') activeValue = 'popular';
+
+    if (activeValue && sortLabels[activeValue]) {
+        sortLabel.textContent = sortLabels[activeValue];
+        sortBtn.classList.add('active');
+
+        // Highlight selected sort option in dropdown/menu
+        var matchingOption = document.querySelector(
+            '.filter-option[data-filter="sort"][data-value="' + activeValue + '"]'
+        );
+
+        if (matchingOption) matchingOption.classList.add('selected');
+    }
+
+    // Genre filter
+    if (state.genre_id) {
+        var genreBtn    = document.getElementById('genreBtn');
+        var genreLabel  = document.getElementById('genreLabel');
+
+        var genreOption = document.querySelector(
+            '.filter-option[data-filter="genre"][data-value="' + state.genre_id + '"]'
+        );
+
+        if (genreOption) {
+            genreLabel.textContent = 'Genre · ' + genreOption.textContent.trim();
+            genreBtn.classList.add('active');
+            genreOption.classList.add('selected');
+        } else {
+            genreLabel.textContent = 'Genre · …';
+            genreBtn.classList.add('active');
+        }
+    }
+}
+
 // Reset
 if (resetBtn) {
     resetBtn.addEventListener('click', function() {
@@ -526,6 +588,7 @@ function escapeHtml(str) {
 
 // Init
 loadFromURL();
+syncUIFromState();
 initDropdowns();
 initFilterOptions();
 initDecadeButtons();
