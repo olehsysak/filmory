@@ -6,59 +6,103 @@
 <link rel="stylesheet" href="{{ url_for('static', path='css/pages/index.css') }}">
 {% endblock %}
 
-{% macro film_row(title, films, see_all_url, track_id) %}
+{% macro film_row(title, films, see_all_url, track_id, show_date=false) %}
 <section class="film-row">
     <div class="film-row__header">
         <h2 class="section-title">{{ title }}</h2>
         <a href="{{ see_all_url }}" class="see-all">See all →</a>
     </div>
-    <div class="film-row__wrapper">
-        <button class="row-arrow row-arrow--prev" aria-label="Scroll left">‹</button>
-        <div class="film-row__track" id="{{ track_id }}">
-            {% if films %}
-                {% for film in films %}
-                <a href="/film/{{ film.tmdb_id }}" class="film-card">
-                    {% if film.poster_url %}
-                    <img
-                        class="film-card__poster"
-                        src="{{ film.poster_url }}"
-                        alt="{{ film.title }}"
-                        loading="lazy"
-                    >
-                    {% else %}
-                    <div class="film-card__no-poster">No Image</div>
-                    {% endif %}
-                    <div class="film-card__info">
-                        <p class="film-card__title">{{ film.title }}</p>
-                        <p class="film-card__meta">
-                            {% if film.release_date %}{{ film.release_date.year }}{% endif %}
-                            <span class="film-card__rating">★ {{ "%.1f"|format(film.vote_average) }}</span>
-                        </p>
-                    </div>
-                </a>
-                {% endfor %}
-            {% else %}
-                <p class="film-row__empty">No films available right now.</p>
-            {% endif %}
-        </div>
-        <button class="row-arrow row-arrow--next" aria-label="Scroll right">›</button>
+    <div class="film-row__track" id="{{ track_id }}">
+        {% if films %}
+            {% for film in films %}
+            <a href="/film/{{ film.tmdb_id }}" class="film-card">
+                {% if film.poster_url %}
+                <img class="film-card__poster" src="{{ film.poster_url }}" alt="{{ film.title }}" loading="lazy">
+                {% else %}
+                <div class="film-card__no-poster">No Image</div>
+                {% endif %}
+                <div class="film-card__info">
+                    <p class="film-card__title">{{ film.title }}</p>
+                    <p class="film-card__meta">
+                        {% if show_date and film.release_date %}
+                            <span class="film-card__new-date">{{ film.release_date.strftime('%b %d') }}</span>
+                        {% elif film.release_date %}
+                            {{ film.release_date.year }}
+                        {% endif %}
+                        <span class="film-card__rating">★ {{ "%.1f"|format(film.vote_average) }}</span>
+                    </p>
+                </div>
+            </a>
+            {% endfor %}
+        {% else %}
+            <p class="film-row__empty">No films available right now.</p>
+        {% endif %}
     </div>
 </section>
 {% endmacro %}
 
+
 {% block content %}
+
+{% if hero_films %}
+<div class="idx-hero-wrap">
+    <div class="idx-hero__inner" id="heroCarousel" aria-label="Featured films">
+        {% for film in hero_films %}
+        <div class="idx-hero__slide{% if loop.first %} active{% endif %}" data-index="{{ loop.index0 }}">
+            {% if film.backdrop_url %}
+            <div class="idx-hero__bg" style="background-image: url('{{ film.backdrop_url }}')"></div>
+            {% else %}
+            <div class="idx-hero__bg"></div>
+            {% endif %}
+            <div class="idx-hero__overlay"></div>
+            <div class="idx-hero__content">
+                {% if film.genres %}
+                <div class="idx-hero__genres">
+                    {% for g in film.genres[:3] %}<a href="/films?genre_id={{ g.tmdb_id }}" class="idx-hero__genre-tag">{{ g.name }}</a>{% endfor %}
+                </div>
+                {% endif %}
+                <h2 class="idx-hero__title">{{ film.title }}</h2>
+                <div class="idx-hero__meta">
+                    {% if film.release_date %}<span>{{ film.release_date.year }}</span>{% endif %}
+                    {% if film.vote_average %}<span class="idx-hero__rating">★ {{ "%.1f"|format(film.vote_average) }}</span>{% endif %}
+                    {% if film.runtime %}<span>{{ film.runtime }} min</span>{% endif %}
+                </div>
+                {% if film.overview %}
+                <p class="idx-hero__overview">{{ film.overview[:150] }}{% if film.overview|length > 150 %}…{% endif %}</p>
+                {% endif %}
+                <div class="idx-hero__actions">
+                    <a href="/film/{{ film.tmdb_id }}" class="btn btn--primary">View film</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="idx-hero__dots">
+            {% for film in hero_films %}
+            <button
+                class="idx-hero__dot{% if loop.first %} active{% endif %}"
+                data-index="{{ loop.index0 }}"
+                aria-label="Slide {{ loop.index }}"
+            ></button>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
 <div class="container">
 
-    <!-- WELCOME BANNER -->
     {% if current_user %}
     <div class="welcome-banner welcome-banner--user">
         <div class="welcome-banner__text">
-            <h2>Welcome back, {{ current_user.username }} 👋</h2>
+            <h2>Welcome back, {{ current_user.username }}</h2>
             <p>Ready to discover something new today?</p>
         </div>
+        <a href="/collection" class="btn btn--outline">My Collection</a>
     </div>
     {% else %}
-    <div class="welcome-banner welcome-banner--guest" id="welcomeBanner">
+    <div class="welcome-banner welcome-banner--guest">
         <div class="welcome-banner__text">
             <h2>Discover your next favourite film</h2>
             <p>Track films you've watched, create lists and share with friends.</p>
@@ -70,8 +114,115 @@
     </div>
     {% endif %}
 
-    {{ film_row("Popular This Week", popular[:12], "/films?sort=popular", "popularTrack") }}
-    {{ film_row("Coming Soon", coming_soon[:12], "/films?sort=upcoming", "comingSoonTrack") }}
+
+    <section class="film-row" id="trendingSection">
+        <div class="film-row__header">
+            <div class="trending-header">
+                <h2 class="section-title">Trending</h2>
+                <div class="trending-tabs">
+                    <button class="trending-tab active" data-period="day">Today</button>
+                    <button class="trending-tab" data-period="week">This week</button>
+                </div>
+            </div>
+            <a href="/films?trending_period=day" class="see-all" id="trendingSeeAll">See all →</a>
+        </div>
+        <div class="film-row__track" id="trendingTrack">
+            {% for film in trending_day %}
+            <a href="/film/{{ film.tmdb_id }}" class="film-card">
+                {% if film.poster_url %}
+                <img class="film-card__poster" src="{{ film.poster_url }}" alt="{{ film.title }}" loading="lazy">
+                {% else %}
+                <div class="film-card__no-poster">No Image</div>
+                {% endif %}
+                <div class="film-card__info">
+                    <p class="film-card__title">{{ film.title }}</p>
+                    <p class="film-card__meta">
+                        {% if film.release_date %}{{ film.release_date.year }}{% endif %}
+                        <span class="film-card__rating">★ {{ "%.1f"|format(film.vote_average) }}</span>
+                    </p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    {{ film_row("Popular", popular[:18], "/films?sort=popular", "popularTrack") }}
+
+
+    {% if genres %}
+    {% set genre_icons = {
+        'Action':           'ti-sword',
+        'Adventure':        'ti-compass',
+        'Animation':        'ti-brush',
+        'Comedy':           'ti-mood-smile',
+        'Crime':            'ti-lock',
+        'Documentary':      'ti-video',
+        'Drama':            'ti-masks-theater',
+        'Family':           'ti-users',
+        'Fantasy':          'ti-wand',
+        'History':          'ti-building',
+        'Horror':           'ti-ghost',
+        'Music':            'ti-music',
+        'Mystery':          'ti-eye',
+        'Romance':          'ti-heart',
+        'Science Fiction':  'ti-rocket',
+        'Thriller':         'ti-bolt',
+        'War':              'ti-medal',
+        'Western':          'ti-horse',
+        'TV Movie':         'ti-device-tv'
+    } %}
+    <section class="genre-section">
+        <div class="film-row__header">
+            <h2 class="section-title">Browse by genre</h2>
+            <a href="/films" class="see-all">All films →</a>
+        </div>
+        <div class="genre-grid">
+            {% for genre in genres[:12] %}
+            <a href="/films?genre_id={{ genre.tmdb_id }}" class="genre-card">
+                <i class="ti {{ genre_icons.get(genre.name, 'ti-movie') }} genre-card__icon" aria-hidden="true"></i>
+                <span class="genre-card__name">{{ genre.name }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+
+    {{ film_row("New Releases", new_releases, "/films?sort=newest", "newReleasesTrack", show_date=true) }}
+
+
+    <section class="lists-section">
+        <div class="film-row__header">
+            <h2 class="section-title">Popular lists</h2>
+            <a href="/community" class="see-all">See all →</a>
+        </div>
+        <div class="lists-grid" id="popularListsGrid">
+            <div class="list-card list-card--skeleton"></div>
+            <div class="list-card list-card--skeleton"></div>
+            <div class="list-card list-card--skeleton"></div>
+            <div class="list-card list-card--skeleton"></div>
+            <div class="list-card list-card--skeleton"></div>
+            <div class="list-card list-card--skeleton"></div>
+        </div>
+    </section>
 
 </div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+window.__TRENDING_WEEK__ = [
+    {% for f in trending_week %}
+    {
+        tmdb_id: {{ f.tmdb_id }},
+        title: {{ f.title | tojson }},
+        poster_url: {{ (f.poster_url or '') | tojson }},
+        release_date: {{ (f.release_date.year | string if f.release_date else '') | tojson }},
+        vote_average: {{ f.vote_average }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+</script>
+<script src="{{ url_for('static', path='js/pages/index.js') }}"></script>
 {% endblock %}
