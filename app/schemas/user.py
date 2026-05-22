@@ -23,6 +23,7 @@ class UserResponse(BaseModel):
     is_active: bool = Field(..., description="Is active")
     role: str = Field(..., description="User role (user/admin)")
     created_at: datetime = Field(..., description="Created at")
+    avatar_path: str | None = Field(None, description="Avatar file path")
 
     model_config = ConfigDict(from_attributes=True)
 
