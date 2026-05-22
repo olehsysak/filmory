@@ -1,6 +1,11 @@
 from fastapi import APIRouter, Request, Depends, status, HTTPException, Query
 from app.templates import templates
 from fastapi.responses import RedirectResponse
+from app.clients.tmdb_client import tmdb_client
+from sqlalchemy import select, func
+from app.models.user import User
+from app.models.user_film import UserFilm
+from app.models.film import Film
 from app.services.film_service import FilmService
 from app.services.person_service import PersonService
 from app.services.profile_service import ProfileService
@@ -15,16 +20,54 @@ router = APIRouter(tags=["pages"])
 
 
 @router.get("/")
-async def index(request: Request, service: FilmService = Depends(get_film_service)):
+async def index(
+        request: Request,
+        service: FilmService = Depends(get_film_service),
+        db: AsyncSession = Depends(get_async_db),
+):
     """Renders homepage."""
-    popular = await service.get_popular()
-    coming_soon = await service.get_top_upcoming()
+    # Hero carousel: top 5 trending this week
+    trending_week_raw = await tmdb_client.get_trending(period="week")
 
+    hero_films = await service._get_or_create_from_tmdb_list(
+        trending_week_raw.get("results", [])[:5]
+    )
+
+    # Generate backdrop image URLs for hero carousel slides
+    for film in hero_films:
+        film.backdrop_url = (
+            tmdb_client.get_image_url(film.backdrop_path, size="w1280")
+            if film.backdrop_path else None
+        )
+
+    # Trending rows
+    trending_day_raw = await tmdb_client.get_trending(period="day")
+
+    trending_day = await service._get_or_create_from_tmdb_list(
+        trending_day_raw.get("results", [])[:18]
+    )
+
+    trending_week = await service._get_or_create_from_tmdb_list(
+        trending_week_raw.get("results", [])[:18]
+    )
+
+    popular = await service.get_popular()
+
+    new_releases = await service.get_new()
+
+    genre_repo = GenreRepository(db)
+    genres = await genre_repo.get_all()
+
+    # Render homepage template with all required data
     return templates.TemplateResponse("index.html", {
         "request": request,
+        "hero_films": hero_films,
+        "trending_day": trending_day,
+        "trending_week": trending_week,
         "popular": popular,
-        "coming_soon": coming_soon,
-        "current_user": request.state.user if hasattr(request.state, 'user') else None,
+        "new_releases": new_releases[:18],
+        "genres": genres,
+        "current_user": request.state.user if hasattr(request.state, "user") else None,
     })
 
 

@@ -3,7 +3,7 @@ import json
 from app.config import TMDB_API_KEY, TMDB_BASE_URL, TMDB_IMAGE_URL
 from app.cache.redis_cache import redis_cache
 from app.cache.ttl import TTL
-from datetime import date
+from datetime import date, timedelta
 
 
 class TMDBClient:
@@ -102,13 +102,18 @@ class TMDBClient:
 
 
     async def get_new(self, page: int = 1) -> dict:
+        sixty_days_ago = (date.today() - timedelta(days=60)).isoformat()
+        today = date.today().isoformat()
+
         params = {
-            "sort_by": "release_date.desc",
+            "sort_by": "popularity.desc",
             "page": page,
-            "release_date.lte": date.today().isoformat()
+            "primary_release_date.gte": sixty_days_ago,
+            "primary_release_date.lte": today,
+            "vote_count.gte": 100,
         }
         return await self._cached_get(
-            key=f"tmdb:new:{page}:{date.today().isoformat()}",
+            key=f"tmdb:new:{page}:{today}",
             endpoint="/discover/movie",
             ttl=TTL.NEW,
             params=params,

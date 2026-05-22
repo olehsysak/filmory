@@ -129,9 +129,11 @@ class FilmService:
 
 
     async def get_popular(self) -> list:
+        """# Fetches popular movies from TMDB and returns synced local movie objects"""
         tmdb_data = await tmdb_client.get_popular()
-        results = [r for r in tmdb_data.get("results", []) if r.get("vote_count", 0) >= 100]
-        return await self._get_or_create_from_tmdb_list(results)
+        return await self._get_or_create_from_tmdb_list(
+            tmdb_data.get("results", [])
+        )
 
 
     async def get_top_rated(self) -> list:
