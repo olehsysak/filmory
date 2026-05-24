@@ -228,3 +228,51 @@ class FilmService:
         )
         films = await self._get_or_create_from_tmdb_list(tmdb_data.get("results", []))
         return films, tmdb_data.get("total_results", 0), tmdb_data.get("total_pages", 1)
+
+
+    async def get_film_stats(self, film_id: int) -> dict:
+        """Returns status counts, percentages and Filmory rating for a film."""
+        row = await self.film_repo.get_stats(film_id)
+        total = row.total or 1
+
+        def fmt_count(n: int) -> str | None:
+            if not n:
+                return None
+            if n >= 1000:
+                return f"{n / 1000:.1f}k"
+            return str(n)
+
+        return {
+            "filmory_rating": float(row.filmory_rating) if row.filmory_rating else None,
+            "filmory_votes": row.filmory_votes or 0,
+            "status_counts": {
+                "want_to_watch": fmt_count(row.want_to_watch),
+                "watching": fmt_count(row.watching),
+                "completed": fmt_count(row.completed),
+                "dropped": fmt_count(row.dropped),
+            },
+            "status_pcts": {
+                "want_to_watch": round((row.want_to_watch or 0) / total * 100),
+                "watching": round((row.watching or 0) / total * 100),
+                "completed": round((row.completed or 0) / total * 100),
+                "dropped": round((row.dropped or 0) / total * 100),
+            } if row.total else {},
+        }
+
+
+    async def get_film_public_lists(self, film_id: int) -> list[dict]:
+        """Public lists containing this film."""
+        rows = await self.film_repo.get_public_lists(film_id)
+        return [
+            {
+                "id": ul.id,
+                "name": ul.name,
+                "username": user.username,
+                "film_count": film_count,
+                "cover_url": (
+                    tmdb_client.get_image_url(ul.cover_poster_paths[0], size="w92")
+                    if ul.cover_poster_paths else None
+                ),
+            }
+            for ul, user, film_count in rows
+        ]

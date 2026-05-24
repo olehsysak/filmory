@@ -2,10 +2,6 @@ from fastapi import APIRouter, Request, Depends, status, HTTPException, Query
 from app.templates import templates
 from fastapi.responses import RedirectResponse
 from app.clients.tmdb_client import tmdb_client
-from sqlalchemy import select, func
-from app.models.user import User
-from app.models.user_film import UserFilm
-from app.models.film import Film
 from app.services.film_service import FilmService
 from app.services.person_service import PersonService
 from app.services.profile_service import ProfileService
@@ -203,19 +199,55 @@ async def film_credits_page(request: Request, tmdb_id: int, service: FilmService
 
 
 @router.get("/film/{tmdb_id}")
-async def film_detail(request: Request, tmdb_id: int, service: FilmService = Depends(get_film_service)):
+async def film_detail(
+    request: Request,
+    tmdb_id: int,
+    service: FilmService = Depends(get_film_service),
+):
     """Renders film detail page."""
     film = await service.get_or_fetch_film(tmdb_id)
-
     if not film:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Film not found")
+        raise HTTPException(status_code=404, detail="Film not found")
 
     similar = await service.get_similar(tmdb_id)
+    tmdb_data = await tmdb_client.get_film(tmdb_id)
+    stats = await service.get_film_stats(film.id)
+
+    LANG_NAMES = {
+        "en": "English", "fr": "French", "de": "German", "ja": "Japanese",
+        "ko": "Korean", "es": "Spanish", "it": "Italian", "zh": "Chinese",
+        "uk": "Ukrainian", "pt": "Portuguese", "hi": "Hindi", "ar": "Arabic",
+        "tr": "Turkish", "pl": "Polish", "nl": "Dutch", "sv": "Swedish",
+        "da": "Danish", "fi": "Finnish", "no": "Norwegian", "cs": "Czech",
+        "th": "Thai", "id": "Indonesian", "vi": "Vietnamese", "he": "Hebrew",
+        "ro": "Romanian", "hu": "Hungarian",
+    }
+
+    def fmt_money(val):
+        if not val or val < 100_000:
+            return None
+        return f"${val:,}"
+
+    companies = tmdb_data.get("production_companies", [])
+    countries = tmdb_data.get("production_countries", [])
+    spoken_languages = tmdb_data.get("spoken_languages", [])
 
     return templates.TemplateResponse("film.html", {
         "request": request,
         "film": film,
         "similar": similar,
+        "film_studios": [c["name"] for c in companies if c.get("name")],
+        "film_status": tmdb_data.get("status"),
+        "film_countries": [c["name"] for c in countries if c.get("name")],
+        "film_languages": [
+            LANG_NAMES.get(l.get("iso_639_1"), l.get("english_name", l.get("name", "")))
+            for l in spoken_languages if l.get("name")
+        ],
+        "film_budget": fmt_money(tmdb_data.get("budget")),
+        "film_revenue": fmt_money(tmdb_data.get("revenue")),
+        "film_budget_raw": tmdb_data.get("budget") or 0,
+        "film_revenue_raw": tmdb_data.get("revenue") or 0,
+        **stats,
     })
 
 
