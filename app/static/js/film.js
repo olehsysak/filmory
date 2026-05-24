@@ -4,7 +4,7 @@ const tmdbId = window.location.pathname.split('/').filter(Boolean).pop();
 const backdrop = document.querySelector('.film-hero__backdrop');
 if (backdrop) setTimeout(() => backdrop.style.transform = 'scale(1)', 100);
 
-// Popularity bar
+// Animate popularity progress bar
 const bar = document.querySelector('.film-popularity__bar-fill');
 if (bar) {
     const target = bar.style.width;
@@ -12,33 +12,35 @@ if (bar) {
     setTimeout(() => bar.style.width = target, 300);
 }
 
-// Similar films row
-initRow(document.querySelector('.film-similar .film-row__wrapper'));
-
-// Credits
 loadCredits();
 
+// Fetches film credits and renders cast, crew, and director stat sections
 async function loadCredits() {
     try {
         const res = await fetch(`/api/film/${tmdbId}/credits`);
         if (!res.ok) throw new Error('Failed to fetch credits');
+
         const data = await res.json();
+
         renderTopCast(data.cast || []);
         renderTopCrew(data.crew || []);
+        renderCrewStat(data.crew || []);
     } catch (e) {
         console.error('Credits error:', e);
         document.getElementById('filmCredits').style.display = 'none';
     }
 }
 
-// Top Cast
+// Render top billed cast members
 function renderTopCast(cast) {
     const track = document.getElementById('topCastTrack');
-    const top = cast.slice(0, 12);
+    const top = cast.slice(0, 15);
+
     if (!top.length) {
         track.innerHTML = '<p style="color:var(--text-muted);font-size:14px;padding:8px 0;">No cast data available.</p>';
         return;
     }
+
     track.innerHTML = top.map(a => `
         <a href="/person/${a.tmdb_id}" class="person-card">
             <img
@@ -52,10 +54,9 @@ function renderTopCast(cast) {
             <span class="person-card__sub">${a.character || ''}</span>
         </a>
     `).join('');
-    initRow(document.querySelector('#topCastPanel .film-row__wrapper'));
 }
 
-// Priority order for crew roles (used for sorting)
+// Priority order for crew roles
 const JOB_PRIORITY = [
     "Director", "Co-Director",
     "Screenplay", "Writer", "Novel",
@@ -66,9 +67,11 @@ const JOB_PRIORITY = [
     "Production Design",
 ];
 
-// Top Crew (grid, key roles only)
+// Render top key crew members
 function renderTopCrew(crew) {
     const grid = document.getElementById('topCrewGrid');
+
+    // Filter only key crew roles (pre-marked by backend)
     const keyCrew = crew.filter(c => c.is_key);
 
     if (!keyCrew.length) {
@@ -76,7 +79,7 @@ function renderTopCrew(crew) {
         return;
     }
 
-    // Deduplicate by tmdb_id and merge jobs
+    // Merge duplicate people and collect all their jobs
     const merged = {};
     keyCrew.forEach(c => {
         if (!merged[c.tmdb_id]) {
@@ -86,15 +89,16 @@ function renderTopCrew(crew) {
         }
     });
 
+    // Sort by job importance
     const sorted = Object.values(merged).sort((a, b) => {
         const ai = JOB_PRIORITY.indexOf(a.jobs[0]);
         const bi = JOB_PRIORITY.indexOf(b.jobs[0]);
         return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
     });
 
-    const top12 = sorted.slice(0, 12);
+    const top9 = sorted.slice(0, 9);
 
-    grid.innerHTML = top12.map(c => `
+    grid.innerHTML = top9.map(c => `
         <a href="/person/${c.tmdb_id}" class="crew-card">
             <img
                 class="crew-card__photo"
@@ -111,9 +115,26 @@ function renderTopCrew(crew) {
     `).join('');
 }
 
-// Shared
+// Render director stat in stats row
+function renderCrewStat(crew) {
+    const col = document.getElementById('filmCrewStat');
+    const body = document.getElementById('filmCrewStatBody');
+
+    if (!col || !body) return;
+
+    const directors = crew.filter(c => c.job === 'Director' || c.job === 'Co-Director');
+    if (!directors.length) return;
+
+    col.style.display = 'flex';
+    body.innerHTML = directors.map(d =>
+        `<a href="/person/${d.tmdb_id}" class="film-crew-stat-name">${d.name}</a>`
+    ).join('<br>');
+}
+
+// Group crew by department for expandable UI sections
 function renderCrewDepartments(container, crew) {
     const grouped = {};
+
     crew.forEach(c => {
         if (!grouped[c.department]) grouped[c.department] = [];
         grouped[c.department].push(c);
@@ -126,6 +147,8 @@ function renderCrewDepartments(container, crew) {
     // Build HTML for department blocks
     function buildDeptHtml(entries) {
         return entries.map(([dept, members]) => {
+
+            // Merge duplicates inside department
             const merged = {};
             members.forEach(m => {
                 if (!merged[m.tmdb_id]) {
@@ -134,7 +157,9 @@ function renderCrewDepartments(container, crew) {
                     merged[m.tmdb_id].jobs.push(m.job);
                 }
             });
+
             const unique = Object.values(merged);
+
             return `
                 <div class="crew-dept">
                     <p class="crew-dept__title">${dept}</p>
@@ -186,7 +211,7 @@ function renderCrewDepartments(container, crew) {
     render();
 }
 
-// Tabs
+// Tabs (cast / crew switch)
 const panels = {
     'top-cast': document.getElementById('topCastPanel'),
     'top-crew': document.getElementById('topCrewPanel'),
@@ -194,45 +219,61 @@ const panels = {
 
 document.querySelectorAll('.film-credits__tab').forEach(tab => {
     tab.addEventListener('click', () => {
+
+         // Remove active state from all tabs
         document.querySelectorAll('.film-credits__tab').forEach(t =>
             t.classList.remove('film-credits__tab--active')
         );
+
+        // Activate clicked tab
         tab.classList.add('film-credits__tab--active');
+
         const target = tab.dataset.tab;
+
+        // Toggle visible panel based on selected tab
         Object.entries(panels).forEach(([key, panel]) => {
             panel.classList.toggle('film-credits__panel--hidden', key !== target);
         });
     });
 });
 
-// Row helper
+// Horizontal scroll helper for reusable rows (cast, similar, etc.)
 function initRow(wrapper) {
     if (!wrapper) return;
+
     const track = wrapper.querySelector('.film-row__track');
     const prev = wrapper.querySelector('.row-arrow--prev');
     const next = wrapper.querySelector('.row-arrow--next');
+
     const scrollBy = 340;
+
     if (prev) prev.addEventListener('click', () => track.scrollBy({ left: -scrollBy, behavior: 'smooth' }));
     if (next) next.addEventListener('click', () => track.scrollBy({ left: scrollBy, behavior: 'smooth' }));
 }
 
-// User film actions
-
 const filmActions = document.getElementById('filmActions');
 const tmdbIdActions = filmActions?.dataset.tmdbId;
 
-// Initialize user film interactions
+// Initialize all user interactions on film page
 async function initFilmActions() {
     if (!filmActions || !tmdbIdActions) return;
 
+    // Check auth state
     const res = await fetch('/api/auth/me');
+
+    // Guest mode (disable interactions but still show public lists)
     if (!res.ok) {
         filmActions.classList.add('film-actions--guest');
         blockGuestClicks();
+        loadFilmInLists();
         return;
     }
 
+    // Load user-specific film state (status, rating, favorite)
     await loadFilmState();
+
+    // Public lists are visible for both guests and logged users
+    loadFilmInLists();
 
     document.getElementById('favoriteBtn')
         ?.addEventListener('click', toggleFavorite);
@@ -248,14 +289,14 @@ async function initFilmActions() {
     initAddToList();
 }
 
-// Prevent guest users from triggering film actions
+// Prevent interaction for guest users
 function blockGuestClicks() {
     filmActions.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('click', e => e.preventDefault());
     });
 }
 
-// Load current user state for the film
+// Load user film state (watch status, rating, favorite)
 async function loadFilmState() {
     try {
         const [watchRes, favRes] = await Promise.all([
@@ -278,24 +319,30 @@ async function loadFilmState() {
     }
 }
 
-// Set or remove user watch status for the film
+// Set or toggle watch status for film
 async function setStatus(newStatus) {
     const activeBtn = document.querySelector('.film-status-btn[data-active="true"]');
     const currentStatus = activeBtn?.dataset.status;
 
     try {
+        // If clicking same status → remove it
         if (currentStatus === newStatus) {
             const res = await fetch(`/api/user/films/${tmdbIdActions}`, { method: 'DELETE' });
+
             if (!res.ok) throw new Error();
+
             applyStatus(null);
             applyRating(null);
+
         } else {
             const res = await fetch(`/api/user/films/${tmdbIdActions}/status`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus }),
             });
+
             if (!res.ok) throw new Error();
+
             const data = await res.json();
             applyStatus(data.status);
             applyRating(data.rating ?? null);
@@ -305,7 +352,7 @@ async function setStatus(newStatus) {
     }
 }
 
-// Toggle film favorite state
+// Toggle favorite state for film
 async function toggleFavorite() {
     const btn = document.getElementById('favoriteBtn');
     const isActive = btn.dataset.active === 'true';
@@ -313,10 +360,13 @@ async function toggleFavorite() {
     try {
         if (isActive) {
             const res = await fetch(`/api/user/favorites/${tmdbIdActions}`, { method: 'DELETE' });
+
             if (!res.ok) throw new Error();
             applyFavorite(false);
+
         } else {
             const res = await fetch(`/api/user/favorites/${tmdbIdActions}`, { method: 'POST' });
+
             if (!res.ok) throw new Error();
             applyFavorite(true);
         }
@@ -325,28 +375,32 @@ async function toggleFavorite() {
     }
 }
 
-// Set or remove user rating for the film
+// Set or update user rating
 async function setRating(value) {
     const activeRating = document.querySelector('.film-rating-star[data-active="true"]');
     const currentRating = activeRating ? parseInt(activeRating.dataset.value) : null;
 
     try {
+        // Clicking same rating removes it (fallback to completed without rating)
         if (currentRating === value) {
-            // Remove rating - delete and immediately add as completed without rating
             await fetch(`/api/user/films/${tmdbIdActions}`, { method: 'DELETE' });
+
             const res = await fetch(`/api/user/films/${tmdbIdActions}/status`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: 'completed' }),
             });
+
             if (!res.ok) throw new Error();
             applyRating(null);
+
         } else {
             const res = await fetch(`/api/user/films/${tmdbIdActions}/rating`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ rating: value }),
             });
+
             if (!res.ok) throw new Error();
             applyRating(value);
         }
@@ -355,29 +409,65 @@ async function setRating(value) {
     }
 }
 
-// Update watch status buttons UI
+// Update UI for watch status
 function applyStatus(status) {
     document.querySelectorAll('.film-status-btn').forEach(btn => {
         btn.dataset.active = btn.dataset.status === status ? 'true' : 'false';
     });
+
+    const isCompleted = status === 'completed';
     const ratingBlock = document.getElementById('ratingBlock');
-    if (ratingBlock) {
-        ratingBlock.style.display = status === 'completed' ? 'block' : 'none';
-    }
+    const ratingLocked = document.getElementById('ratingLocked');
+
+    if (ratingBlock) ratingBlock.style.display = isCompleted ? 'block' : 'none';
+    if (ratingLocked) ratingLocked.style.display = isCompleted ? 'none' : 'block';
 }
 
-// Update favorite button UI state
+// Update favorite UI state
 function applyFavorite(isActive) {
     const btn = document.getElementById('favoriteBtn');
     if (!btn) return;
     btn.dataset.active = isActive ? 'true' : 'false';
 }
 
-// Update active rating stars UI
+// Update rating UI state
 function applyRating(value) {
     document.querySelectorAll('.film-rating-star').forEach(btn => {
         btn.dataset.active = parseInt(btn.dataset.value) === value ? 'true' : 'false';
     });
+}
+
+// Load public lists that contain this film
+async function loadFilmInLists() {
+    const body = document.getElementById('filmInListsBody');
+
+    if (!body || !tmdbIdActions) return;
+
+    try {
+        const res = await fetch(`/api/film/${tmdbIdActions}/public-lists`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+
+        if (!data.length) {
+            body.innerHTML = '<span class="film-in-lists__empty">Not in any public lists yet.</span>';
+            return;
+        }
+
+        body.innerHTML = data.map(list => `
+            <a href="/list/${list.id}" class="film-in-list-item">
+                ${list.cover_url
+                    ? `<img class="film-in-list-item__cover" src="${list.cover_url}" alt="">`
+                    : `<div class="film-in-list-item__cover"></div>`
+                }
+                <div class="film-in-list-item__info">
+                    <span class="film-in-list-item__name">${list.name}</span>
+                    <span class="film-in-list-item__meta">by ${list.username} · ${list.film_count} films</span>
+                </div>
+            </a>
+        `).join('');
+    } catch {
+        body.innerHTML = '<span class="film-in-lists__empty">Could not load lists.</span>';
+    }
 }
 
 initFilmActions();
