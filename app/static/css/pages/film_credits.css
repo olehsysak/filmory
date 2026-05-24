@@ -141,6 +141,26 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 12px;
+    align-items: start;
+}
+
+.fc-cast-grid .crew-card {
+    align-items: center;
+    overflow: hidden;
+}
+
+.fc-cast-grid .crew-card__info {
+    min-width: 0;
+    overflow: hidden;
+    flex: 1;
+}
+
+.fc-cast-grid .crew-card__name,
+.fc-cast-grid .crew-card__job {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
 }
 
 /* Full Crew */

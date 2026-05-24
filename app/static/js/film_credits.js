@@ -51,13 +51,31 @@ function renderFullCrew(crew) {
         return;
     }
 
+    // Group crew members by department (Directing, Writing, etc.)
     const grouped = {};
     crew.forEach(c => {
         if (!grouped[c.department]) grouped[c.department] = [];
         grouped[c.department].push(c);
     });
 
-    const html = Object.entries(grouped).map(([dept, members]) => {
+    // Predefined department order for UI sorting
+    const DEPT_ORDER = [
+        "Directing", "Writing", "Production", "Camera",
+        "Art", "Editing", "Sound", "Visual Effects",
+        "Costume & Make-Up", "Crew", "Lighting",
+    ];
+
+    const html = Object.entries(grouped)
+
+        // Sort departments based on predefined UI priority
+        .sort(([a], [b]) => {
+            const ai = DEPT_ORDER.indexOf(a);
+            const bi = DEPT_ORDER.indexOf(b);
+            return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+        })
+        .map(([dept, members]) => {
+
+         // Merge duplicate people within the same department
         const merged = {};
         members.forEach(m => {
             if (!merged[m.tmdb_id]) {
@@ -66,7 +84,9 @@ function renderFullCrew(crew) {
                 merged[m.tmdb_id].jobs.push(m.job);
             }
         });
+
         const unique = Object.values(merged);
+
         return `
             <div class="crew-dept">
                 <p class="crew-dept__title">${dept}</p>
