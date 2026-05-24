@@ -11,7 +11,6 @@
 
 {% block content %}
 
-<!-- HERO -->
 <div class="film-hero">
     {% if film.backdrop_url %}
     <div class="film-hero__backdrop" style="background-image: url('{{ film.backdrop_url }}')"></div>
@@ -21,13 +20,11 @@
     <div class="film-hero__backdrop" style="background: var(--bg-secondary)"></div>
     {% endif %}
     <div class="film-hero__gradient"></div>
-    <div class="film-hero__content"></div>
 </div>
 
-<!-- MAIN LAYOUT -->
 <div class="film-layout">
 
-    <!-- LEFT: Poster + Actions -->
+    <!-- LEFT: sticky -->
     <div class="film-poster-col">
         {% if film.poster_url %}
         <img class="film-poster" src="{{ film.poster_url }}" alt="{{ film.title }}">
@@ -40,31 +37,60 @@
             <div class="film-action-status">
                 <p class="film-action-status__label">Status</p>
                 <div class="film-action-status__grid">
+
                     <button class="film-status-btn" data-status="want_to_watch">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" width="20" height="20">
-                            <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M6 2c-0.26522 0 -0.51957 0.10536 -0.70711 0.29289C5.10536 2.48043 5 2.73478 5 3v18.1958l6.47 -4.0438c0.3243 -0.2027 0.7357 -0.2027 1.06 0L19 21.1958V3c0 -0.26522 -0.1054 -0.51957 -0.2929 -0.70711C18.5196 2.10536 18.2652 2 18 2zM3.87868 0.87868C4.44129 0.316071 5.20435 0 6 0h12c0.7956 0 1.5587 0.316071 2.1213 0.87868C20.6839 1.44129 21 2.20435 21 3v20c0 0.3635 -0.1973 0.6984 -0.5152 0.8746 -0.318 0.1763 -0.7065 0.1661 -1.0148 -0.0266L12 19.1792 4.53 23.848c-0.30827 0.1927 -0.69681 0.2029 -1.01477 0.0266C3.19728 23.6984 3 23.3635 3 23V3c0 -0.79565 0.31607 -1.55871 0.87868 -2.12132"/>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" width="18" height="18">
+                            <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M6 2c-0.26522 0 -0.51957 0.10536 -0.70711 0.29289C5.10536 2.48043 5 2.73478 5 3v18.1958l6.47 -4.0438c0.3243 -0.2027 0.7357 -0.2027 1.06 0L19 21.1958V3c0 -0.26522 -0.1054 -0.51957 -0.2929 -0.70711C18.5196 2.10536 18.2652 2 18 2H6Z"/>
                         </svg>
                         <span class="film-status-btn__text">Want to watch</span>
+                        <span class="film-status-btn__count">
+                            {% if status_counts and status_counts.want_to_watch %}{{ status_counts.want_to_watch }} · {{ status_pcts.want_to_watch }}%{% else %}—{% endif %}
+                        </span>
+                        <div class="film-status-btn__bar">
+                            <div class="film-status-btn__bar-fill" style="width: {{ status_pcts.want_to_watch if status_pcts else 0 }}%"></div>
+                        </div>
                     </button>
+
                     <button class="film-status-btn" data-status="watching">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14" width="20" height="20">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M13.23 6.2463c0.1658 0.20672 0.2576 0.47529 0.2576 0.75376s-0.0918 0.54704 -0.2576 0.75376c-1.05 1.27127 -3.44003 3.74628 -6.23003 3.74628s-5.18 -2.47501 -6.230002 -3.74628c-0.16584 -0.20672 -0.257639 -0.47529 -0.257639 -0.75376s0.091799 -0.54704 0.257639 -0.75376C1.81997 4.97503 4.20997 2.5 6.99997 2.5S12.18 4.97503 13.23 6.2463Z"/>
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 9c1.10457 0 2 -0.89543 2 -2s-0.89543 -2 -2 -2 -2 0.89543 -2 2 0.89543 2 2 2Z"/>
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" width="18" height="18">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 5C7 5 2.5 8.5 1 12c1.5 3.5 6 7 11 7s9.5 -3.5 11 -7c-1.5 -3.5 -6 -7 -11 -7Z"/>
+                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                         <span class="film-status-btn__text">Watching</span>
+                        <span class="film-status-btn__count">
+                            {% if status_counts and status_counts.watching %}{{ status_counts.watching }} · {{ status_pcts.watching }}%{% else %}—{% endif %}
+                        </span>
+                        <div class="film-status-btn__bar">
+                            <div class="film-status-btn__bar-fill" style="width: {{ status_pcts.watching if status_pcts else 0 }}%"></div>
+                        </div>
                     </button>
+
                     <button class="film-status-btn" data-status="completed">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" width="20" height="20">
-                            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M0.85 15.65a1.21 1.21 0 0 0 0 1.7l5.8 5.8a1.2 1.2 0 0 0 1.7 0l14.8 -14.8a1.2 1.2 0 0 0 0 -1.7l-2.3 -2.3a1.2 1.2 0 0 0 -1.7 0L7.5 16l-2.65 -2.65a1.21 1.21 0 0 0 -1.7 0Z"/>
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" width="18" height="18">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 6 9 17l-5-5"/>
                         </svg>
                         <span class="film-status-btn__text">Completed</span>
+                        <span class="film-status-btn__count">
+                            {% if status_counts and status_counts.completed %}{{ status_counts.completed }} · {{ status_pcts.completed }}%{% else %}—{% endif %}
+                        </span>
+                        <div class="film-status-btn__bar">
+                            <div class="film-status-btn__bar-fill" style="width: {{ status_pcts.completed if status_pcts else 0 }}%"></div>
+                        </div>
                     </button>
+
                     <button class="film-status-btn" data-status="dropped">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" width="20" height="20">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" width="18" height="18">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="m7.5 12 -6.293 6.293a1 1 0 0 0 0 1.414l3.086 3.086a1 1 0 0 0 1.414 0L12 16.5l6.293 6.293a1 1 0 0 0 1.414 0l3.086 -3.086a1 1 0 0 0 0 -1.414L16.5 12l6.293 -6.293a1 1 0 0 0 0 -1.414l-3.086 -3.086a1 1 0 0 0 -1.414 0L12 7.5 5.707 1.207a1 1 0 0 0 -1.414 0L1.207 4.293a1 1 0 0 0 0 1.414Z"/>
                         </svg>
                         <span class="film-status-btn__text">Dropped</span>
+                        <span class="film-status-btn__count">
+                            {% if status_counts and status_counts.dropped %}{{ status_counts.dropped }} · {{ status_pcts.dropped }}%{% else %}—{% endif %}
+                        </span>
+                        <div class="film-status-btn__bar">
+                            <div class="film-status-btn__bar-fill" style="width: {{ status_pcts.dropped if status_pcts else 0 }}%"></div>
+                        </div>
                     </button>
+
                 </div>
             </div>
 
@@ -84,6 +110,16 @@
                 </button>
             </div>
 
+            <div class="film-rating-locked" id="ratingLocked">
+                <p class="film-action-status__label">Your rating</p>
+                <div class="film-rating-locked__nums">
+                    {% for i in range(1, 11) %}<span class="film-rating-locked__num">{{ i }}</span>{% endfor %}
+                </div>
+                <div class="film-rating-locked__tooltip">
+                    Mark as <strong>Completed</strong> to leave a rating
+                </div>
+            </div>
+
             <div class="film-action-rating" id="ratingBlock" style="display:none">
                 <p class="film-action-status__label">Your rating</p>
                 <div class="film-rating-stars" id="ratingStars">
@@ -93,10 +129,17 @@
                 </div>
             </div>
 
+            <div class="film-in-lists" id="filmInLists">
+                <p class="film-action-status__label">Appears in lists</p>
+                <div class="film-in-lists__body" id="filmInListsBody">
+                    <span class="film-in-lists__loading">Loading…</span>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <!-- RIGHT: Info -->
+    <!-- RIGHT -->
     <div class="film-info">
 
         {% if film.genres %}
@@ -113,36 +156,104 @@
         <p class="film-tagline">{{ film.tagline }}</p>
         {% endif %}
 
-        <div class="film-rating-row">
-            <div class="film-rating">
-                <span class="film-rating__score">{{ "%.1f"|format(film.vote_average) }}</span>
-                <span class="film-rating__max">/ 10</span>
+        <!-- STATS ROW -->
+        <div class="film-stats-row">
+            <div class="film-stat-col">
+                <span class="film-stat-label">Rating</span>
+                <div class="film-stat-ratings">
+                    <div class="film-stat-rating-line">
+                        <span class="film-stat-src">TMDB</span>
+                        <span class="film-stat-num film-stat-num--accent">{{ "%.1f"|format(film.vote_average) }}</span>
+                        <span class="film-stat-max">/10</span>
+                        <span class="film-stat-votes">{{ "{:,}".format(film.vote_count) }} votes</span>
+                    </div>
+                    {% if filmory_rating %}
+                    <div class="film-stat-rating-line">
+                        <span class="film-stat-src">Filmory</span>
+                        <span class="film-stat-num">{{ "%.1f"|format(filmory_rating) }}</span>
+                        <span class="film-stat-max">/10</span>
+                        <span class="film-stat-votes">{{ filmory_votes }} votes</span>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
-            <div class="film-rating__stars">
-                {% for i in range(1, 6) %}
-                <span class="film-rating__star {% if (film.vote_average / 2) >= i %}film-rating__star--filled{% elif (film.vote_average / 2) >= (i - 0.5) %}film-rating__star--filled{% endif %}">★</span>
-                {% endfor %}
+
+            <div class="film-stat-col">
+                <span class="film-stat-label">Released</span>
+                {% if film_status == 'Released' %}
+                <span class="film-stat-status film-stat-status--released">● Released</span>
+                {% elif film_status == 'In Production' %}
+                <span class="film-stat-status film-stat-status--production">● In Production</span>
+                {% elif film_status %}
+                <span class="film-stat-status">{{ film_status }}</span>
+                {% endif %}
+                {% if film.release_date %}
+                <span class="film-stat-date">{{ film.release_date.strftime('%b %d, %Y') }}</span>
+                {% endif %}
             </div>
-            <span class="film-rating__votes">{{ "{:,}".format(film.vote_count) }} votes</span>
+
+            <div class="film-stat-col">
+                <span class="film-stat-label">Runtime</span>
+                {% if film.runtime %}
+                {% set h = film.runtime // 60 %}{% set m = film.runtime % 60 %}
+                <span class="film-stat-runtime">{% if h %}{{ h }}h {% endif %}{{ m }}<span class="film-stat-runtime-sub">min</span></span>
+                <span class="film-stat-date">{{ film.runtime }} minutes total</span>
+                {% endif %}
+            </div>
+
+            <!-- Director -->
+            <div class="film-stat-col film-stat-col--crew" id="filmCrewStat" style="display:none">
+                <span class="film-stat-label">Director</span>
+                <div id="filmCrewStatBody"></div>
+            </div>
         </div>
 
-        <div class="film-meta-pills">
-            {% if film.release_date %}
-            <span class="film-meta-pill">{{ film.release_date.year }}</span>
+        <!-- INFO TABLE -->
+        <div class="film-info-table">
+            {% if film_countries %}
+            <div class="film-info-row">
+                <span class="film-info-row__key">Country</span>
+                <span class="film-info-row__val">{{ film_countries | join(', ') }}</span>
+            </div>
             {% endif %}
-            {% if film.runtime %}
-            <span class="film-meta-pill">
-                ⏱
-                {% set h = film.runtime // 60 %}
-                {% set m = film.runtime % 60 %}
-                {% if h %}{{ h }}h {% endif %}{{ m }}min
-            </span>
+            {% if film_languages %}
+            <div class="film-info-row">
+                <span class="film-info-row__key">Language</span>
+                <span class="film-info-row__val">{{ film_languages | join(', ') }}</span>
+            </div>
             {% endif %}
-            {% if film.genres %}
-            <span class="film-meta-pill">{{ film.genres | map(attribute='name') | join(', ') }}</span>
+            {% if film_studios %}
+            <div class="film-info-row">
+                <span class="film-info-row__key">Studio</span>
+                <span class="film-info-row__val">{{ film_studios | join(', ') }}</span>
+            </div>
+            {% endif %}
+            {% if film_budget %}
+            <div class="film-info-row">
+                <span class="film-info-row__key">Budget</span>
+                <span class="film-info-row__val">{{ film_budget }}</span>
+            </div>
+            {% endif %}
+            {% if film_revenue %}
+            <div class="film-info-row">
+                <span class="film-info-row__key">Revenue</span>
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span class="film-info-row__val">{{ film_revenue }}</span>
+                    {% if film_budget_raw and film_revenue_raw and film_budget_raw > 0 %}
+                    <span class="film-info-row__roi">↑ {{ "%.2f"|format(film_revenue_raw / film_budget_raw) }}×</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            {% if film.title %}
+            <div class="film-info-row">
+                <span class="film-info-row__key">Original title</span>
+                <span class="film-info-row__val film-info-row__val--italic">{{ film.title }}</span>
+            </div>
             {% endif %}
         </div>
 
+        <!-- OVERVIEW -->
         {% if film.overview %}
         <div>
             <p class="film-section-label">Overview</p>
@@ -150,94 +261,91 @@
         </div>
         {% endif %}
 
+        <!-- POPULARITY SCORE -->
         <div class="film-popularity">
             <p class="film-section-label">Popularity score</p>
-            <div class="film-popularity__bar-track">
-                <div
-                    class="film-popularity__bar-fill"
-                    style="width: {{ [film.popularity / 3, 100] | min }}%"
-                ></div>
-            </div>
-            <span class="film-popularity__label">{{ "%.1f"|format(film.popularity) }} / 300+</span>
-        </div>
-
-    </div>
-
-</div>
-
-<!-- CREDITS -->
-<div class="film-credits" id="filmCredits">
-    <div class="film-credits__container">
-
-        <!-- Tabs -->
-        <div class="film-credits__header">
-            <div class="film-credits__tabs">
-                <button class="film-credits__tab film-credits__tab--active" data-tab="top-cast">Top Cast</button>
-                <button class="film-credits__tab" data-tab="top-crew">Top Crew</button>
+            <div class="film-popularity__bar-row">
+                <div class="film-popularity__bar-track">
+                    <div class="film-popularity__bar-fill" style="width: {{ [film.popularity / 3, 100] | min }}%"></div>
+                </div>
+                <span class="film-popularity__label">{{ "%.1f"|format(film.popularity) }} / 300+</span>
+                {% set pct = [film.popularity / 3, 100] | min %}
+                {% if pct >= 95 %}
+                <span class="film-popularity__badge">Top 2%</span>
+                {% elif pct >= 90 %}
+                <span class="film-popularity__badge">Top 5%</span>
+                {% elif pct >= 75 %}
+                <span class="film-popularity__badge">Top 10%</span>
+                {% elif pct >= 50 %}
+                <span class="film-popularity__badge">Top 25%</span>
+                {% endif %}
             </div>
         </div>
 
-        <!-- Top Cast -->
-        <div class="film-credits__panel" id="topCastPanel">
-            <div class="film-row__wrapper">
-                <button class="row-arrow row-arrow--prev" aria-label="Scroll left">‹</button>
-                <div class="film-row__track" id="topCastTrack">
-                    {% for _ in range(12) %}
-                    <div class="person-card person-card--skeleton">
-                        <div class="person-card__photo skeleton-box"></div>
-                        <div class="person-card__name skeleton-box" style="height:12px; width:80%; margin-top:10px;"></div>
-                        <div class="person-card__sub skeleton-box" style="height:10px; width:60%; margin-top:6px;"></div>
+        <!-- CREDITS -->
+        <div class="film-credits" id="filmCredits">
+            <div class="film-credits__header">
+                <div class="film-credits__tabs">
+                    <button class="film-credits__tab film-credits__tab--active" data-tab="top-cast">Top Cast</button>
+                    <button class="film-credits__tab" data-tab="top-crew">Top Crew</button>
+                </div>
+            </div>
+
+            <div class="film-credits__panel" id="topCastPanel">
+                <div class="film-hscroll">
+                    <div class="film-hscroll__track" id="topCastTrack">
+                        {% for _ in range(15) %}
+                        <div class="person-card person-card--skeleton">
+                            <div class="person-card__photo skeleton-box"></div>
+                            <div class="person-card__name skeleton-box" style="height:12px;width:80%;margin-top:10px;"></div>
+                            <div class="person-card__sub skeleton-box" style="height:10px;width:60%;margin-top:6px;"></div>
+                        </div>
+                        {% endfor %}
                     </div>
+                </div>
+            </div>
+
+            <div class="film-credits__panel film-credits__panel--hidden" id="topCrewPanel">
+                <div class="film-crew__grid" id="topCrewGrid"></div>
+            </div>
+
+            <a href="/film/{{ film.tmdb_id }}/credits" class="fc-link">
+                View Full Cast & Crew
+                <span class="fc-link__arrow">→</span>
+            </a>
+        </div>
+
+        <!-- SIMILAR FILMS -->
+        {% if similar %}
+        <div class="film-similar">
+            <div class="film-similar__header">
+                <h2 class="film-similar__title">Similar Films</h2>
+            </div>
+            <div class="film-hscroll">
+                <div class="film-hscroll__track" id="similarTrack">
+                    {% for s in similar %}
+                    <a href="/film/{{ s.tmdb_id }}" class="film-card">
+                        {% if s.poster_url %}
+                        <img class="film-card__poster" src="{{ s.poster_url }}" alt="{{ s.title }}" loading="lazy">
+                        {% else %}
+                        <div class="film-card__no-poster">No Image</div>
+                        {% endif %}
+                        <div class="film-card__info">
+                            <p class="film-card__title">{{ s.title }}</p>
+                            <p class="film-card__meta">
+                                {% if s.release_date %}{{ s.release_date.year }}{% endif %}
+                                <span class="film-card__rating">★ {{ "%.1f"|format(s.vote_average) }}</span>
+                            </p>
+                        </div>
+                    </a>
                     {% endfor %}
                 </div>
-                <button class="row-arrow row-arrow--next" aria-label="Scroll right">›</button>
             </div>
         </div>
+        {% endif %}
 
-        <!-- Top Crew -->
-        <div class="film-credits__panel film-credits__panel--hidden" id="topCrewPanel">
-            <div class="film-crew__grid" id="topCrewGrid"></div>
-        </div>
-
-        <a href="/film/{{ film.tmdb_id }}/credits" class="fc-link">
-            View Full Cast & Crew
-            <span class="fc-link__arrow">→</span>
-        </a>
     </div>
 </div>
-
-<!-- SIMILAR FILMS -->
-{% if similar %}
-<div class="film-similar">
-    <div class="film-similar__container">
-        <div class="film-similar__header">
-            <h2 class="section-title">Similar Films</h2>
-        </div>
-        <div class="film-row__wrapper">
-            <button class="row-arrow row-arrow--prev" aria-label="Scroll left">‹</button>
-            <div class="film-row__track" id="similarTrack">
-                {% for s in similar %}
-                <a href="/film/{{ s.tmdb_id }}" class="film-card">
-                    {% if s.poster_url %}
-                    <img class="film-card__poster" src="{{ s.poster_url }}" alt="{{ s.title }}" loading="lazy">
-                    {% else %}
-                    <div class="film-card__no-poster">No Image</div>
-                    {% endif %}
-                    <div class="film-card__info">
-                        <p class="film-card__title">{{ s.title }}</p>
-                        <p class="film-card__meta">
-                            {% if s.release_date %}{{ s.release_date.year }}{% endif %}
-                            <span class="film-card__rating">★ {{ "%.1f"|format(s.vote_average) }}</span>
-                        </p>
-                    </div>
-                </a>
-                {% endfor %}
-            </div>
-            <button class="row-arrow row-arrow--next" aria-label="Scroll right">›</button>
-        </div>
-    </div>
-</div>
-{% endif %}
 
 {% endblock %}
 
