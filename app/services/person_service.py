@@ -192,8 +192,10 @@ class PersonService:
 
         tmdb_data = await tmdb_client.get_person_film_credits(tmdb_id)
 
-        # genres map from Redis
-        genres_list = await redis_cache.get("tmdb:genres") or []
+        # genres map from Redis with fallback to TMDB
+        genres_list = await redis_cache.get("tmdb:genres")
+        if not genres_list:
+            genres_list = await tmdb_client.get_genres()
         genres_map = {g["id"]: g["name"] for g in genres_list}
 
         tmdb_jobs = {}

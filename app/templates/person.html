@@ -147,6 +147,18 @@
         </div>
         {% endif %}
 
+        <!-- Watched stats (shown only for logged in users) -->
+        <div class="person-sidebar__watched" id="personStats" style="display:none">
+            <div class="person-sidebar__watched-header">
+                <span class="person-sidebar__watched-label">You've watched</span>
+                <span class="person-sidebar__watched-pct" id="statPct">0%</span>
+            </div>
+            <div class="person-sidebar__watched-count" id="statCount">0 of 0</div>
+            <div class="person-sidebar__watched-bar">
+                <div class="person-sidebar__watched-fill" id="statBar" style="width:0%"></div>
+            </div>
+        </div>
+
     </div>
 
 </div>

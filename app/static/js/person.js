@@ -2,8 +2,9 @@ const PAGE_SIZE = 20;
 let allFilms = [];
 let filteredFilms = [];
 let visibleCount = PAGE_SIZE;
+let userCompletedIds = new Set();
 
-// state of active filters
+// State of active filters
 const activeFilters = {
     job: '',
     sort: 'newest',
@@ -24,13 +25,19 @@ const filterLabels = {
 async function init() {
     showLoading();
     try {
-        const [filmsRes, jobsRes] = await Promise.all([
+        const [filmsRes, jobsRes, completedRes] = await Promise.all([
             fetch(`/api/person/${PERSON_TMDB_ID}/films`),
             fetch(`/api/person/${PERSON_TMDB_ID}/jobs`),
+            fetch('/api/user/films/completed').catch(() => null),
         ]);
 
         allFilms = await filmsRes.json();
         const { jobs } = await jobsRes.json();
+
+        if (completedRes && completedRes.ok) {
+            const completed = await completedRes.json();
+            userCompletedIds = new Set(completed.map(uf => uf.film.tmdb_id));
+        }
 
         populateJobFilter(jobs);
         populateGenreFilter();
@@ -58,7 +65,7 @@ function showLoading() {
     document.getElementById('filmsCount').textContent = 'Loading...';
 }
 
-// fallback on API error
+// Fallback on API error
 function showError() {
     document.getElementById('filmsGrid').innerHTML =
         '<p style="color:var(--text-muted);font-size:14px;grid-column:1/-1;">Failed to load films. Please try again.</p>';
@@ -79,12 +86,19 @@ function populateJobFilter(jobs) {
     });
 }
 
-// Creating genres from all movies
+// Populate genre filter dropdown based on genres from all loaded films
 function populateGenreFilter() {
     const genreMap = {};
-    allFilms.forEach(f => f.genres.forEach(g => genreMap[g.id] = g.name));
+
+    allFilms.forEach(f => {
+        if (Array.isArray(f.genres)) {
+            f.genres.forEach(g => { if (g.id && g.name) genreMap[g.id] = g.name; });
+        }
+    });
 
     const menu = document.getElementById('genreMenu');
+    menu.querySelectorAll('.filter-option[data-value]:not([data-value=""])').forEach(el => el.remove());
+
     Object.entries(genreMap)
         .sort((a, b) => a[1].localeCompare(b[1]))
         .forEach(([id, name]) => {
@@ -189,13 +203,12 @@ function initDecadeButtons() {
     });
 }
 
-// create a dynamic menu of years within a decade
+// Create a dynamic menu of years within a decade
 function showYearSubmenu(decade) {
     removeYearSubmenu();
 
     const currentYear = new Date().getFullYear();
 
-    // generate a list of years within a decade
     const years = [];
     for (let y = decade; y <= decade + 9; y++) {
         if (y <= currentYear) years.push(y);
@@ -312,14 +325,11 @@ document.getElementById('resetFilters').addEventListener('click', () => {
     activeFilters.year_to = null;
     activeFilters.genre = '';
 
-
-    // UI: Clear active states
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.filter-option').forEach(o => {
         o.classList.toggle('selected', o.dataset.value === '' || (o.dataset.filter === 'sort' && o.dataset.value === 'newest'));
     });
 
-    // Return default labels
     Object.values(filterLabels).forEach(({ id, default: def }) => {
         const el = document.getElementById(id);
         if (el) el.textContent = def;
@@ -339,20 +349,16 @@ function applyFilters() {
         const releaseDate = f.release_date ? new Date(f.release_date) : null;
         const releaseYear = releaseDate ? releaseDate.getFullYear() : null;
 
-        // job filter
         if (activeFilters.job && !f.jobs.includes(activeFilters.job)) return false;
 
-        // year range filter
         if (activeFilters.year_from && activeFilters.year_to) {
             if (!releaseYear || releaseYear < activeFilters.year_from || releaseYear > activeFilters.year_to) return false;
         } else if (activeFilters.year && !activeFilters.year_from) {
             if (!releaseYear || releaseYear !== parseInt(activeFilters.year)) return false;
         }
 
-        // genre filter
         if (activeFilters.genre && !f.genres.some(g => String(g.id) === activeFilters.genre)) return false;
 
-        // sorting-based filtering
         if (activeFilters.sort === 'upcoming') {
             if (!releaseDate || releaseDate <= today) return false;
         } else if (activeFilters.sort === 'newest' || activeFilters.sort === 'oldest') {
@@ -374,8 +380,23 @@ function applyFilters() {
         }
     });
 
-    visibleCount = PAGE_SIZE; // reset pagination on filter change
+    visibleCount = PAGE_SIZE;
     renderFilms();
+}
+
+// Update sidebar watched stats
+function updateSidebarStats() {
+    const statsEl = document.getElementById('personStats');
+    if (!statsEl || userCompletedIds.size === 0) return;
+
+    const total = filteredFilms.length;
+    const watched = filteredFilms.filter(f => userCompletedIds.has(f.tmdb_id)).length;
+    const pct = total > 0 ? Math.round((watched / total) * 100) : 0;
+
+    document.getElementById('statCount').textContent = `${watched} of ${total}`;
+    document.getElementById('statPct').textContent = `${pct}%`;
+    document.getElementById('statBar').style.width = `${pct}%`;
+    statsEl.style.display = 'block';
 }
 
 // Render
@@ -390,6 +411,7 @@ function renderFilms() {
     if (!visible.length) {
         grid.innerHTML = '<p style="color:var(--text-muted);font-size:14px;grid-column:1/-1;">No films found.</p>';
         loadMoreWrapper.style.display = 'none';
+        updateSidebarStats();
         return;
     }
 
@@ -412,6 +434,8 @@ function renderFilms() {
     `).join('');
 
     loadMoreWrapper.style.display = visibleCount < filteredFilms.length ? 'flex' : 'none';
+
+    updateSidebarStats();
 }
 
 // Load more

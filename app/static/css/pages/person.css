@@ -17,6 +17,29 @@
     margin-bottom: 32px;
 }
 
+/* Filter dropdown scrollbar styling */
+.filter-dropdown__menu {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+.filter-dropdown__menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.filter-dropdown__menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.filter-dropdown__menu::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+.filter-dropdown__menu::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
 /* Filters */
 .person-filter:hover,
 .person-filter:focus {
@@ -64,12 +87,13 @@
 
 /* Sidebar */
 .person-sidebar {
-    position: sticky;
-    top: 24px;
+    position: static;
+    top: auto;
     display: flex;
     flex-direction: column;
     gap: 20px;
-}
+    align-self: start;
+} */
 
 .person-sidebar__photo {
     width: 100%;
@@ -128,6 +152,55 @@
     font-weight: 500;
     text-align: right;
     max-width: 60%;
+}
+
+/* Watched stats */
+.person-sidebar__watched {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.person-sidebar__watched-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.person-sidebar__watched-label {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.person-sidebar__watched-pct {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.person-sidebar__watched-count {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.person-sidebar__watched-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.person-sidebar__watched-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.4s ease;
 }
 
 /* Bio */
