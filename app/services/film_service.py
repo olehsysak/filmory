@@ -192,20 +192,33 @@ class FilmService:
             runtime_max: int | None = None,
             page: int = 1,
     ) -> tuple[list, int, int]:
+        """Fetches films catalog from TMDB with optional filters, sorting, and pagination"""
 
-        if trending_period in ("day", "week"):
+        # Handle trending movies without additional filters using TMDB trending endpoint.
+        if trending_period in ("day", "week") and not genre_id and not runtime_min and not runtime_max:
             tmdb_data = await tmdb_client.get_trending(period=trending_period, page=page)
             films = await self._get_or_create_from_tmdb_list(tmdb_data.get("results", []))
-            if genre_id:
-                films = [f for f in films if any(g.tmdb_id == genre_id for g in f.genres)]
-            total = len(films)
-            return films, total, 1
+            return films, tmdb_data.get("total_results", 0), tmdb_data.get("total_pages", 1)
 
-        if sort == "popular" and not genre_id and not year and not year_from and not runtime_min and not runtime_max:
+        # Handle trending movies with additional filters using TMDB discover endpoint.
+        if trending_period in ("day", "week"):
+            tmdb_data = await tmdb_client.discover(
+                sort_by="popularity.desc",
+                genre_id=genre_id,
+                runtime_min=runtime_min,
+                runtime_max=runtime_max,
+                page=page,
+            )
+            films = await self._get_or_create_from_tmdb_list(tmdb_data.get("results", []))
+            return films, tmdb_data.get("total_results", 0), tmdb_data.get("total_pages", 1)
+
+        # Optimize default popular request by using a dedicated TMDB popular endpoint.
+        if sort == "popular" and not genre_id and not year and not year_from and not runtime_min and not runtime_max and not upcoming:
             tmdb_data = await tmdb_client.get_popular(page=page)
             films = await self._get_or_create_from_tmdb_list(tmdb_data.get("results", []))
             return films, tmdb_data.get("total_results", 0), tmdb_data.get("total_pages", 1)
 
+        # Map sorting options to TMDB-compatible sort parameters.
         sort_map = {
             "popular": "popularity.desc",
             "top_rated": "vote_average.desc",
@@ -215,6 +228,7 @@ class FilmService:
         }
         sort_by = sort_map.get(sort, "popularity.desc")
 
+        # Fetch filtered film catalog using TMDB discover endpoint.
         tmdb_data = await tmdb_client.discover(
             sort_by=sort_by,
             genre_id=genre_id,
@@ -227,6 +241,7 @@ class FilmService:
             page=page,
         )
         films = await self._get_or_create_from_tmdb_list(tmdb_data.get("results", []))
+
         return films, tmdb_data.get("total_results", 0), tmdb_data.get("total_pages", 1)
 
 

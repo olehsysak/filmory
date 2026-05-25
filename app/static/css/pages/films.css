@@ -39,7 +39,6 @@
     margin-bottom: 12px;
 }
 
-/* Search group */
 .filters__search-group {
     display: flex;
     align-items: center;
@@ -48,7 +47,6 @@
     flex-shrink: 0;
 }
 
-/* Filter label */
 .filters__label {
     font-size: 13px;
     color: var(--text-muted);
@@ -56,20 +54,7 @@
     flex-shrink: 0;
 }
 
-/* Skeleton */
-.film-card-skeleton {
-    aspect-ratio: 2/3;
-    background: var(--bg-secondary);
-    border-radius: 8px;
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes skeleton-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-}
-
-/* Films grid 5 col */
+/* Films Grid */
 .films-grid--5col {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -83,6 +68,19 @@
     padding: 60px 0;
     color: var(--text-muted);
     font-size: 15px;
+}
+
+/* Skeleton */
+.film-card-skeleton {
+    aspect-ratio: 2/3;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
 }
 
 /* Pagination */
@@ -133,6 +131,253 @@
     color: var(--text-muted);
     font-size: 14px;
     padding: 0 4px;
+}
+
+/* Browse bar */
+.browse-bar-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.browse-bar {
+    display: flex;
+    align-items: center;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    position: relative;
+    overflow: visible;
+    flex-shrink: 0;
+}
+
+.browse-bar__label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 0 16px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.browse-bar__divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    flex-shrink: 0;
+}
+
+/* Browse bar item */
+.browse-bar__item {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.browse-bar__item::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 12px;
+}
+
+/* Browse bar button */
+.browse-bar__btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: none;
+    border: none;
+    padding: 11px 17px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: color 0.15s;
+    line-height: 1;
+}
+
+.browse-bar__btn:hover {
+    color: var(--text);
+}
+
+.browse-bar__btn.active {
+    color: var(--accent);
+}
+
+.browse-bar__btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Browse bar arrow */
+.browse-bar__arrow {
+    width: 10px;
+    height: 6px;
+    flex-shrink: 0;
+    transition: transform 0.2s ease, color 0.15s;
+    color: var(--text-muted);
+}
+
+.browse-bar__item:hover .browse-bar__arrow {
+    transform: rotate(180deg);
+    color: var(--accent);
+}
+
+.browse-bar__btn.active .browse-bar__arrow {
+    color: var(--accent);
+}
+
+/* Browse bar dropdown */
+.browse-bar__menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px;
+    min-width: 180px;
+    box-shadow: var(--shadow);
+    z-index: 300;
+    max-height: 400px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+.browse-bar__menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.browse-bar__menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.browse-bar__menu::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+.browse-bar__item:hover .browse-bar__menu,
+.browse-bar__menu:hover {
+    display: block;
+}
+
+.browse-bar__menu--sort   {
+    min-width: 210px;
+}
+
+.browse-bar__menu--genres {
+    columns: 2;
+    min-width: 280px;
+    max-height: 360px;
+}
+
+.browse-bar__menu--years {
+    min-width: 200px;
+    max-height: none;
+    overflow: visible;
+}
+
+/* Browse bar section label */
+.browse-bar__section {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 8px 10px 4px;
+    column-span: all;
+    white-space: nowrap;
+}
+
+/* Upcoming item */
+.filter-option--upcoming {
+    color: var(--accent);
+    opacity: 0.85;
+}
+
+/* Active filters */
+.active-filters-bar {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+    margin-bottom: 36px;
+}
+
+.active-filter-tag--default {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    cursor: default;
+    user-select: none;
+}
+
+.active-filter-tag--closable {
+    background: rgba(var(--accent-rgb), 0.1);
+    border: 1px solid rgba(var(--accent-rgb), 0.3);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 8px 4px 12px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Browse search */
+.browse-search-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.browse-search-wrapper .films-search {
+    margin-left: 0;
+}
+
+.browse-search-wrapper .filters__label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.browse-search-wrapper .films-search__input {
+    width: 380px;
+}
+
+.films-search__field--bar {
+    border-radius: 24px !important;
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border) !important;
+    padding: 0 12px !important;
+}
+
+.films-search__input--bar {
+    width: 380px !important;
+    font-size: 14px;
+    padding: 8px 0 !important;
 }
 
 /* Responsive */
