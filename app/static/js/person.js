@@ -12,13 +12,15 @@ const activeFilters = {
     year_from: null,
     year_to: null,
     genre: '',
+    genre_name: '',
 };
 
+// Mapping filter keys to UI label elements
 const filterLabels = {
-    sort: { id: 'sortLabel', default: 'Sort' },
-    job: { id: 'jobLabel', default: 'Role' },
-    year: { id: 'yearLabel', default: 'Year' },
-    genre: { id: 'genreLabel', default: 'Genre' },
+    sort:  { id: 'sortLabel',  default: 'SORT' },
+    job:   { id: 'jobLabel',   default: 'ROLE' },
+    year:  { id: 'yearLabel',  default: 'YEAR' },
+    genre: { id: 'genreLabel', default: 'GENRE' },
 };
 
 // Load data
@@ -52,6 +54,7 @@ async function init() {
 // Loading states
 function showLoading() {
     const grid = document.getElementById('filmsGrid');
+
     grid.innerHTML = Array(10).fill(`
         <div class="film-card">
             <div class="film-card__poster skeleton-box"></div>
@@ -69,6 +72,7 @@ function showLoading() {
 function showError() {
     document.getElementById('filmsGrid').innerHTML =
         '<p style="color:var(--text-muted);font-size:14px;grid-column:1/-1;">Failed to load films. Please try again.</p>';
+
     document.getElementById('filmsCount').textContent = '';
 }
 
@@ -77,7 +81,7 @@ function populateJobFilter(jobs) {
     const menu = document.getElementById('jobMenu');
     jobs.forEach(job => {
         const btn = document.createElement('button');
-        btn.className = 'filter-option';
+        btn.className = 'person-filter-option';
         btn.dataset.filter = 'job';
         btn.dataset.value = job;
         btn.dataset.label = `Role · ${job}`;
@@ -90,6 +94,7 @@ function populateJobFilter(jobs) {
 function populateGenreFilter() {
     const genreMap = {};
 
+    // Extract unique genres from all films
     allFilms.forEach(f => {
         if (Array.isArray(f.genres)) {
             f.genres.forEach(g => { if (g.id && g.name) genreMap[g.id] = g.name; });
@@ -97,13 +102,14 @@ function populateGenreFilter() {
     });
 
     const menu = document.getElementById('genreMenu');
-    menu.querySelectorAll('.filter-option[data-value]:not([data-value=""])').forEach(el => el.remove());
+    menu.querySelectorAll('.person-filter-option[data-value]:not([data-value=""])').forEach(el => el.remove());
 
+    // Create sorted genre options
     Object.entries(genreMap)
         .sort((a, b) => a[1].localeCompare(b[1]))
         .forEach(([id, name]) => {
             const btn = document.createElement('button');
-            btn.className = 'filter-option';
+            btn.className = 'person-filter-option';
             btn.dataset.filter = 'genre';
             btn.dataset.value = id;
             btn.dataset.label = `Genre · ${name}`;
@@ -112,47 +118,77 @@ function populateGenreFilter() {
         });
 }
 
-// Dropdowns
 // Close all open dropdowns
 function closeAllDropdowns() {
-    document.querySelectorAll('.filter-dropdown.open').forEach(d => d.classList.remove('open'));
+    document.querySelectorAll('.person-browse-bar__item.open')
+        .forEach(d => d.classList.remove('open'));
 }
 
-// Opening/closing dropdowns
+// Opening/closing dropdowns on click
 function initDropdowns() {
-    document.querySelectorAll('.filter-dropdown').forEach(dropdown => {
-        const btn = dropdown.querySelector('.filter-btn');
+    document.querySelectorAll('.person-browse-bar__item').forEach(item => {
+        const btn = item.querySelector('.person-browse-bar__btn');
+        if (!btn) return;
+
         btn.addEventListener('click', e => {
             e.stopPropagation();
-            const isOpen = dropdown.classList.contains('open');
+            const isOpen = item.classList.contains('open');
             closeAllDropdowns();
-            if (!isOpen) dropdown.classList.add('open');
+            if (!isOpen) item.classList.add('open');
         });
     });
 
     document.addEventListener('click', e => {
-        if (!e.target.closest('.filter-dropdown')) closeAllDropdowns();
+        if (!e.target.closest('.person-browse-bar__item')) closeAllDropdowns();
     });
 }
 
-// Filter options
+// Handles filter option clicks and updates active filters
 function initFilterOptions() {
     document.addEventListener('click', e => {
-        const option = e.target.closest('.filter-option');
+        const option = e.target.closest('.person-filter-option');
         if (!option) return;
 
         const filter = option.dataset.filter;
-        const value = option.dataset.value;
-        const label = option.dataset.label;
+        const value  = option.dataset.value;
+        const label  = option.dataset.label;
 
         if (!filter) return;
 
-        // Year reset button
+        // Decade buttons — open year submenu
+        if (option.classList.contains('decade-btn')) {
+            document.querySelectorAll('.decade-btn').forEach(b => b.classList.remove('selected'));
+            option.classList.add('selected');
+            showYearSubmenu(parseInt(option.dataset.decade));
+            return;
+        }
+
+        // Upcoming — sets sort to upcoming, highlights Year button
+        if (filter === 'upcoming') {
+            activeFilters.sort = 'upcoming';
+            activeFilters.year = '';
+            activeFilters.year_from = null;
+            activeFilters.year_to = null;
+            removeYearSubmenu();
+            document.querySelectorAll('.decade-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById('yearBtn').classList.add('active');
+            document.getElementById('sortBtn').classList.remove('active');
+            // Mark upcoming as selected, deselect others in year menu
+            document.querySelectorAll('#yearMenu .person-filter-option').forEach(o =>
+                o.classList.toggle('selected', o === option)
+            );
+            closeAllDropdowns();
+            updateActiveFilterTags();
+            applyFilters();
+            return;
+        }
+
+        // Year reset ("All Years")
         if (filter === 'year' && value === '') {
             activeFilters.year = '';
             activeFilters.year_from = null;
             activeFilters.year_to = null;
-            document.getElementById('yearLabel').textContent = 'Year';
+            document.getElementById('yearLabel').textContent = filterLabels.year.default;
             document.getElementById('yearBtn').classList.remove('active');
             removeYearSubmenu();
             document.querySelectorAll('.decade-btn').forEach(b => b.classList.remove('selected'));
@@ -166,31 +202,30 @@ function initFilterOptions() {
 
         // Update filter state
         activeFilters[filter] = value;
+        if (filter === 'genre') activeFilters.genre_name = option.textContent.trim();
 
-        // Update UI label
+        // Update label in button — only highlight, no value appended
         const labelEl = document.getElementById(filterLabels[filter]?.id);
         if (labelEl) {
-            labelEl.textContent = value ? label || value : filterLabels[filter].default;
+            labelEl.textContent = filterLabels[filter].default;
         }
 
-        // UI: selected state
-        const menu = option.closest('.filter-dropdown__menu');
-        if (menu) {
-            menu.querySelectorAll('.filter-option').forEach(o => o.classList.remove('selected'));
-            option.classList.add('selected');
-        }
+        // Mark selected option
+        const item = option.closest('.person-browse-bar__item');
+        item?.querySelectorAll('.person-filter-option').forEach(o =>
+            o.classList.toggle('selected', o === option)
+        );
 
-        const dropdownBtn = option.closest('.filter-dropdown')?.querySelector('.filter-btn');
-        if (dropdownBtn) dropdownBtn.classList.toggle('active', !!value);
+        // Toggle active state on button
+        const btn = item?.querySelector('.person-browse-bar__btn');
+        if (btn) btn.classList.toggle('active', !!value);
 
-        option.closest('.filter-dropdown')?.classList.remove('open');
-
+        closeAllDropdowns();
         updateActiveFilterTags();
         applyFilters();
     });
 }
 
-// Year submenu
 // Initialization of decade buttons
 function initDecadeButtons() {
     document.querySelectorAll('.decade-btn').forEach(btn => {
@@ -209,14 +244,17 @@ function showYearSubmenu(decade) {
 
     const currentYear = new Date().getFullYear();
 
+    // Build array of valid years (not in the future)
     const years = [];
     for (let y = decade; y <= decade + 9; y++) {
         if (y <= currentYear) years.push(y);
     }
 
+    // Create submenu container
     const submenu = document.createElement('div');
     submenu.className = 'year-submenu';
     submenu.id = 'yearSubmenu';
+
     submenu.innerHTML = `
         <div class="year-submenu__header">
             <span class="year-submenu__title">Pick a year or</span>
@@ -229,26 +267,34 @@ function showYearSubmenu(decade) {
 
     document.getElementById('yearMenu').appendChild(submenu);
 
+    // Handle decade-wide selection (e.g. "1990s")
     submenu.querySelector('.year-submenu__decade-btn').addEventListener('click', e => {
         e.stopPropagation();
+
         activeFilters.year = `${decade}s`;
         activeFilters.year_from = decade;
         activeFilters.year_to = Math.min(decade + 9, currentYear);
-        document.getElementById('yearLabel').textContent = `Year · ${decade}s`;
+
+        document.getElementById('yearLabel').textContent = `YEAR`;
         document.getElementById('yearBtn').classList.add('active');
+
         closeAllDropdowns();
         updateActiveFilterTags();
         applyFilters();
     });
 
+    // Handle individual year selection
     submenu.querySelectorAll('.year-option').forEach(yBtn => {
         yBtn.addEventListener('click', e => {
             e.stopPropagation();
+
             activeFilters.year = parseInt(yBtn.dataset.year);
             activeFilters.year_from = null;
             activeFilters.year_to = null;
-            document.getElementById('yearLabel').textContent = `Year · ${activeFilters.year}`;
+
+            document.getElementById('yearLabel').textContent = `YEAR`;
             document.getElementById('yearBtn').classList.add('active');
+
             closeAllDropdowns();
             updateActiveFilterTags();
             applyFilters();
@@ -262,52 +308,96 @@ function removeYearSubmenu() {
     if (sub) sub.remove();
 }
 
-// Active filter tags
+// Builds UI tags for currently active filters and attaches remove handlers
 function updateActiveFilterTags() {
     const container = document.getElementById('activeFilters');
-    const resetBtn = document.getElementById('resetFilters');
+    const resetBtn  = document.getElementById('resetFilters');
+    const bar       = document.getElementById('personActiveFiltersBar');
 
-    const tags = Object.entries(activeFilters)
-        .filter(([key, val]) => {
-            if (key === 'year_from' || key === 'year_to') return false;
-            if (key === 'sort' && val === 'newest') return false;
-            return !!val;
-        })
+    const TAG_LABELS = {
+        sort:     v => v === 'upcoming' ? null : `Sort · ${v.charAt(0).toUpperCase() + v.slice(1)}`,
+        job:      v => `Role · ${v}`,
+        genre:    v => `Genre · ${activeFilters.genre_name || v}`,
+        year:     v => `Year · ${v}`,
+    };
+
+    // Build entries — upcoming shown as a Year tag via sort value
+    const entries = Object.entries(activeFilters).filter(([key, val]) => {
+        if (key === 'year_from' || key === 'year_to') return false;
+        if (key === 'genre_name') return false;
+        if (key === 'sort' && val === 'newest') return false;
+        if (key === 'sort' && val === 'upcoming') return true; // show as Year · Upcoming
+        if (key === 'sort') return true;
+        return !!val;
+    });
+
+    // Convert filters into tag HTML
+    const tags = entries
         .map(([key, val]) => {
-            const labelEl = document.getElementById(filterLabels[key]?.id);
-            const label = labelEl?.textContent || val;
+            const rawLabel = key === 'sort' && val === 'upcoming'
+                ? 'Year · Upcoming'
+                : TAG_LABELS[key] ? TAG_LABELS[key](val) : val;
+            if (!rawLabel) return null;
             return `
                 <span class="active-filter-tag">
-                    ${label}
+                    ${rawLabel}
                     <button class="active-filter-tag__remove" data-filter="${key}">×</button>
                 </span>
             `;
-        });
+        })
+        .filter(Boolean);
 
     container.innerHTML = tags.join('');
     resetBtn.style.display = tags.length ? 'block' : 'none';
 
+    // Toggle empty state on bar
+    if (bar) bar.classList.toggle('person-active-filters-bar--empty', tags.length === 0);
+
+    // Remove handlers for each tag
     container.querySelectorAll('.active-filter-tag__remove').forEach(btn => {
         btn.addEventListener('click', () => {
             const filter = btn.dataset.filter;
 
+            // Year filter reset
             if (filter === 'year') {
                 activeFilters.year = '';
                 activeFilters.year_from = null;
                 activeFilters.year_to = null;
-                document.getElementById('yearLabel').textContent = 'Year';
+
+                document.getElementById('yearLabel').textContent = filterLabels.year.default;
                 document.getElementById('yearBtn').classList.remove('active');
+
                 removeYearSubmenu();
                 document.querySelectorAll('.decade-btn').forEach(b => b.classList.remove('selected'));
+
+            // Sort filter reset
+            } else if (filter === 'sort') {
+                // Covers both regular sort and upcoming
+                activeFilters.sort = 'newest';
+
+                document.getElementById('sortLabel').textContent = filterLabels.sort.default;
+                document.getElementById('sortBtn').classList.remove('active');
+                document.getElementById('yearBtn').classList.remove('active');
+                // Deselect upcoming in year menu
+                document.querySelectorAll('#yearMenu .person-filter-option').forEach(o =>
+                    o.classList.toggle('selected', o.dataset.value === '')
+                );
+                document.querySelectorAll('.person-filter-option[data-filter="sort"]').forEach(o =>
+                    o.classList.toggle('selected', o.dataset.value === 'newest')
+                );
+
+            // Generic filter reset
             } else {
                 activeFilters[filter] = filter === 'sort' ? 'newest' : '';
                 const labelEl = document.getElementById(filterLabels[filter]?.id);
                 if (labelEl) labelEl.textContent = filterLabels[filter].default;
-                const dropdown = document.getElementById(`${filter}Dropdown`);
-                dropdown?.querySelectorAll('.filter-option').forEach(o => {
-                    o.classList.toggle('selected', o.dataset.value === activeFilters[filter] || o.dataset.value === '');
+
+                // Reset selected state in dropdown
+                const btn2 = document.getElementById(`${filter}Btn`);
+                btn2?.classList.remove('active');
+                document.querySelectorAll(`.person-filter-option[data-filter="${filter}"]`).forEach(o => {
+                    o.classList.toggle('selected', o.dataset.value === (filter === 'sort' ? 'newest' : ''));
                 });
-                dropdown?.querySelector('.filter-btn')?.classList.remove('active');
             }
 
             updateActiveFilterTags();
@@ -316,7 +406,7 @@ function updateActiveFilterTags() {
     });
 }
 
-// Reset
+// Restores default state for all filters, UI, and search input
 document.getElementById('resetFilters').addEventListener('click', () => {
     activeFilters.job = '';
     activeFilters.sort = 'newest';
@@ -324,41 +414,88 @@ document.getElementById('resetFilters').addEventListener('click', () => {
     activeFilters.year_from = null;
     activeFilters.year_to = null;
     activeFilters.genre = '';
+    activeFilters.genre_name = '';
 
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.filter-option').forEach(o => {
-        o.classList.toggle('selected', o.dataset.value === '' || (o.dataset.filter === 'sort' && o.dataset.value === 'newest'));
+    // Clear active state from all buttons
+    document.querySelectorAll('.person-browse-bar__btn').forEach(b => b.classList.remove('active'));
+
+    // Reset selected options
+    document.querySelectorAll('.person-filter-option').forEach(o => {
+        o.classList.toggle('selected',
+            o.dataset.value === '' || (o.dataset.filter === 'sort' && o.dataset.value === 'newest')
+        );
     });
 
+    // Reset label text
     Object.values(filterLabels).forEach(({ id, default: def }) => {
         const el = document.getElementById(id);
         if (el) el.textContent = def;
     });
+
     removeYearSubmenu();
     document.querySelectorAll('.decade-btn').forEach(b => b.classList.remove('selected'));
+    // Deselect upcoming, restore All Years as selected
+    document.querySelectorAll('#yearMenu .person-filter-option').forEach(o =>
+        o.classList.toggle('selected', o.dataset.value === '')
+    );
+
+    // Clear search input
+    const searchInput = document.getElementById('personSearch');
+    const searchClear = document.getElementById('personSearchClear');
+    if (searchInput) searchInput.value = '';
+    if (searchClear) searchClear.style.display = 'none';
 
     updateActiveFilterTags();
     applyFilters();
 });
 
-// Apply filters
+// Sets up search input with debounce and clear button behavior
+function initSearch() {
+    const input = document.getElementById('personSearch');
+    const clear = document.getElementById('personSearchClear');
+
+    if (!input) return;
+
+    let debounce;
+    input.addEventListener('input', () => {
+        clear.style.display = input.value ? '' : 'none';
+        clearTimeout(debounce);
+        debounce = setTimeout(() => applyFilters(), 200);
+    });
+
+    clear.addEventListener('click', () => {
+        input.value = '';
+        clear.style.display = 'none';
+        applyFilters();
+    });
+}
+
+// Filters, sorts, and updates the global film list based on active filters + search
 function applyFilters() {
     const today = new Date();
+    const searchQuery = document.getElementById('personSearch')?.value.trim().toLowerCase() || '';
 
     filteredFilms = allFilms.filter(f => {
         const releaseDate = f.release_date ? new Date(f.release_date) : null;
         const releaseYear = releaseDate ? releaseDate.getFullYear() : null;
 
+        // Search by title
+        if (searchQuery && !f.title.toLowerCase().includes(searchQuery)) return false;
+
+        // Filter by job/role
         if (activeFilters.job && !f.jobs.includes(activeFilters.job)) return false;
 
+        // Filter by year range or exact year
         if (activeFilters.year_from && activeFilters.year_to) {
             if (!releaseYear || releaseYear < activeFilters.year_from || releaseYear > activeFilters.year_to) return false;
         } else if (activeFilters.year && !activeFilters.year_from) {
             if (!releaseYear || releaseYear !== parseInt(activeFilters.year)) return false;
         }
 
+        // Filter by genre
         if (activeFilters.genre && !f.genres.some(g => String(g.id) === activeFilters.genre)) return false;
 
+        // Filter by release timing
         if (activeFilters.sort === 'upcoming') {
             if (!releaseDate || releaseDate <= today) return false;
         } else if (activeFilters.sort === 'newest' || activeFilters.sort === 'oldest') {
@@ -368,13 +505,14 @@ function applyFilters() {
         return true;
     });
 
+    // Sort filtered results based on active sort option
     filteredFilms.sort((a, b) => {
         switch (activeFilters.sort) {
-            case 'newest': return new Date(b.release_date) - new Date(a.release_date);
-            case 'oldest': return new Date(a.release_date) - new Date(b.release_date);
+            case 'newest':  return new Date(b.release_date) - new Date(a.release_date);
+            case 'oldest':  return new Date(a.release_date) - new Date(b.release_date);
             case 'upcoming': return new Date(a.release_date) - new Date(b.release_date);
             case 'highest': return b.vote_average - a.vote_average;
-            case 'lowest': return a.vote_average - b.vote_average;
+            case 'lowest':  return a.vote_average - b.vote_average;
             case 'popular': return b.popularity - a.popularity;
             default: return 0;
         }
@@ -384,22 +522,22 @@ function applyFilters() {
     renderFilms();
 }
 
-// Update sidebar watched stats
+// Updates watched/total progress stats in sidebar
 function updateSidebarStats() {
     const statsEl = document.getElementById('personStats');
     if (!statsEl || userCompletedIds.size === 0) return;
 
-    const total = filteredFilms.length;
+    const total   = filteredFilms.length;
     const watched = filteredFilms.filter(f => userCompletedIds.has(f.tmdb_id)).length;
-    const pct = total > 0 ? Math.round((watched / total) * 100) : 0;
+    const pct     = total > 0 ? Math.round((watched / total) * 100) : 0;
 
     document.getElementById('statCount').textContent = `${watched} of ${total}`;
-    document.getElementById('statPct').textContent = `${pct}%`;
-    document.getElementById('statBar').style.width = `${pct}%`;
+    document.getElementById('statPct').textContent   = `${pct}%`;
+    document.getElementById('statBar').style.width   = `${pct}%`;
     statsEl.style.display = 'block';
 }
 
-// Render
+// Renders visible subset of films and handles empty state + pagination UI
 function renderFilms() {
     const grid = document.getElementById('filmsGrid');
     const count = document.getElementById('filmsCount');
@@ -438,15 +576,16 @@ function renderFilms() {
     updateSidebarStats();
 }
 
-// Load more
+// Increases visible items and re-renders list
 document.getElementById('loadMoreBtn').addEventListener('click', () => {
     visibleCount += PAGE_SIZE;
     renderFilms();
 });
 
-// Bio toggle
-const bioText = document.getElementById('bioText');
+// Toggles expanded state of biography text in sidebar
+const bioText   = document.getElementById('bioText');
 const bioToggle = document.getElementById('bioToggle');
+
 if (bioText && bioToggle) {
     bioToggle.addEventListener('click', () => {
         const expanded = bioText.classList.toggle('person-sidebar__bio-text--expanded');
@@ -457,4 +596,5 @@ if (bioText && bioToggle) {
 // Init
 initDropdowns();
 initFilterOptions();
+initSearch();
 init();

@@ -8,50 +8,354 @@
     align-items: start;
 }
 
-/* Filters — reuse films style */
-.filters {
+/* Filmography title + count */
+.person-films__titlebar {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 32px;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 16px;
 }
 
-/* Filter dropdown scrollbar styling */
-.filter-dropdown__menu {
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-}
-
-.filter-dropdown__menu::-webkit-scrollbar {
-    width: 4px;
-}
-
-.filter-dropdown__menu::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.filter-dropdown__menu::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 4px;
-}
-
-.filter-dropdown__menu::-webkit-scrollbar-thumb:hover {
-    background: var(--text-muted);
-}
-
-/* Filters */
-.person-filter:hover,
-.person-filter:focus {
-    border-color: var(--accent);
-    outline: none;
+.person-films__title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
 }
 
 /* Films count */
 .person-films__count {
     font-size: 13px;
     color: var(--text-muted);
-    margin-bottom: 16px;
+    white-space: nowrap;
+}
+
+/* Filmography header row */
+.person-films__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0;
+    flex-wrap: nowrap;
+}
+
+/* Browse bar */
+.person-browse-bar {
+    display: flex;
+    align-items: center;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    position: relative;
+    overflow: visible;
+    flex-shrink: 0;
+}
+
+.person-browse-bar__label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 0 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.person-browse-bar__divider {
+    width: 1px;
+    height: 16px;
+    background: var(--border);
+    flex-shrink: 0;
+}
+
+.person-browse-bar__item {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.person-browse-bar__item::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 10px;
+}
+
+.person-browse-bar__btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    padding: 9px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: color 0.15s;
+    line-height: 1;
+}
+
+.person-browse-bar__btn:hover,
+.person-browse-bar__item:hover .person-browse-bar__btn {
+    color: var(--text);
+}
+
+.person-browse-bar__btn.active {
+    color: var(--accent);
+}
+
+.person-browse-bar__arrow {
+    width: 9px;
+    height: 5px;
+    flex-shrink: 0;
+    transition: transform 0.2s ease, color 0.15s;
+    color: var(--text-muted);
+}
+
+.person-browse-bar__item:hover .person-browse-bar__arrow {
+    transform: rotate(180deg);
+    color: var(--accent);
+}
+
+.person-browse-bar__btn.active .person-browse-bar__arrow {
+    color: var(--accent);
+}
+
+/* Dropdown menu */
+.person-browse-bar__menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px;
+    min-width: 180px;
+    box-shadow: var(--shadow);
+    z-index: 300;
+    max-height: 400px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+.person-browse-bar__menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.person-browse-bar__menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.person-browse-bar__menu::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+.person-browse-bar__menu::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+.person-browse-bar__item:hover .person-browse-bar__menu,
+.person-browse-bar__menu:hover {
+    display: block;
+}
+
+.person-browse-bar__menu--sort  { min-width: 210px; }
+.person-browse-bar__menu--genres {
+    columns: 2;
+    min-width: 280px;
+    max-height: 360px;
+}
+.person-browse-bar__menu--years {
+    min-width: 200px;
+    max-height: none;
+    overflow: visible;
+}
+
+.person-browse-bar__section {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 8px 10px 4px;
+    column-span: all;
+    white-space: nowrap;
+}
+
+/* Filter options inside dropdown */
+.person-filter-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 7px 10px;
+    font-size: 13px;
+    color: var(--text);
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    white-space: nowrap;
+    break-inside: avoid;
+}
+
+.person-filter-option:hover {
+    background: var(--border);
+    color: var(--accent);
+}
+
+.person-filter-option.selected {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.person-filter-option--upcoming.selected {
+    color: var(--accent);
+}
+
+/* Reset button */
+.person-filter-reset {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 13px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.person-filter-reset:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Search */
+.person-browse-search {
+    display: flex;
+    align-items: center;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0 11px;
+    gap: 7px;
+    transition: border-color 0.15s;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.person-browse-search:focus-within {
+    border-color: var(--accent);
+}
+
+.person-browse-search__icon {
+    color: var(--text-muted);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.person-browse-search__input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 12px;
+    padding: 7px 0;
+    width: 220px;
+    font-family: inherit;
+}
+
+.person-browse-search__input::placeholder {
+    color: var(--text-muted);
+}
+
+.person-browse-search__clear {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 15px;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: color 0.15s;
+}
+
+.person-browse-search__clear:hover {
+    color: var(--text);
+}
+
+/* Active filters + count bar */
+.person-active-filters-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 16px;
+    margin-top: 14px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+    min-height: 28px;
+}
+
+.person-active-filters-bar--empty {
+    padding-bottom: 0;
+    margin-top: 14px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+    min-height: 0;
+}
+
+.person-active-filters-bar--empty .person-active-filters {
+    display: none;
+}
+
+.person-active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex: 1;
+}
+
+.active-filter-tag {
+    background: rgba(var(--accent-rgb), 0.1);
+    border: 1px solid rgba(var(--accent-rgb), 0.3);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 8px 4px 12px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.active-filter-tag__remove {
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+    line-height: 1;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+}
+
+.active-filter-tag__remove:hover {
+    opacity: 1;
 }
 
 /* Films grid */
@@ -93,7 +397,7 @@
     flex-direction: column;
     gap: 20px;
     align-self: start;
-} */
+}
 
 .person-sidebar__photo {
     width: 100%;
@@ -278,6 +582,16 @@
     }
     .person-films__grid {
         grid-template-columns: repeat(3, 1fr);
+    }
+    .person-films__header {
+        flex-wrap: wrap;
+    }
+    .person-browse-search {
+        margin-left: 0;
+        width: 100%;
+    }
+    .person-browse-search__input {
+        width: 100%;
     }
 }
 
