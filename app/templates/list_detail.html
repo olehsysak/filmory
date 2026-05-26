@@ -6,17 +6,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', path='css/pages/list_detail.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', path='css/components/filters.css') }}">
 {% endblock %}
 
 {% block content %}
 
 <div class="ld-page">
 
-    <!-- HERO: cover + list info -->
+    <!-- HERO: cover col + meta col -->
     <div class="ld-hero">
-        <!-- Cover image -->
-        <div class="ld-cover">
+
+        <!-- LEFT: cover grid + stats below -->
+        <div class="ld-cover-col">
             <div class="ld-cover__grid" data-count="{{ list_data.cover_urls | length }}">
                 {% if list_data.cover_urls %}
                     {% for url in list_data.cover_urls %}
@@ -37,9 +37,40 @@
                     {% endfor %}
                 {% endif %}
             </div>
+
+            <!-- Stats under cover -->
+            <div class="ld-cover__stats">
+                <span class="ld-cover__stat">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                        <path d="M3 9H21" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span id="ldFilmCount">{{ list_data.film_count }}</span>
+                    {{ 'film' if list_data.film_count == 1 else 'films' }}
+                </span>
+                <span class="ld-cover__dot">·</span>
+                <span class="ld-cover__stat">Updated {{ list_data.updated_at.strftime('%b %d, %Y') }}</span>
+                {% if list_data.is_public %}
+                <span class="ld-cover__dot">·</span>
+                <span class="ld-cover__stat">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                        <path d="M20.84 4.61C20.3292 4.09896 19.7228 3.69365 19.0554 3.41708C18.3879 3.14052 17.6725 2.99817 16.95 2.99817C16.2275 2.99817 15.5121 3.14052 14.8446 3.41708C14.1772 3.69365 13.5708 4.09896 13.06 4.61L12 5.67L10.94 4.61C9.9083 3.5783 8.50903 2.9987 7.05 2.9987C5.59096 2.9987 4.19169 3.5783 3.16 4.61C2.1283 5.6417 1.5487 7.04097 1.5487 8.5C1.5487 9.95903 2.1283 11.3583 3.16 12.39L12 21.23L20.84 12.39C21.351 11.8792 21.7563 11.2728 22.0329 10.6054C22.3095 9.93789 22.4518 9.22248 22.4518 8.5C22.4518 7.77752 22.3095 7.06211 22.0329 6.39464C21.7563 5.72718 21.351 5.12083 20.84 4.61Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span id="ldLikesCountStat">{{ list_data.likes_count }}</span>
+                </span>
+                <span class="ld-cover__dot">·</span>
+                <span class="ld-cover__stat">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                        <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="currentColor" stroke-width="2"/>
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span id="ldViewsCount">{{ list_data.views_count }}</span>
+                </span>
+                {% endif %}
+            </div>
         </div>
 
-        <!-- List metadata -->
+        <!-- RIGHT: meta -->
         <div class="ld-meta">
             <div class="ld-meta__top">
                 <span class="ld-meta__label">List</span>
@@ -51,40 +82,8 @@
             <h1 class="ld-meta__title">{{ list_data.name }}</h1>
 
             {% if list_data.description %}
-            <p class="ld-meta__desc">{{ list_data.description }}</p>
+            <p class="ld-meta__desc">{{ list_data.description[:475] }}</p>
             {% endif %}
-
-            <div class="ld-meta__stats">
-                <span class="ld-meta__stat">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
-                        <path d="M3 9H21" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                    <span id="ldFilmCount">{{ list_data.film_count }}</span>
-                    {{ 'film' if list_data.film_count == 1 else 'films' }}
-                </span>
-                <span class="ld-meta__dot">·</span>
-                <span class="ld-meta__stat">
-                    Updated {{ list_data.updated_at.strftime('%b %d, %Y') }}
-                </span>
-                {% if list_data.is_public %}
-                <span class="ld-meta__dot">·</span>
-                <span class="ld-meta__stat">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                        <path d="M20.84 4.61C20.3292 4.09896 19.7228 3.69365 19.0554 3.41708C18.3879 3.14052 17.6725 2.99817 16.95 2.99817C16.2275 2.99817 15.5121 3.14052 14.8446 3.41708C14.1772 3.69365 13.5708 4.09896 13.06 4.61L12 5.67L10.94 4.61C9.9083 3.5783 8.50903 2.9987 7.05 2.9987C5.59096 2.9987 4.19169 3.5783 3.16 4.61C2.1283 5.6417 1.5487 7.04097 1.5487 8.5C1.5487 9.95903 2.1283 11.3583 3.16 12.39L12 21.23L20.84 12.39C21.351 11.8792 21.7563 11.2728 22.0329 10.6054C22.3095 9.93789 22.4518 9.22248 22.4518 8.5C22.4518 7.77752 22.3095 7.06211 22.0329 6.39464C21.7563 5.72718 21.351 5.12083 20.84 4.61Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <span id="ldLikesCountStat">{{ list_data.likes_count }}</span>
-                </span>
-                <span class="ld-meta__dot">·</span>
-                <span class="ld-meta__stat">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                        <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="currentColor" stroke-width="2"/>
-                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                    <span id="ldViewsCount">{{ list_data.views_count }}</span>
-                </span>
-                {% endif %}
-            </div>
 
             <!-- Owner actions -->
             {% if list_data.is_owner %}
@@ -111,6 +110,14 @@
                         <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
                     Delete
+                </button>
+                <!-- Copy link for owner -->
+                <button class="ld-btn ld-btn--copy" id="ldCopyLinkBtn" title="Copy link">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                        <path d="M10 13C10.8333 14.1667 12.5 16 15 16C17.5 16 19.5 14 19.5 12C19.5 10 17.5 8 15 8L13 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M14 11C13.1667 9.83333 11.5 8 9 8C6.5 8 4.5 10 4.5 12C4.5 14 6.5 16 9 16H11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span id="ldCopyLinkLabel">Copy link</span>
                 </button>
             </div>
 
@@ -148,85 +155,83 @@
                 </span>
                 {% endif %}
 
-            </div>
-            {% endif %}
-
-            <!-- Copy link — visible for all on public lists -->
-            {% if list_data.is_public %}
-            <div class="ld-meta__copy">
-                <button class="ld-btn ld-btn--copy" id="ldCopyLinkBtn" title="Copy link">
+                <!-- Copy link — for all on public lists -->
+                <button class="ld-btn ld-btn--copy" id="ldCopyLinkBtn2" title="Copy link">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                         <path d="M10 13C10.8333 14.1667 12.5 16 15 16C17.5 16 19.5 14 19.5 12C19.5 10 17.5 8 15 8L13 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                         <path d="M14 11C13.1667 9.83333 11.5 8 9 8C6.5 8 4.5 10 4.5 12C4.5 14 6.5 16 9 16H11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
-                    <span id="ldCopyLinkLabel">Copy link</span>
+                    <span id="ldCopyLinkLabel2">Copy link</span>
                 </button>
+
             </div>
             {% endif %}
+
         </div>
     </div>
 
     <!-- FILMS SECTION -->
     <div class="ld-films">
 
-        <!-- Filters row -->
+        <!-- Filters: browse bar + search + count -->
         <div class="ld-filters">
-
-            <!-- Left: dropdowns -->
-            <div class="ld-filters__dropdowns">
+            <div class="ld-browse-bar">
+                <span class="ld-browse-bar__label">Browse by</span>
+                <div class="ld-browse-bar__divider"></div>
 
                 <!-- Sort -->
-                <div class="filter-dropdown" id="ldSortDropdown">
-                    <button class="filter-btn" id="ldSortBtn">
-                        <span id="ldSortLabel">Sort</span>
-                        <span class="filter-btn__arrow">▾</span>
+                <div class="ld-browse-bar__item">
+                    <button class="ld-browse-bar__btn" id="ldSortBtn">
+                        <span id="ldSortLabel">SORT</span>
+                        <svg class="ld-browse-bar__arrow" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </button>
-                    <div class="filter-dropdown__menu filter-dropdown__menu--sort">
-                        <div class="filter-dropdown__section">Date added</div>
-                        <button class="ld-filter-option" data-filter="sort" data-value="added_desc" data-label="Added · Newest">Newest added</button>
+                    <div class="ld-browse-bar__menu ld-browse-bar__menu--sort">
+                        <div class="ld-browse-bar__section">Date added</div>
+                        <button class="ld-filter-option selected" data-filter="sort" data-value="added_desc" data-label="Added · Newest">Newest added</button>
                         <button class="ld-filter-option" data-filter="sort" data-value="added_asc" data-label="Added · Oldest">Oldest added</button>
-
-                        <div class="filter-dropdown__section">Release</div>
+                        <div class="ld-browse-bar__section">Release</div>
                         <button class="ld-filter-option" data-filter="sort" data-value="release_desc" data-label="Release · Newest">Newest first</button>
                         <button class="ld-filter-option" data-filter="sort" data-value="release_asc" data-label="Release · Oldest">Oldest first</button>
-
-                        <div class="filter-dropdown__section">Average rating</div>
+                        <div class="ld-browse-bar__section">Average rating</div>
                         <button class="ld-filter-option" data-filter="sort" data-value="rating_desc" data-label="Rating · Highest">Highest rated</button>
                         <button class="ld-filter-option" data-filter="sort" data-value="rating_asc" data-label="Rating · Lowest">Lowest rated</button>
-
-                        <div class="filter-dropdown__section">Your rating</div>
+                        <div class="ld-browse-bar__section">Your rating</div>
                         <button class="ld-filter-option" data-filter="sort" data-value="user_rating_desc" data-label="Your rating · Highest">Highest yours</button>
                         <button class="ld-filter-option" data-filter="sort" data-value="user_rating_asc" data-label="Your rating · Lowest">Lowest yours</button>
                         <button class="ld-filter-option" data-filter="sort" data-value="rated_only" data-label="Your rating · Rated only">Rated only</button>
                         <button class="ld-filter-option" data-filter="sort" data-value="unrated_only" data-label="Your rating · Not rated">Not rated</button>
-
-                        <div class="filter-dropdown__section">Other</div>
+                        <div class="ld-browse-bar__section">Other</div>
                         <button class="ld-filter-option" data-filter="sort" data-value="popularity_desc" data-label="Popularity · High">Most popular</button>
                         <button class="ld-filter-option" data-filter="sort" data-value="runtime_desc" data-label="Runtime · Longest">Longest first</button>
                         <button class="ld-filter-option" data-filter="sort" data-value="runtime_asc" data-label="Runtime · Shortest">Shortest first</button>
                     </div>
                 </div>
 
+                <div class="ld-browse-bar__divider"></div>
+
                 <!-- Genre -->
-                <div class="filter-dropdown" id="ldGenreDropdown">
-                    <button class="filter-btn" id="ldGenreBtn">
-                        <span id="ldGenreLabel">Genre</span>
-                        <span class="filter-btn__arrow">▾</span>
+                <div class="ld-browse-bar__item">
+                    <button class="ld-browse-bar__btn" id="ldGenreBtn">
+                        <span id="ldGenreLabel">GENRE</span>
+                        <svg class="ld-browse-bar__arrow" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </button>
-                    <div class="filter-dropdown__menu filter-dropdown__menu--genres" id="ldGenreMenu">
-                        <button class="ld-filter-option" data-filter="genre" data-value="">All Genres</button>
+                    <div class="ld-browse-bar__menu ld-browse-bar__menu--genres" id="ldGenreMenu">
+                        <button class="ld-filter-option selected" data-filter="genre" data-value="">All Genres</button>
                     </div>
                 </div>
 
+                <div class="ld-browse-bar__divider"></div>
+
                 <!-- Year -->
-                <div class="filter-dropdown" id="ldYearDropdown">
-                    <button class="filter-btn" id="ldYearBtn">
-                        <span id="ldYearLabel">Year</span>
-                        <span class="filter-btn__arrow">▾</span>
+                <div class="ld-browse-bar__item">
+                    <button class="ld-browse-bar__btn" id="ldYearBtn">
+                        <span id="ldYearLabel">YEAR</span>
+                        <svg class="ld-browse-bar__arrow" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </button>
-                    <div class="filter-dropdown__menu filter-dropdown__menu--years" id="ldYearMenu">
-                        <button class="ld-filter-option" data-filter="year" data-value="">All Years</button>
-                        <div class="filter-dropdown__section">By Decade</div>
+                    <div class="ld-browse-bar__menu ld-browse-bar__menu--years" id="ldYearMenu">
+                        <button class="ld-filter-option selected" data-filter="year" data-value="">All Years</button>
+                        <button class="ld-filter-option ld-filter-option--upcoming" data-filter="upcoming" data-value="upcoming">Upcoming</button>
+                        <div class="ld-browse-bar__section">By Decade</div>
                         <button class="ld-filter-option ld-decade-btn" data-decade="2020">2020s</button>
                         <button class="ld-filter-option ld-decade-btn" data-decade="2010">2010s</button>
                         <button class="ld-filter-option ld-decade-btn" data-decade="2000">2000s</button>
@@ -241,44 +246,43 @@
                     </div>
                 </div>
 
+                <div class="ld-browse-bar__divider"></div>
+
                 <!-- Duration -->
-                <div class="filter-dropdown" id="ldDurationDropdown">
-                    <button class="filter-btn" id="ldDurationBtn">
-                        <span id="ldDurationLabel">Duration</span>
-                        <span class="filter-btn__arrow">▾</span>
+                <div class="ld-browse-bar__item">
+                    <button class="ld-browse-bar__btn" id="ldDurationBtn">
+                        <span id="ldDurationLabel">DURATION</span>
+                        <svg class="ld-browse-bar__arrow" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </button>
-                    <div class="filter-dropdown__menu">
-                        <div class="filter-dropdown__section">Runtime</div>
-                        <button class="ld-filter-option" data-filter="duration" data-value="" data-min="" data-max="">Any length</button>
+                    <div class="ld-browse-bar__menu">
+                        <div class="ld-browse-bar__section">Runtime</div>
+                        <button class="ld-filter-option selected" data-filter="duration" data-value="" data-min="" data-max="">Any length</button>
                         <button class="ld-filter-option" data-filter="duration" data-value="short" data-min="" data-max="90">Short · under 90 min</button>
                         <button class="ld-filter-option" data-filter="duration" data-value="standard" data-min="90" data-max="150">Standard · 90–150 min</button>
                         <button class="ld-filter-option" data-filter="duration" data-value="long" data-min="150" data-max="">Long · over 150 min</button>
                     </div>
                 </div>
-
-                <!-- Reset -->
-                <button class="filter-reset" id="ldResetBtn" style="display:none">
-                    Reset
-                </button>
-
             </div>
 
-            <!-- Right: search -->
-            <div class="ld-search">
-                <span class="ld-search__icon">⌕</span>
-                <input
-                    type="text"
-                    class="ld-search__input"
-                    id="ldSearch"
-                    placeholder="Search in list..."
-                    autocomplete="off"
-                >
-                <button class="ld-search__clear" id="ldSearchClear" style="display:none">×</button>
+            <!-- Reset -->
+            <button class="ld-filter-reset" id="ldResetBtn" style="display:none">Reset all</button>
+
+            <!-- Search -->
+            <div class="ld-browse-search">
+                <span class="ld-browse-search__icon">⌕</span>
+                <input type="text" class="ld-browse-search__input" id="ldSearch"
+                    placeholder="Search in list..." autocomplete="off">
+                <button class="ld-browse-search__clear" id="ldSearchClear" style="display:none">×</button>
             </div>
+
+            <!-- Count -->
+            <span class="ld-films__count" id="ldFilmsCount"></span>
         </div>
 
         <!-- Active filter tags -->
-        <div class="ld-active-filters" id="ldActiveFilters"></div>
+        <div class="ld-active-filters-bar ld-active-filters-bar--empty" id="ldActiveFiltersBar">
+            <div class="ld-active-filters" id="ldActiveFilters"></div>
+        </div>
 
         <!-- Films grid -->
         <div class="ld-grid" id="ldGrid">
@@ -309,22 +313,27 @@
             <div class="ld-field">
                 <label class="ld-field__label" for="ldEditName">Name</label>
                 <input
+                    type="text"
                     class="ld-field__input"
                     id="ldEditName"
-                    type="text"
-                    maxlength="255"
                     value="{{ list_data.name }}"
+                    maxlength="255"
+                    placeholder="List name"
                 >
             </div>
 
             <!-- Description -->
             <div class="ld-field">
-                <label class="ld-field__label" for="ldEditDesc">Description</label>
+                <div class="ld-field__label-row">
+                    <label class="ld-field__label" for="ldEditDesc">Description</label>
+                    <span class="ld-field__counter" id="ldDescCounter">0 / 1000</span>
+                </div>
                 <textarea
                     class="ld-field__textarea"
                     id="ldEditDesc"
-                    rows="3"
-                    placeholder="Optional description..."
+                    rows="6"
+                    maxlength="475"
+                    placeholder="Optional description"
                 >{{ list_data.description or '' }}</textarea>
             </div>
 
@@ -332,42 +341,39 @@
             <div class="ld-field">
                 <label class="ld-field__label">Visibility</label>
                 <div class="ld-visibility">
-                    <button class="ld-vis-btn {% if not list_data.is_public %}ld-vis-btn--active{% endif %}" data-value="false">
-                        Private
-                    </button>
-                    <button class="ld-vis-btn {% if list_data.is_public %}ld-vis-btn--active{% endif %}" data-value="true">
-                        Public
-                    </button>
+                    <button class="ld-vis-btn {% if list_data.is_public %}ld-vis-btn--active{% endif %}"
+                        data-value="true">Public</button>
+                    <button class="ld-vis-btn {% if not list_data.is_public %}ld-vis-btn--active{% endif %}"
+                        data-value="false">Private</button>
                 </div>
             </div>
 
-            <!-- Cover -->
+            <!-- Cover picker -->
             <div class="ld-field">
-                <label class="ld-field__label">Cover image</label>
-                <p class="ld-field__hint">Choose a poster from films in this list</p>
+                <label class="ld-field__label">Cover (select up to 5 films)</label>
                 <div class="ld-cover-picker" id="ldCoverPicker">
-                    <div class="ld-cover-picker__empty">Loading films...</div>
+                    <p class="ld-cover-picker__empty">Add films to pick a cover</p>
                 </div>
             </div>
 
         </div>
         <div class="ld-modal__footer">
             <button class="ld-modal-btn ld-modal-btn--cancel" id="ldEditCancel">Cancel</button>
-            <button class="ld-modal-btn ld-modal-btn--save" id="ldEditSave">Save changes</button>
+            <button class="ld-modal-btn ld-modal-btn--confirm" id="ldEditSave">Save changes</button>
         </div>
     </div>
 </div>
 
 <!-- DELETE MODAL -->
 <div class="ld-modal-overlay" id="ldDeleteOverlay" style="display:none">
-    <div class="ld-modal ld-modal--sm" id="ldDeleteModal">
+    <div class="ld-modal ld-modal--sm">
         <div class="ld-modal__header">
             <h2 class="ld-modal__title">Delete list?</h2>
             <button class="ld-modal__close" id="ldDeleteClose">×</button>
         </div>
         <div class="ld-modal__body">
             <p class="ld-delete__msg">
-                Are you sure you want to delete <strong id="ldDeleteName">{{ list_data.name }}</strong>?
+                Are you sure you want to delete <strong>{{ list_data.name }}</strong>?
                 This action cannot be undone.
             </p>
         </div>

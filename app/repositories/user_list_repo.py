@@ -207,6 +207,7 @@ class UserListRepository:
             genre_id: int | None = None,
             year_from: int | None = None,
             year_to: int | None = None,
+            upcoming: bool = False,
             runtime_min: int | None = None,
             runtime_max: int | None = None,
             search: str | None = None,
@@ -246,11 +247,14 @@ class UserListRepository:
                 film_genre, film_genre.c.film_id == Film.id
             ).where(film_genre.c.genre_id == genre_id)
 
-        if year_from:
-            query = query.where(extract("year", Film.release_date) >= year_from)
-
-        if year_to:
-            query = query.where(extract("year", Film.release_date) <= year_to)
+        if upcoming:
+            from datetime import date
+            query = query.where(Film.release_date > date.today())
+        else:
+            if year_from:
+                query = query.where(extract("year", Film.release_date) >= year_from)
+            if year_to:
+                query = query.where(extract("year", Film.release_date) <= year_to)
 
         if runtime_min:
             query = query.where(Film.runtime >= runtime_min)

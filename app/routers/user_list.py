@@ -178,6 +178,7 @@ async def get_list_films(
     genre_id: int | None = Query(default=None),
     year_from: int | None = Query(default=None),
     year_to: int | None = Query(default=None),
+    upcoming: bool = Query(default=False),
     runtime_min: int | None = Query(default=None),
     runtime_max: int | None = Query(default=None),
     search: str | None = Query(default=None),
@@ -191,6 +192,7 @@ async def get_list_films(
         list_id, user_id,
         sort=sort, genre_id=genre_id,
         year_from=year_from, year_to=year_to,
+        upcoming=upcoming,
         runtime_min=runtime_min, runtime_max=runtime_max,
         search=search, rated_only=rated_only, unrated_only=unrated_only,
     )
