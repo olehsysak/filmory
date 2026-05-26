@@ -109,7 +109,8 @@
 .filter-option.selected,
 .col-filter-option.selected {
     color: var(--accent);
-    font-weight: 500;
+    font-weight: 600;
+    background: rgba(var(--accent-rgb), 0.08);
 }
 
 /* Year submenu */
@@ -176,7 +177,8 @@
 
 .year-option.selected {
     color: var(--accent);
-    font-weight: 500;
+    font-weight: 600;
+    background: rgba(var(--accent-rgb), 0.08);
 }
 
 /* Active filters */
@@ -195,31 +197,33 @@
 }
 
 .active-filter-tag {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    color: var(--text-muted);
+    background: rgba(var(--accent-rgb), 0.1);
+    border: 1px solid rgba(var(--accent-rgb), 0.3);
+    color: var(--accent);
     font-size: 12px;
     font-weight: 500;
-    padding: 4px 10px;
+    padding: 4px 8px 4px 12px;
     border-radius: 20px;
+    white-space: nowrap;
 }
 
 .active-filter-tag__remove {
     background: none;
     border: none;
-    color: var(--text-muted);
+    color: var(--accent);
     cursor: pointer;
     font-size: 14px;
     padding: 0;
     line-height: 1;
-    transition: color 0.15s;
+    opacity: 0.7;
+    transition: opacity 0.15s;
 }
 
 .active-filter-tag__remove:hover {
-    color: var(--text);
+    opacity: 1;
 }
 
 /* Reset */
@@ -227,8 +231,8 @@
     background: none;
     border: 1px solid var(--border);
     color: var(--text-muted);
-    font-size: 13px;
-    padding: 8px 16px;
+    font-size: 12px;
+    padding: 9px 16px;
     border-radius: 8px;
     cursor: pointer;
     font-family: inherit;

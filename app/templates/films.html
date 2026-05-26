@@ -71,6 +71,9 @@
                     <button class="filter-option" data-filter="sort" data-value="popular" data-label="Popular · All Time">All Time</button>
                     <button class="filter-option" data-filter="sort" data-value="trending_day" data-label="Trending · Today">Today</button>
                     <button class="filter-option" data-filter="sort" data-value="trending_week" data-label="Trending · This Week">This Week</button>
+                    <div class="browse-bar__section">Release</div>
+                    <button class="filter-option" data-filter="sort" data-value="release_desc" data-label="Release · Newest">Newest First</button>
+                    <button class="filter-option" data-filter="sort" data-value="release_asc" data-label="Release · Oldest">Oldest First</button>
                     <div class="browse-bar__section">Rating</div>
                     <button class="filter-option" data-filter="sort" data-value="top_rated" data-label="Rating · Highest">Highest Rated</button>
                     <button class="filter-option" data-filter="sort" data-value="lowest_rated" data-label="Rating · Lowest">Lowest Rated</button>
@@ -115,15 +118,17 @@
             </div>
         </div>
 
+        <!-- RESET (після browse bar, перед search) -->
+        <button class="filter-reset" id="resetFilters" style="display:none">Reset all</button>
+
         <!-- SEARCH -->
         <div class="browse-search-wrapper">
-            <span class="filters__label">FIND A FILM</span>
             <div class="films-search" id="filmsSearchWrapper">
-                <div class="films-search__field">
+                <div class="films-search__field films-search__field--bar">
                     <span class="films-search__icon">⌕</span>
                     <input
                         type="text"
-                        class="films-search__input"
+                        class="films-search__input films-search__input--bar"
                         id="filmsSearchInput"
                         placeholder="Search..."
                         autocomplete="off"
@@ -139,7 +144,6 @@
     <!-- ACTIVE FILTERS -->
     <div class="active-filters-bar">
         <div class="active-filters" id="activeFilters"></div>
-        <button class="filter-reset" id="resetFilters" style="display:none">Reset all</button>
     </div>
 
     <!-- GRID -->
