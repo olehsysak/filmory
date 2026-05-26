@@ -545,6 +545,30 @@
     color: #fff;
 }
 
+/* New List button */
+.cl-new-list-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 10px;
+    padding: 7px 13px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+}
+
+.cl-new-list-btn:hover {
+    background: var(--accent);
+    color: #fff;
+}
+
 .lists-sort-option,
 .liked-sort-option {
     display: block;

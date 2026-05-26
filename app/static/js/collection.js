@@ -323,7 +323,7 @@ function initGenreOptions() {
             state.genre_id   = btn.dataset.value ? parseInt(btn.dataset.value) : null;
             state.genre_name = btn.dataset.value ? btn.textContent.trim() : null;
 
-            document.getElementById('colGenreBtn').classList.toggle('active', !!state.genre_id);
+            document.getElementById('colGenreBtn').classList.toggle('active', !!btn.dataset.value);
 
             renderActiveFilters();
             fetchCollection();
@@ -331,43 +331,15 @@ function initGenreOptions() {
     });
 }
 
-// Initialize year and upcoming filters
+// Initialize year filter options
 function initYearOptions() {
-    document.querySelectorAll('.col-filter-option[data-filter="year"]').forEach(btn => {
-        btn.addEventListener('click', e => {
-            e.stopPropagation();
-
-            // Clear all year-related selections
-            document.querySelectorAll('.col-filter-option[data-filter="year"], .decade-btn, .col-filter-option[data-filter="upcoming"]')
-                .forEach(b => b.classList.remove('selected'));
-
-            btn.classList.add('selected');
-
-            // Reset year state
-            state.year = null;
-            state.year_from = null;
-            state.year_to = null;
-            state.upcoming = false;
-
-            document.getElementById('colYearBtn').classList.remove('active');
-
-            removeYearSubmenu();
-            renderActiveFilters();
-            fetchCollection();
-        });
-    });
-
-    // Upcoming filter
     document.querySelectorAll('.col-filter-option[data-filter="upcoming"]').forEach(btn => {
         btn.addEventListener('click', e => {
             e.stopPropagation();
 
-            document.querySelectorAll('.col-filter-option[data-filter="year"], .decade-btn, .col-filter-option[data-filter="upcoming"]')
+            document.querySelectorAll('.col-filter-option[data-filter="year"]')
                 .forEach(b => b.classList.remove('selected'));
 
-            btn.classList.add('selected');
-
-            // Enable upcoming mode and reset year filters
             state.year = null;
             state.year_from = null;
             state.year_to = null;
@@ -448,6 +420,7 @@ function showYearSubmenu(decade) {
         });
     });
 }
+
 // Remove year submenu from DOM
 function removeYearSubmenu() {
     document.getElementById('colYearSubmenu')?.remove();
@@ -632,7 +605,6 @@ function removeFilter(key) {
 
         document.querySelectorAll('.col-filter-option[data-filter="year"]')
             .forEach(b => {
-                b.classList.remove('selected');
                 if (!b.dataset.value) b.classList.add('selected');
             });
     }
@@ -754,7 +726,13 @@ function renderListsFilters() {
                 <button class="lists-vis-btn lists-vis-btn--active" data-value="">All</button>
                 <button class="lists-vis-btn" data-value="false">Private</button>
                 <button class="lists-vis-btn" data-value="true">Public</button>
-            </div>` : ''}
+            </div>
+            <button class="cl-new-list-btn" id="clNewListBtn">
+                <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                    <path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                New list
+            </button>` : ''}
             <div class="col-browse-search" style="margin-left:auto;">
                 <span class="col-browse-search__icon">⌕</span>
                 <input type="text" class="col-browse-search__input" id="listsSearch" placeholder="Search lists..." autocomplete="off">
@@ -768,7 +746,7 @@ function renderListsFilters() {
         btn.addEventListener('click', e => {
             e.stopPropagation();
 
-             // Update UI selected state
+            // Update UI selected state
             document.querySelectorAll('.lists-sort-option')
                 .forEach(b => b.classList.remove('selected'));
 
@@ -819,6 +797,8 @@ function renderListsFilters() {
         sc.style.display = 'none';
         fetchLists();
     });
+
+    if (IS_OWNER) initCreateListModal();
 }
 
 // Same structure as "My Lists" but without visibility filter
@@ -896,6 +876,110 @@ function renderLikedListsFilters() {
         listsState.search = '';
         sc.style.display = 'none';
         fetchLikedLists();
+    });
+}
+
+// Creates and manages the "New list" modal on the My Lists tab
+function initCreateListModal() {
+    const btn = document.getElementById('clNewListBtn');
+    if (!btn) return;
+
+    // Build modal once, reuse on subsequent tab visits
+    let overlay = document.getElementById('clCreateListOverlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'clCreateListOverlay';
+        overlay.className = 'atl-overlay';
+        overlay.innerHTML = `
+            <div class="atl-modal" style="max-height: unset;">
+                <div class="atl-modal__header">
+                    <span class="atl-modal__title">New list</span>
+                    <button class="atl-modal__close" id="clModalClose">✕</button>
+                </div>
+                <div class="atl-create-form" style="padding: 16px 20px 24px; border-top: none;">
+                    <input class="atl-input" id="clListName" type="text"
+                        placeholder="List name" maxlength="255" autocomplete="off">
+                    <textarea class="atl-input atl-textarea" id="clListDesc"
+                        placeholder="Description (optional)" maxlength="475" rows="3"></textarea>
+                    <div class="atl-create-form__actions">
+                        <label class="atl-toggle-row">
+                            <span>Public</span>
+                            <div class="atl-toggle" id="clPublicToggle" data-on="false">
+                                <div class="atl-toggle__knob"></div>
+                            </div>
+                        </label>
+                        <div class="atl-create-form__btns">
+                            <button class="atl-btn atl-btn--ghost" id="clCancelBtn">Cancel</button>
+                            <button class="atl-btn atl-btn--primary" id="clConfirmBtn">Create</button>
+                        </div>
+                    </div>
+                    <p id="clCreateError" style="display:none;font-size:12px;color:#e05c7a;margin-top:8px;"></p>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        // Toggle public/private
+        document.getElementById('clPublicToggle').addEventListener('click', function () {
+            this.dataset.on = this.dataset.on === 'true' ? 'false' : 'true';
+        });
+
+        // Close on backdrop click
+        overlay.addEventListener('click', e => { if (e.target === overlay) closeCreateModal(); });
+    }
+
+    function openCreateModal() {
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        document.getElementById('clListName').value = '';
+        document.getElementById('clListDesc').value = '';
+        document.getElementById('clPublicToggle').dataset.on = 'false';
+        document.getElementById('clCreateError').style.display = 'none';
+        document.getElementById('clConfirmBtn').disabled = false;
+        document.getElementById('clConfirmBtn').textContent = 'Create';
+        setTimeout(() => document.getElementById('clListName').focus({ preventScroll: true }), 50);
+    }
+
+    function closeCreateModal() {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    btn.addEventListener('click', openCreateModal);
+    document.getElementById('clModalClose').addEventListener('click', closeCreateModal);
+    document.getElementById('clCancelBtn').addEventListener('click', closeCreateModal);
+
+    document.getElementById('clConfirmBtn').addEventListener('click', async () => {
+        const name     = document.getElementById('clListName').value.trim();
+        const desc     = document.getElementById('clListDesc').value.trim() || null;
+        const isPublic = document.getElementById('clPublicToggle').dataset.on === 'true';
+        const errEl    = document.getElementById('clCreateError');
+        const confirmBtn = document.getElementById('clConfirmBtn');
+
+        if (!name) { document.getElementById('clListName').focus({ preventScroll: true }); return; }
+
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Creating…';
+        errEl.style.display = 'none';
+
+        try {
+            const res = await fetch('/api/user/lists/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, description: desc, is_public: isPublic }),
+            });
+
+            if (!res.ok) throw new Error();
+
+            closeCreateModal();
+            fetchLists();
+
+        } catch {
+            errEl.textContent = 'Something went wrong. Try again.';
+            errEl.style.display = 'block';
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Create';
+        }
     });
 }
 
