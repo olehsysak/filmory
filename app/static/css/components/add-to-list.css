@@ -343,6 +343,14 @@
     background: var(--text-muted);
 }
 
+/* Char counter */
+.atl-char-counter {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: right;
+    margin-top: -8px;
+}
+
 .atl-toggle-row {
     display: flex;
     align-items: center;

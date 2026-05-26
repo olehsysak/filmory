@@ -898,9 +898,11 @@ function initCreateListModal() {
                 </div>
                 <div class="atl-create-form" style="padding: 16px 20px 24px; border-top: none;">
                     <input class="atl-input" id="clListName" type="text"
-                        placeholder="List name" maxlength="255" autocomplete="off">
+                        placeholder="List name" maxlength="50" autocomplete="off">
+                    <div class="atl-char-counter" id="clNameCounter">0 / 50</div>
                     <textarea class="atl-input atl-textarea" id="clListDesc"
                         placeholder="Description (optional)" maxlength="475" rows="3"></textarea>
+                    <div class="atl-char-counter" id="clDescCounter">0 / 475</div>
                     <div class="atl-create-form__actions">
                         <label class="atl-toggle-row">
                             <span>Public</span>
@@ -926,6 +928,14 @@ function initCreateListModal() {
 
         // Close on backdrop click
         overlay.addEventListener('click', e => { if (e.target === overlay) closeCreateModal(); });
+
+        // Char counters
+        document.getElementById('clListName').addEventListener('input', function () {
+            document.getElementById('clNameCounter').textContent = `${this.value.length} / 50`;
+        });
+        document.getElementById('clListDesc').addEventListener('input', function () {
+            document.getElementById('clDescCounter').textContent = `${this.value.length} / 475`;
+        });
     }
 
     function openCreateModal() {
@@ -938,6 +948,9 @@ function initCreateListModal() {
         document.getElementById('clConfirmBtn').disabled = false;
         document.getElementById('clConfirmBtn').textContent = 'Create';
         setTimeout(() => document.getElementById('clListName').focus({ preventScroll: true }), 50);
+        // Reset counters
+        document.getElementById('clNameCounter').textContent = '0 / 50';
+        document.getElementById('clDescCounter').textContent = '0 / 475';
     }
 
     function closeCreateModal() {

@@ -308,16 +308,18 @@
             <button class="ld-modal__close" id="ldEditClose">×</button>
         </div>
         <div class="ld-modal__body">
-
             <!-- Name -->
             <div class="ld-field">
-                <label class="ld-field__label" for="ldEditName">Name</label>
+                <div class="ld-field__label-row">
+                    <label class="ld-field__label" for="ldEditName">Name</label>
+                    <span class="ld-field__counter" id="ldNameCounter">0 / 50</span>
+                </div>
                 <input
                     type="text"
                     class="ld-field__input"
                     id="ldEditName"
                     value="{{ list_data.name }}"
-                    maxlength="255"
+                    maxlength="50"
                     placeholder="List name"
                 >
             </div>
@@ -326,7 +328,7 @@
             <div class="ld-field">
                 <div class="ld-field__label-row">
                     <label class="ld-field__label" for="ldEditDesc">Description</label>
-                    <span class="ld-field__counter" id="ldDescCounter">0 / 1000</span>
+                    <span class="ld-field__counter" id="ldDescCounter">0 / 475</span>
                 </div>
                 <textarea
                     class="ld-field__textarea"

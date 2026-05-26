@@ -556,6 +556,15 @@ function openEditModal() {
     editCoverFilmIds = [...CURRENT_COVER_FILM_IDS];
     loadCoverPicker();
 
+    // Init char counter for name
+    const nameInput   = document.getElementById('ldEditName');
+    const nameCounter = document.getElementById('ldNameCounter');
+    if (nameInput && nameCounter) {
+        const updateName = () => { nameCounter.textContent = `${nameInput.value.length} / 50`; };
+        updateName();
+        nameInput.addEventListener('input', updateName);
+    }
+
     // Init char counter for description
     const textarea = document.getElementById('ldEditDesc');
     const counter  = document.getElementById('ldDescCounter');

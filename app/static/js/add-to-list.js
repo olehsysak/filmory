@@ -217,8 +217,10 @@
         form.className = 'atl-create-form';
         form.id = 'atlCreateForm';
         form.innerHTML = `
-            <input class="atl-input" id="atlNewName" type="text" placeholder="List name" maxlength="255" autofocus>
-            <textarea class="atl-input atl-textarea" id="atlNewDesc" placeholder="Description (optional)" maxlength="500" rows="2"></textarea>
+            <input class="atl-input" id="atlNewName" type="text" placeholder="List name" maxlength="50" autofocus>
+            <div class="atl-char-counter" id="atlNameCounter">0 / 50</div>
+            <textarea class="atl-input atl-textarea" id="atlNewDesc" placeholder="Description (optional)" maxlength="475" rows="2"></textarea>
+            <div class="atl-char-counter" id="atlDescCounter">0 / 475</div>
             <div class="atl-create-form__actions">
                 <label class="atl-toggle-row">
                     <span>Public</span>
@@ -242,6 +244,14 @@
         toggle.addEventListener('click', () => {
             const isOn = toggle.dataset.on === 'true';
             toggle.dataset.on = !isOn;
+        });
+
+        // Char counters
+        document.getElementById('atlNewName').addEventListener('input', function () {
+            document.getElementById('atlNameCounter').textContent = `${this.value.length} / 50`;
+        });
+        document.getElementById('atlNewDesc').addEventListener('input', function () {
+            document.getElementById('atlDescCounter').textContent = `${this.value.length} / 475`;
         });
     }
 
