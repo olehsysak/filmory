@@ -10,42 +10,32 @@
 {% block content %}
 <div class="collection-layout">
 
-    <!-- SIDEBAR -->
     <aside class="collection-sidebar">
-
-        <!-- User info -->
         <div class="collection-user">
-            <div class="collection-user__avatar">
-                {% if is_owner and current_user %}
-                    {{ current_user.username[0].upper() }}
-                {% else %}
-                    {{ profile_display[0].upper() }}
-                {% endif %}
-            </div>
-            <div class="collection-user__info">
-                <p class="collection-user__name">
-                    {% if is_owner and current_user %}
-                        {{ current_user.username }}
-                    {% else %}
-                        {{ profile_display }}
-                    {% endif %}
-                </p>
-                <p class="collection-user__sub">
-                    {% if is_owner %}My Collection{% else %}Collection{% endif %}
-                </p>
-            </div>
+            <a href="{% if is_owner %}/profile{% else %}/users/{{ profile_username }}{% endif %}"
+               class="collection-user__link">
+                <div class="collection-user__avatar">
+                    {% if is_owner and current_user %}{{ current_user.username[0].upper() }}
+                    {% else %}{{ profile_display[0].upper() }}{% endif %}
+                </div>
+                <div class="collection-user__info">
+                    <p class="collection-user__name">
+                        {% if is_owner and current_user %}{{ current_user.username }}
+                        {% else %}{{ profile_display }}{% endif %}
+                    </p>
+                    <p class="collection-user__sub">{% if is_owner %}My Collection{% else %}Collection{% endif %}</p>
+                </div>
+            </a>
         </div>
 
-        <!-- Navigation -->
         <nav class="collection-nav">
-
             <p class="collection-nav__label">Status</p>
 
             <a href="{% if is_owner %}/collection{% else %}/users/{{ profile_username }}/collection{% endif %}?tab=want_to_watch"
-            class="collection-nav__item {% if active_tab == 'want_to_watch' %}collection-nav__item--active{% endif %}">
+               class="collection-nav__item {% if active_tab == 'want_to_watch' %}collection-nav__item--active{% endif %}">
                 <span class="collection-nav__icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" width="18" height="18">
-                        <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M6 2c-0.26522 0 -0.51957 0.10536 -0.70711 0.29289C5.10536 2.48043 5 2.73478 5 3v18.1958l6.47 -4.0438c0.3243 -0.2027 0.7357 -0.2027 1.06 0L19 21.1958V3c0 -0.26522 -0.1054 -0.51957 -0.2929 -0.70711C18.5196 2.10536 18.2652 2 18 2zM3.87868 0.87868C4.44129 0.316071 5.20435 0 6 0h12c0.7956 0 1.5587 0.316071 2.1213 0.87868C20.6839 1.44129 21 2.20435 21 3v20c0 0.3635 -0.1973 0.6984 -0.5152 0.8746 -0.318 0.1763 -0.7065 0.1661 -1.0148 -0.0266L12 19.1792 4.53 23.848c-0.30827 0.1927 -0.69681 0.2029 -1.01477 0.0266C3.19728 23.6984 3 23.3635 3 23V3c0 -0.79565 0.31607 -1.55871 0.87868 -2.12132"/>
+                    <svg fill="none" viewBox="0 0 24 24" width="18" height="18">
+                        <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M6 2c-.265 0-.52.105-.707.293C5.105 2.48 5 2.735 5 3v18.196l6.47-4.044a.999.999 0 011.06 0L19 21.196V3c0-.265-.105-.52-.293-.707A1 1 0 0018 2H6zM3.879.879A3 3 0 016 0h12a3 3 0 013 3v20c0 .364-.197.698-.535.894a.999.999 0 01-1.065-.058L12 19.248l-7.4 4.588a.999.999 0 01-1.065.058A1 1 0 013 22.8V3a3 3 0 01.879-2.121z"/>
                     </svg>
                 </span>
                 <span>Want to watch</span>
@@ -53,11 +43,11 @@
             </a>
 
             <a href="{% if is_owner %}/collection{% else %}/users/{{ profile_username }}/collection{% endif %}?tab=watching"
-            class="collection-nav__item {% if active_tab == 'watching' %}collection-nav__item--active{% endif %}">
+               class="collection-nav__item {% if active_tab == 'watching' %}collection-nav__item--active{% endif %}">
                 <span class="collection-nav__icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14" width="18" height="18">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M13.23 6.2463c0.1658 0.20672 0.2576 0.47529 0.2576 0.75376s-0.0918 0.54704 -0.2576 0.75376c-1.05 1.27127 -3.44003 3.74628 -6.23003 3.74628s-5.18 -2.47501 -6.230002 -3.74628c-0.16584 -0.20672 -0.257639 -0.47529 -0.257639 -0.75376s0.091799 -0.54704 0.257639 -0.75376C1.81997 4.97503 4.20997 2.5 6.99997 2.5S12.18 4.97503 13.23 6.2463Z"/>
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 9c1.10457 0 2 -0.89543 2 -2s-0.89543 -2 -2 -2 -2 0.89543 -2 2 0.89543 2 2 2Z"/>
+                    <svg fill="none" viewBox="0 0 24 24" width="18" height="18">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 5C5.636 5 2 12 2 12s3.636 7 10 7 10-7 10-7-3.636-7-10-7z"/>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
                     </svg>
                 </span>
                 <span>Watching</span>
@@ -65,10 +55,10 @@
             </a>
 
             <a href="{% if is_owner %}/collection{% else %}/users/{{ profile_username }}/collection{% endif %}?tab=completed"
-            class="collection-nav__item {% if active_tab == 'completed' %}collection-nav__item--active{% endif %}">
+               class="collection-nav__item {% if active_tab == 'completed' %}collection-nav__item--active{% endif %}">
                 <span class="collection-nav__icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" width="18" height="18">
-                        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M0.85 15.65a1.21 1.21 0 0 0 0 1.7l5.8 5.8a1.2 1.2 0 0 0 1.7 0l14.8 -14.8a1.2 1.2 0 0 0 0 -1.7l-2.3 -2.3a1.2 1.2 0 0 0 -1.7 0L7.5 16l-2.65 -2.65a1.21 1.21 0 0 0 -1.7 0Z"/>
+                    <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 12.5L9 18l11-12"/>
                     </svg>
                 </span>
                 <span>Completed</span>
@@ -76,10 +66,10 @@
             </a>
 
             <a href="{% if is_owner %}/collection{% else %}/users/{{ profile_username }}/collection{% endif %}?tab=dropped"
-            class="collection-nav__item {% if active_tab == 'dropped' %}collection-nav__item--active{% endif %}">
+               class="collection-nav__item {% if active_tab == 'dropped' %}collection-nav__item--active{% endif %}">
                 <span class="collection-nav__icon">
-                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" width="18" height="18">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="m7.5 12 -6.293 6.293a1 1 0 0 0 0 1.414l3.086 3.086a1 1 0 0 0 1.414 0L12 16.5l6.293 6.293a1 1 0 0 0 1.414 0l3.086 -3.086a1 1 0 0 0 0 -1.414L16.5 12l6.293 -6.293a1 1 0 0 0 0 -1.414l-3.086 -3.086a1 1 0 0 0 -1.414 0L12 7.5 5.707 1.207a1 1 0 0 0 -1.414 0L1.207 4.293a1 1 0 0 0 0 1.414Z"/>
+                    <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 6L6 18M6 6l12 12"/>
                     </svg>
                 </span>
                 <span>Dropped</span>
@@ -87,14 +77,13 @@
             </a>
 
             <div class="collection-nav__divider"></div>
-
             <p class="collection-nav__label">Favorites</p>
 
             <a href="{% if is_owner %}/collection{% else %}/users/{{ profile_username }}/collection{% endif %}?tab=favorites"
-            class="collection-nav__item {% if active_tab == 'favorites' %}collection-nav__item--active{% endif %}">
+               class="collection-nav__item {% if active_tab == 'favorites' %}collection-nav__item--active{% endif %}">
                 <span class="collection-nav__icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
                     </svg>
                 </span>
                 <span>Favorites</span>
@@ -102,14 +91,13 @@
             </a>
 
             <div class="collection-nav__divider"></div>
-
             <p class="collection-nav__label">Lists</p>
 
             <a href="{% if is_owner %}/collection{% else %}/users/{{ profile_username }}/collection{% endif %}?tab=lists"
-            class="collection-nav__item {% if active_tab == 'lists' %}collection-nav__item--active{% endif %}">
+               class="collection-nav__item {% if active_tab == 'lists' %}collection-nav__item--active{% endif %}">
                 <span class="collection-nav__icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14" width="18" height="18">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M1 2h12M1 7h12M1 12h7"/>
+                    <svg fill="none" viewBox="0 0 24 24" width="18" height="18">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5h18M3 12h18M3 19h12"/>
                     </svg>
                 </span>
                 <span>My Lists</span>
@@ -118,10 +106,10 @@
 
             {% if is_owner %}
             <a href="/collection?tab=liked_lists"
-            class="collection-nav__item {% if active_tab == 'liked_lists' %}collection-nav__item--active{% endif %}">
+               class="collection-nav__item {% if active_tab == 'liked_lists' %}collection-nav__item--active{% endif %}">
                 <span class="collection-nav__icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
                     </svg>
                 </span>
                 <span>Liked Lists</span>
@@ -131,173 +119,141 @@
         </nav>
     </aside>
 
-    <!-- MAIN -->
     <div class="collection-main">
 
-        <!-- Header -->
         <div class="collection-header">
             <h1 class="collection-title" id="collectionTitle">—</h1>
             <p class="collection-count" id="collectionCount"></p>
         </div>
 
-        <!-- Filters -->
-        <div class="collection-filters" id="collectionFilters">
+        <div id="collectionFilters">
+            <div class="col-browse-row">
+                <div class="col-browse-bar">
+                    <span class="col-browse-bar__label">Browse by</span>
+                    <div class="col-browse-bar__divider"></div>
 
-            <!-- Search -->
-            <div class="collection-search">
-        <span class="collection-search__icon">⌕</span>
-                <input
-                    type="text"
-                    class="collection-search__input"
-                    id="collectionSearch"
-                    placeholder="Search by title..."
-                    autocomplete="off"
-                >
-                <button class="collection-search__clear" id="collectionSearchClear" style="display:none">×</button>
-            </div>
-
-            <div class="collection-filters__row">
-
-                <!-- Sort -->
-                <div class="filter-dropdown" id="colSortDropdown">
-                    <button class="filter-btn" id="colSortBtn">
-                        <span id="colSortLabel">Sort</span>
-                        <span class="filter-btn__arrow">▾</span>
-                    </button>
-                    <div class="filter-dropdown__menu">
-                        <div class="filter-dropdown__section">Date added</div>
-                        <button class="col-filter-option" data-filter="sort" data-value="added_desc" data-label="Added · Newest">Newest added</button>
-                        <button class="col-filter-option" data-filter="sort" data-value="added_asc" data-label="Added · Oldest">Oldest added</button>
-
-                        <div class="filter-dropdown__section">Release</div>
-                        <button class="col-filter-option" data-filter="sort" data-value="release_desc" data-label="Release · Newest">Newest first</button>
-                        <button class="col-filter-option" data-filter="sort" data-value="release_asc" data-label="Release · Oldest">Oldest first</button>
-
-                        <div class="filter-dropdown__section">Average rating</div>
-                        <button class="col-filter-option" data-filter="sort" data-value="rating_desc" data-label="Rating · Highest">Highest rated</button>
-                        <button class="col-filter-option" data-filter="sort" data-value="rating_asc" data-label="Rating · Lowest">Lowest rated</button>
-
-                        <div id="userRatingSortOptions" style="display:none">
-                            <div class="filter-dropdown__section">Your rating</div>
-                            <button class="col-filter-option" data-filter="sort" data-value="user_rating_desc" data-label="Your rating · Highest">Highest yours</button>
-                            <button class="col-filter-option" data-filter="sort" data-value="user_rating_asc" data-label="Your rating · Lowest">Lowest yours</button>
-                            <button class="col-filter-option" data-filter="sort" data-value="rated_only" data-label="Your rating · Rated only">Rated only</button>
-                            <button class="col-filter-option" data-filter="sort" data-value="unrated_only" data-label="Your rating · Not rated">Not rated</button>
+                    <!-- Sort -->
+                    <div class="col-browse-bar__item">
+                        <button class="col-browse-bar__btn" id="colSortBtn">
+                            <span id="colSortLabel">SORT</span>
+                            <svg class="col-browse-bar__arrow" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        </button>
+                        <div class="col-browse-bar__menu col-browse-bar__menu--sort">
+                            <div class="col-browse-bar__section">Date added</div>
+                            <button class="col-filter-option" data-filter="sort" data-value="added_desc">Newest added</button>
+                            <button class="col-filter-option" data-filter="sort" data-value="added_asc">Oldest added</button>
+                            <div class="col-browse-bar__section">Release</div>
+                            <button class="col-filter-option" data-filter="sort" data-value="release_desc">Newest first</button>
+                            <button class="col-filter-option" data-filter="sort" data-value="release_asc">Oldest first</button>
+                            <div class="col-browse-bar__section">Average rating</div>
+                            <button class="col-filter-option" data-filter="sort" data-value="rating_desc">Highest rated</button>
+                            <button class="col-filter-option" data-filter="sort" data-value="rating_asc">Lowest rated</button>
+                            <div id="userRatingSortOptions" style="display:none">
+                                <div class="col-browse-bar__section">Your rating</div>
+                                <button class="col-filter-option" data-filter="sort" data-value="user_rating_desc">Highest yours</button>
+                                <button class="col-filter-option" data-filter="sort" data-value="user_rating_asc">Lowest yours</button>
+                                <button class="col-filter-option" data-filter="sort" data-value="rated_only">Rated only</button>
+                                <button class="col-filter-option" data-filter="sort" data-value="unrated_only">Not rated</button>
+                            </div>
+                            <div class="col-browse-bar__section">Other</div>
+                            <button class="col-filter-option" data-filter="sort" data-value="popularity_desc">Most popular</button>
+                            <button class="col-filter-option" data-filter="sort" data-value="runtime_desc">Longest first</button>
+                            <button class="col-filter-option" data-filter="sort" data-value="runtime_asc">Shortest first</button>
                         </div>
+                    </div>
 
-                        <div class="filter-dropdown__section">Other</div>
-                        <button class="col-filter-option" data-filter="sort" data-value="popularity_desc" data-label="Popularity · High">Most popular</button>
-                        <button class="col-filter-option" data-filter="sort" data-value="runtime_desc" data-label="Runtime · Longest">Longest first</button>
-                        <button class="col-filter-option" data-filter="sort" data-value="runtime_asc" data-label="Runtime · Shortest">Shortest first</button>
+                    <div class="col-browse-bar__divider"></div>
+
+                    <!-- Genre -->
+                    <div class="col-browse-bar__item">
+                        <button class="col-browse-bar__btn" id="colGenreBtn">
+                            <span id="colGenreLabel">GENRE</span>
+                            <svg class="col-browse-bar__arrow" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        </button>
+                        <div class="col-browse-bar__menu col-browse-bar__menu--genres" id="colGenreMenu">
+                            <button class="col-filter-option" data-filter="genre" data-value="">All Genres</button>
+                        </div>
+                    </div>
+
+                    <div class="col-browse-bar__divider"></div>
+
+                    <!-- Year -->
+                    <div class="col-browse-bar__item">
+                        <button class="col-browse-bar__btn" id="colYearBtn">
+                            <span id="colYearLabel">YEAR</span>
+                            <svg class="col-browse-bar__arrow" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        </button>
+                        <div class="col-browse-bar__menu col-browse-bar__menu--years" id="colYearMenu">
+                            <button class="col-filter-option" data-filter="year" data-value="">All Years</button>
+                            <button class="col-filter-option col-filter-option--upcoming" data-filter="upcoming" data-value="upcoming">Upcoming</button>
+                            <div class="col-browse-bar__section">By Decade</div>
+                            <button class="col-filter-option decade-btn" data-decade="2020">2020s</button>
+                            <button class="col-filter-option decade-btn" data-decade="2010">2010s</button>
+                            <button class="col-filter-option decade-btn" data-decade="2000">2000s</button>
+                            <button class="col-filter-option decade-btn" data-decade="1990">1990s</button>
+                            <button class="col-filter-option decade-btn" data-decade="1980">1980s</button>
+                            <button class="col-filter-option decade-btn" data-decade="1970">1970s</button>
+                            <button class="col-filter-option decade-btn" data-decade="1960">1960s</button>
+                            <button class="col-filter-option decade-btn" data-decade="1950">1950s</button>
+                            <button class="col-filter-option decade-btn" data-decade="1940">1940s</button>
+                            <button class="col-filter-option decade-btn" data-decade="1930">1930s</button>
+                            <button class="col-filter-option decade-btn" data-decade="1920">1920s</button>
+                        </div>
+                    </div>
+
+                    <div class="col-browse-bar__divider"></div>
+
+                    <!-- Duration -->
+                    <div class="col-browse-bar__item">
+                        <button class="col-browse-bar__btn" id="colDurationBtn">
+                            <span id="colDurationLabel">DURATION</span>
+                            <svg class="col-browse-bar__arrow" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        </button>
+                        <div class="col-browse-bar__menu">
+                            <div class="col-browse-bar__section">Runtime</div>
+                            <button class="col-filter-option" data-filter="duration" data-value="" data-min="" data-max="">Any length</button>
+                            <button class="col-filter-option" data-filter="duration" data-value="short"    data-min=""    data-max="90">Short · under 90 min</button>
+                            <button class="col-filter-option" data-filter="duration" data-value="standard" data-min="90"  data-max="150">Standard · 90–150 min</button>
+                            <button class="col-filter-option" data-filter="duration" data-value="long"     data-min="150" data-max="">Long · over 150 min</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Genre -->
-                <div class="filter-dropdown" id="colGenreDropdown">
-                    <button class="filter-btn" id="colGenreBtn">
-                        <span id="colGenreLabel">Genre</span>
-                        <span class="filter-btn__arrow">▾</span>
-                    </button>
-                    <div class="filter-dropdown__menu filter-dropdown__menu--genres" id="colGenreMenu">
-                        <button class="col-filter-option" data-filter="genre" data-value="">All Genres</button>
-                    </div>
+                <button class="col-filter-reset" id="colResetFilters" style="display:none">Reset all</button>
+
+                <div class="col-browse-search">
+                    <span class="col-browse-search__icon">⌕</span>
+                    <input type="text" class="col-browse-search__input" id="collectionSearch"
+                        placeholder="Search by title..." autocomplete="off">
+                    <button class="col-browse-search__clear" id="collectionSearchClear" style="display:none">×</button>
                 </div>
-
-                <!-- Year -->
-                <div class="filter-dropdown" id="colYearDropdown">
-                    <button class="filter-btn" id="colYearBtn">
-                        <span id="colYearLabel">Year</span>
-                        <span class="filter-btn__arrow">▾</span>
-                    </button>
-                    <div class="filter-dropdown__menu filter-dropdown__menu--years" id="colYearMenu">
-                        <button class="col-filter-option" data-filter="year" data-value="">All Years</button>
-                        <div class="filter-dropdown__section">By Decade</div>
-                        <button class="col-filter-option decade-btn" data-decade="2020">2020s</button>
-                        <button class="col-filter-option decade-btn" data-decade="2010">2010s</button>
-                        <button class="col-filter-option decade-btn" data-decade="2000">2000s</button>
-                        <button class="col-filter-option decade-btn" data-decade="1990">1990s</button>
-                        <button class="col-filter-option decade-btn" data-decade="1980">1980s</button>
-                        <button class="col-filter-option decade-btn" data-decade="1970">1970s</button>
-                        <button class="col-filter-option decade-btn" data-decade="1960">1960s</button>
-                        <button class="col-filter-option decade-btn" data-decade="1950">1950s</button>
-                        <button class="col-filter-option decade-btn" data-decade="1940">1940s</button>
-                        <button class="col-filter-option decade-btn" data-decade="1930">1930s</button>
-                        <button class="col-filter-option decade-btn" data-decade="1920">1920s</button>
-                    </div>
-                </div>
-
-                <!-- Duration -->
-                <div class="filter-dropdown" id="colDurationDropdown">
-                    <button class="filter-btn" id="colDurationBtn">
-                        <span id="colDurationLabel">Duration</span>
-                        <span class="filter-btn__arrow">▾</span>
-                    </button>
-                    <div class="filter-dropdown__menu">
-                        <div class="filter-dropdown__section">Runtime</div>
-                        <button class="col-filter-option" data-filter="duration" data-value="" data-min="" data-max="">Any length</button>
-                        <button class="col-filter-option" data-filter="duration" data-value="short" data-min="" data-max="90">Short · under 90 min</button>
-                        <button class="col-filter-option" data-filter="duration" data-value="standard" data-min="90" data-max="150">Standard · 90–150 min</button>
-                        <button class="col-filter-option" data-filter="duration" data-value="long" data-min="150" data-max="">Long · over 150 min</button>
-                    </div>
-                </div>
-
-                <!-- Reset -->
-                <button class="filter-reset" id="colResetFilters" style="display:none">Reset</button>
-
             </div>
 
-            <!-- Active filters -->
-            <div class="active-filters" id="colActiveFilters"></div>
-
-        </div>
-
-        <!-- Films grid -->
-        <div class="collection-grid" id="collectionGrid">
-            <!-- skeleton -->
-            {% for _ in range(8) %}
-            <div class="collection-card collection-card--skeleton">
-                <div class="collection-card__poster skeleton-box"></div>
-                <div class="collection-card__info">
-                    <div class="skeleton-box" style="height:14px; width:80%; margin-bottom:8px;"></div>
-                    <div class="skeleton-box" style="height:12px; width:50%;"></div>
-                </div>
+            <div class="col-active-filters-bar col-active-filters-bar--empty" id="colActiveFiltersBar">
+                <div class="col-active-filters" id="colActiveFilters"></div>
             </div>
-            {% endfor %}
         </div>
 
-        <!-- Empty state -->
+        <div id="ratingSection" style="display:none; margin-bottom: 20px;"></div>
+
+        <div class="collection-grid" id="collectionGrid"></div>
         <div class="collection-empty" id="collectionEmpty" style="display:none">
-            <p class="collection-empty__text">No films here yet.</p>
-            <p class="collection-empty__text">Start build your own collection.</p>
-            <a href="/films" class="btn btn--outline">Browse films</a>
+            <p class="collection-empty__text">Nothing here yet.</p>
         </div>
-
-        <!-- Lists grid (shown only on lists tab) -->
         <div class="lists-grid" id="listsGrid" style="display:none"></div>
-        <div class="lists-empty" id="listsEmpty" style="display:none">
-            <p class="collection-empty__text">No lists yet.</p>
-            <p class="collection-empty__text">Create your first list from any film page.</p>
-            <a href="/films" class="btn btn--outline">Browse films</a>
+        <div class="collection-empty" id="listsEmpty" style="display:none">
+            <p class="collection-empty__text">No lists found.</p>
         </div>
-
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    const ACTIVE_TAB = "{{ active_tab }}";
-    const IS_OWNER = {{ 'true' if is_owner else 'false' }};
-    const PROFILE_USERNAME = {{ profile_username | tojson }};
-    const PRIVACY = {
-        want_to_watch: {{ privacy['want_to_watch'] | lower if privacy else 'true' }},
-        watching:      {{ privacy['watching'] | lower if privacy else 'true' }},
-        completed:     {{ privacy['completed'] | lower if privacy else 'true' }},
-        dropped:       {{ privacy['dropped'] | lower if privacy else 'true' }},
-        favorites:     {{ privacy['favorites'] | lower if privacy else 'true' }},
-        lists:         {{ privacy['lists'] | lower if privacy else 'true' }},
-        liked_lists: true,
-    };
+    const ACTIVE_TAB       = {{ active_tab | tojson }};
+    const IS_OWNER         = {{ is_owner | tojson }};
+    const PROFILE_USERNAME = {{ profile_username | tojson if profile_username else 'null' }};
+    const PRIVACY          = {{ privacy | tojson }};
 </script>
 <script src="{{ url_for('static', path='js/collection.js') }}"></script>
 {% endblock %}

@@ -1,4 +1,4 @@
-// Titles for each collection tab
+// Tab titles displayed in the profile navigation
 const TAB_TITLES = {
     want_to_watch: 'Want to Watch',
     watching: 'Watching',
@@ -9,11 +9,10 @@ const TAB_TITLES = {
     liked_lists: 'Liked Lists',
 };
 
-// API endpoints mapped to each tab
-const _base = PROFILE_USERNAME
-    ? `/api/users/${PROFILE_USERNAME}`
-    : '/api/user';
+// Base API path depends on whether the profile is public or current user
+const _base = PROFILE_USERNAME ? `/api/users/${PROFILE_USERNAME}` : '/api/user';
 
+// Film collection endpoints for each tab
 const TAB_ENDPOINTS = {
     want_to_watch: `${_base}/films/want-to-watch`,
     watching:      `${_base}/films/watching`,
@@ -22,65 +21,107 @@ const TAB_ENDPOINTS = {
     favorites:     PROFILE_USERNAME ? `${_base}/favorites` : '/api/user/favorites/',
 };
 
-const LISTS_ENDPOINT = PROFILE_USERNAME
-    ? `/api/users/${PROFILE_USERNAME}/lists`
-    : '/api/user/lists/';
-
+// Lists endpoints
+const LISTS_ENDPOINT       = PROFILE_USERNAME ? `/api/users/${PROFILE_USERNAME}/lists` : '/api/user/lists/';
 const LIKED_LISTS_ENDPOINT = '/api/user/lists/liked';
 
-// Tabs that support user-specific rating filters
-const RATED_ONLY_TABS = new Set(['completed', 'favorites']);
+// Tabs that support rating-related filters
+const RATED_ONLY_TABS      = new Set(['completed', 'favorites']);
 
-// Central state object controlling filters and active tab
+// Shared collection filter and sorting state
 const state = {
     tab: ACTIVE_TAB,
     sort: 'added_desc',
     genre_id: null,
+    genre_name: null,
     year: null,
     year_from: null,
     year_to: null,
+    upcoming: false,
     runtime_min: null,
     runtime_max: null,
+    runtime_label: null,
     search: '',
 };
 
-// Separate filter state used only for custom user lists tab
-const listsState = {
-    sort: 'updated_desc',
-    is_public: null,   // null | true | false
-    search: '',
+// Labels for film sorting options
+const SORT_LABELS = {
+    added_desc:       'Sort · Newest added',
+    added_asc:        'Sort · Oldest added',
+    release_desc:     'Sort · Newest release',
+    release_asc:      'Sort · Oldest release',
+    rating_desc:      'Sort · Highest rated',
+    rating_asc:       'Sort · Lowest rated',
+    user_rating_desc: 'Sort · Your highest',
+    user_rating_asc:  'Sort · Your lowest',
+    rated_only:       'Sort · Rated only',
+    unrated_only:     'Sort · Not rated',
+    popularity_desc:  'Sort · Most popular',
+    runtime_desc:     'Sort · Longest first',
+    runtime_asc:      'Sort · Shortest first',
 };
 
-// Labels for runtime filter options
-const durationLabels = {
-    short: 'Short · < 90 min',
-    standard: 'Standard · 90–150 min',
-    long: 'Long · > 150 min',
+// Labels for runtime filters
+const DURATION_LABELS = {
+    short:    'Duration · Under 90 min',
+    standard: 'Duration · 90–150 min',
+    long:     'Duration · Over 150 min',
 };
 
-// Fetches collection data from the API based on current state filters and renders the results into the grid
+// Lists sort option labels shown IN the browse-bar button (for My Lists / Liked Lists)
+const LISTS_SORT_LABELS = {
+    updated_desc: 'SORT · Newest updated',
+    updated_asc:  'SORT · Oldest updated',
+    created_desc: 'SORT · Newest created',
+    created_asc:  'SORT · Oldest created',
+    name_asc:     'SORT · Name A–Z',
+    name_desc:    'SORT · Name Z–A',
+    films_desc:   'SORT · Most films',
+    films_asc:    'SORT · Fewest films',
+};
+
+// Labels for liked lists sorting options
+const LIKED_SORT_LABELS = {
+    liked_desc:  'SORT · Newest liked',
+    liked_asc:   'SORT · Oldest liked',
+    likes_desc:  'SORT · Most liked',
+    likes_asc:   'SORT · Least liked',
+    views_desc:  'SORT · Most viewed',
+    views_asc:   'SORT · Least viewed',
+    films_desc:  'SORT · Most films',
+    name_asc:    'SORT · Name A–Z',
+};
+
+// State for lists filters and sorting
+const listsState = { sort: 'updated_desc', is_public: null, search: '' };
+
+// Fetch films for the active collection tab
 async function fetchCollection() {
-    const grid = document.getElementById('collectionGrid');
+    const grid  = document.getElementById('collectionGrid');
     const empty = document.getElementById('collectionEmpty');
     const count = document.getElementById('collectionCount');
 
-    // Hide private message if visible
     const privateMsg = document.getElementById('collectionPrivateMsg');
     if (privateMsg) privateMsg.style.display = 'none';
 
-    renderSkeletons();
-    empty.style.display = 'none';
-
-    // Build query parameters based on active filters
+    renderSkeletons(); empty.style.display = 'none';
     const params = new URLSearchParams();
-    if (state.genre_id) params.set('genre_id', state.genre_id);
-    if (state.year) params.set('year', state.year);
-    if (state.year_from) params.set('year_from', state.year_from);
-    if (state.year_to) params.set('year_to', state.year_to);
+
+    // Upcoming filter replaces year filters
+    if (state.genre_id)    params.set('genre_id', state.genre_id);
+    if (state.upcoming) {
+        params.set('upcoming', 'true');
+    } else {
+        if (state.year)        params.set('year', state.year);
+        if (state.year_from)   params.set('year_from', state.year_from);
+        if (state.year_to)     params.set('year_to', state.year_to);
+    }
+
+    // Apply runtime filters
     if (state.runtime_min) params.set('runtime_min', state.runtime_min);
     if (state.runtime_max) params.set('runtime_max', state.runtime_max);
 
-    // Special sorting cases for rating-based filters
+    // Handle rated/unrated filters separately from regular sorting
     if (state.sort === 'rated_only') {
         params.set('rated_only', 'true');
     } else if (state.sort === 'unrated_only') {
@@ -89,38 +130,29 @@ async function fetchCollection() {
         params.set('sort', state.sort);
     }
 
+    // Apply search query
     if (state.search) params.set('search', state.search);
 
     try {
-        const url = `${TAB_ENDPOINTS[state.tab]}?${params}`;
-        const res = await fetch(url);
+        const res  = await fetch(`${TAB_ENDPOINTS[state.tab]}?${params}`);
         if (!res.ok) throw new Error();
         const data = await res.json();
 
         const countEl = document.getElementById(`count-${state.tab}`);
         if (countEl) countEl.textContent = data.length;
-
         count.textContent = `${data.length} films`;
 
-        if (!data.length) {
-            grid.style.display = 'none';
-            empty.style.display = 'flex';
-            return;
-        }
-
+        if (!data.length) { grid.style.display = 'none'; empty.style.display = 'flex'; return; }
         grid.style.display = 'grid';
         grid.innerHTML = data.map(entry => renderCard(entry)).join('');
-
     } catch {
-        grid.style.display = 'none';
-        empty.style.display = 'flex';
+        grid.style.display = 'none'; empty.style.display = 'flex';
     }
 }
 
-// Renders a single film card inside the collection grid
+// Render a single film card
 function renderCard(entry) {
     const film = entry.film;
-
     const tmdbRating = film.vote_average
         ? `<span class="collection-card__tmdb-rating">★ ${film.vote_average.toFixed(1)}</span>`
         : '';
@@ -137,251 +169,94 @@ function renderCard(entry) {
         <a href="/film/${film.tmdb_id}" class="collection-card">
             ${film.poster_url
                 ? `<img class="collection-card__poster" src="${film.poster_url}" alt="${escapeHtml(film.title)}" loading="lazy">`
-                : `<div class="collection-card__poster"></div>`
-            }
+                : `<div class="collection-card__no-poster"></div>`}
             <div class="collection-card__info">
                 <p class="collection-card__title">${escapeHtml(film.title)}</p>
-                <div class="collection-card__meta">
-                    ${tmdbRating}
-                    ${userRating}
-                    ${year}
-                </div>
+                <div class="collection-card__meta">${tmdbRating}${userRating}${year}</div>
             </div>
-        </a>
-    `;
+        </a>`;
 }
 
-// Fetches user-created lists from the API and renders them into the lists grid
+// Fetch user's own lists
 async function fetchLists() {
-    const grid = document.getElementById('listsGrid');
+    const grid  = document.getElementById('listsGrid');
     const empty = document.getElementById('listsEmpty');
     const count = document.getElementById('collectionCount');
 
-    // Hide private message if visible
-    const privateMsg = document.getElementById('collectionPrivateMsg');
-    if (privateMsg) privateMsg.style.display = 'none';
-
-    // Skeleton
-    grid.style.display = 'grid';
-    empty.style.display = 'none';
+    grid.style.display = 'grid'; empty.style.display = 'none';
     renderListSkeletons(grid, 4);
 
     const params = new URLSearchParams();
     params.set('sort', listsState.sort);
+
     if (listsState.is_public !== null) params.set('is_public', listsState.is_public);
     if (listsState.search) params.set('search', listsState.search);
 
     try {
-        const res = await fetch(`${LISTS_ENDPOINT}?${params}`);
+        const res  = await fetch(`${LISTS_ENDPOINT}?${params}`);
         if (!res.ok) throw new Error();
-        const data = await res.json();
 
+        const data = await res.json();
         const countEl = document.getElementById('count-lists');
+
         if (countEl) countEl.textContent = data.length;
         count.textContent = `${data.length} lists`;
 
-        if (!data.length) {
-            grid.style.display = 'none';
-            empty.style.display = 'flex';
-            return;
-        }
-
+        if (!data.length) { grid.style.display = 'none'; empty.style.display = 'flex'; return; }
         grid.style.display = 'grid';
-        grid.innerHTML = data.map(list => renderListCard(list, {
-            showBadge: true, showDesc: true, showDate: true,
-        })).join('');
+
+        grid.innerHTML = data.map(list =>
+            renderListCard(list, {
+                showBadge: true, showDesc: true, showDate: true
+            })
+        ).join('');
 
     } catch {
-        grid.style.display = 'none';
-        empty.style.display = 'flex';
+        grid.style.display = 'none'; empty.style.display = 'flex';
     }
 }
 
-// Fetches liked lists from the API and renders them
+// Fetch lists liked by the current user
 async function fetchLikedLists() {
-    const grid = document.getElementById('listsGrid');
+    const grid  = document.getElementById('listsGrid');
     const empty = document.getElementById('listsEmpty');
     const count = document.getElementById('collectionCount');
 
-    const privateMsg = document.getElementById('collectionPrivateMsg');
-    if (privateMsg) privateMsg.style.display = 'none';
-
-    grid.style.display = 'grid';
-    empty.style.display = 'none';
+    grid.style.display = 'grid'; empty.style.display = 'none';
     renderListSkeletons(grid, 4);
 
-    try {
-        const res = await fetch(LIKED_LISTS_ENDPOINT);
-        if (!res.ok) throw new Error();
-        const data = await res.json();
+    const params = new URLSearchParams();
+    params.set('sort', listsState.sort || 'liked_desc');
 
+    if (listsState.search) params.set('search', listsState.search);
+
+    try {
+        const res  = await fetch(`${LIKED_LISTS_ENDPOINT}?${params}`);
+        if (!res.ok) throw new Error();
+
+        const data = await res.json();
         const countEl = document.getElementById('count-liked_lists');
+
         if (countEl) countEl.textContent = data.length;
         count.textContent = `${data.length} lists`;
 
-        if (!data.length) {
-            grid.style.display = 'none';
-            empty.style.display = 'flex';
-            return;
-        }
-
+        if (!data.length) { grid.style.display = 'none'; empty.style.display = 'flex'; return; }
         grid.style.display = 'grid';
+
         grid.innerHTML = data.map(list => renderListCard(list, {
-            showAuthor: true, showDesc: true,
+            showAuthor: true, showDesc: true, showLikes: true, showViews: true,
         })).join('');
     } catch {
-        grid.style.display = 'none';
-        empty.style.display = 'flex';
+        grid.style.display = 'none'; empty.style.display = 'flex';
     }
 }
 
-// Renders minimal filters for liked lists tab (search only, no sort needed for now)
-function renderLikedListsFilters() {
-    const filtersArea = document.getElementById('collectionFilters');
-    filtersArea.innerHTML = `
-        <div class="lists-filters">
-            <div class="collection-search">
-                <span class="collection-search__icon">⌕</span>
-                <input type="text" class="collection-search__input" id="likedListsSearch"
-                    placeholder="Search liked lists..." autocomplete="off">
-                <button class="collection-search__clear" id="likedListsSearchClear" style="display:none">×</button>
-            </div>
-        </div>
-    `;
-
-    // Client-side search (filter already loaded cards)
-    const searchInput = document.getElementById('likedListsSearch');
-    const searchClear = document.getElementById('likedListsSearchClear');
-
-    searchInput.addEventListener('input', () => {
-        const q = searchInput.value.trim().toLowerCase();
-        searchClear.style.display = q ? '' : 'none';
-
-        document.querySelectorAll('#listsGrid .list-card').forEach(card => {
-            const name = card.querySelector('.list-card__name')?.textContent.toLowerCase() || '';
-            const author = card.querySelector('.list-card__author')?.textContent.toLowerCase() || '';
-            card.style.display = (name.includes(q) || author.includes(q)) ? '' : 'none';
-        });
-    });
-
-    searchClear.addEventListener('click', () => {
-        searchInput.value = '';
-        searchClear.style.display = 'none';
-        document.querySelectorAll('#listsGrid .list-card').forEach(card => {
-            card.style.display = '';
-        });
-    });
-}
-
-// Renders and initializes filters used specifically for custom user lists
-function renderListsFilters() {
-    const filtersArea = document.getElementById('collectionFilters');
-    filtersArea.innerHTML = `
-        <div class="lists-filters">
-            <div class="collection-search">
-                <span class="collection-search__icon">⌕</span>
-                <input type="text" class="collection-search__input" id="listsSearch"
-                    placeholder="Search lists..." autocomplete="off">
-                <button class="collection-search__clear" id="listsSearchClear" style="display:none">×</button>
-            </div>
-            <div class="collection-filters__row">
-                <div class="filter-dropdown" id="listsSortDropdown">
-                    <button class="filter-btn" id="listsSortBtn">
-                        <span id="listsSortLabel">Sort</span>
-                        <span class="filter-btn__arrow">▾</span>
-                    </button>
-                    <div class="filter-dropdown__menu">
-                        <div class="filter-dropdown__section">Last updated</div>
-                        <button class="lists-sort-option" data-value="updated_desc" data-label="Updated · Newest">Newest updated</button>
-                        <button class="lists-sort-option" data-value="updated_asc" data-label="Updated · Oldest">Oldest updated</button>
-                        <div class="filter-dropdown__section">Created</div>
-                        <button class="lists-sort-option" data-value="created_desc" data-label="Created · Newest">Newest created</button>
-                        <button class="lists-sort-option" data-value="created_asc" data-label="Created · Oldest">Oldest created</button>
-                        <div class="filter-dropdown__section">Other</div>
-                        <button class="lists-sort-option" data-value="name_asc" data-label="Name · A–Z">Name A–Z</button>
-                        <button class="lists-sort-option" data-value="name_desc" data-label="Name · Z–A">Name Z–A</button>
-                        <button class="lists-sort-option" data-value="films_desc" data-label="Films · Most">Most films</button>
-                        <button class="lists-sort-option" data-value="films_asc" data-label="Films · Fewest">Fewest films</button>
-                    </div>
-                </div>
-
-                ${IS_OWNER ? `
-                    <div class="lists-visibility-toggle">
-                        <button class="lists-vis-btn lists-vis-btn--active" data-value="">All</button>
-                        <button class="lists-vis-btn" data-value="false">Private</button>
-                        <button class="lists-vis-btn" data-value="true">Public</button>
-                    </div>
-                ` : ''}
-            </div>
-        </div>
-    `;
-
-    // Sort dropdown
-    const sortDropdown = document.getElementById('listsSortDropdown');
-    sortDropdown.querySelector('.filter-btn').addEventListener('click', e => {
-        e.stopPropagation();
-        sortDropdown.classList.toggle('open');
-    });
-    document.addEventListener('click', () => sortDropdown.classList.remove('open'));
-
-    document.querySelectorAll('.lists-sort-option').forEach(btn => {
-        if (btn.dataset.value === listsState.sort) btn.classList.add('selected');
-        btn.addEventListener('click', e => {
-            e.stopPropagation();
-            document.querySelectorAll('.lists-sort-option').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            listsState.sort = btn.dataset.value;
-            document.getElementById('listsSortLabel').textContent = btn.dataset.label;
-            document.getElementById('listsSortBtn').classList.add('active');
-            sortDropdown.classList.remove('open');
-            fetchLists();
-        });
-    });
-
-    // Visibility toggle
-    document.querySelectorAll('.lists-vis-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.lists-vis-btn').forEach(b => b.classList.remove('lists-vis-btn--active'));
-            btn.classList.add('lists-vis-btn--active');
-            listsState.is_public = btn.dataset.value === '' ? null : btn.dataset.value === 'true';
-            fetchLists();
-        });
-    });
-
-    if (!IS_OWNER) {
-    document.querySelector('.lists-vis-btn[data-value="false"]')?.remove();
-    }
-
-    // Search
-    const searchInput = document.getElementById('listsSearch');
-    const searchClear = document.getElementById('listsSearchClear');
-    let searchTimer;
-    searchInput.addEventListener('input', () => {
-        listsState.search = searchInput.value.trim();
-        searchClear.style.display = listsState.search ? '' : 'none';
-        clearTimeout(searchTimer);
-        searchTimer = setTimeout(fetchLists, 300);
-    });
-    searchClear.addEventListener('click', () => {
-        searchInput.value = '';
-        listsState.search = '';
-        searchClear.style.display = 'none';
-        fetchLists();
-    });
-}
-
-// Redirects to the collection page while preserving the current tab (filters reset)
-function restoreCollectionFilters() {
-    const base = IS_OWNER
-        ? '/collection'
-        : `/users/${PROFILE_USERNAME}/collection`;
-    window.location.href = `${base}?tab=${state.tab}`;
-}
-
-// Renders skeleton placeholders while data is loading
+// Render loading skeleton cards while collection data is being fetched
 function renderSkeletons() {
     const grid = document.getElementById('collectionGrid');
     grid.style.display = 'grid';
+
+    // Generate placeholder cards for loading state
     grid.innerHTML = Array(8).fill(`
         <div class="collection-card collection-card--skeleton">
             <div class="collection-card__poster skeleton-box"></div>
@@ -389,165 +264,52 @@ function renderSkeletons() {
                 <div class="skeleton-box" style="height:14px;width:80%;margin-bottom:8px;"></div>
                 <div class="skeleton-box" style="height:12px;width:50%;"></div>
             </div>
-        </div>
-    `).join('');
+        </div>`).join('');
 }
 
-// Switches active collection tab, updates visible layouts, and loads matching content
-function switchTab(tab) {
-    if (!IS_OWNER && !PRIVACY[tab]) {
-        showPrivateTab(tab);
-        return;
-    }
-
-    const prevCountEl = document.getElementById(`count-${state.tab}`);
-    if (prevCountEl) prevCountEl.textContent = '—';
-
-    state.tab = tab;
-
-    document.getElementById('collectionTitle').textContent = TAB_TITLES[tab] || tab;
-
-    document.querySelectorAll('.collection-nav__item[href]').forEach(item => {
-        const href = item.getAttribute('href');
-        item.classList.toggle('collection-nav__item--active', href.includes(`tab=${tab}`));
-    });
-
-    const url = new URL(window.location);
-    url.searchParams.set('tab', tab);
-    window.history.pushState({}, '', url);
-
-    const isLists = tab === 'lists' || tab === 'liked_lists';
-    document.getElementById('collectionGrid').style.display = isLists ? 'none' : '';
-    document.getElementById('collectionEmpty').style.display = 'none';
-    document.getElementById('listsGrid').style.display = isLists ? 'grid' : 'none';
-    document.getElementById('listsEmpty').style.display = 'none';
-
-    if (tab === 'liked_lists') {
-        renderLikedListsFilters();
-        fetchLikedLists();
-    } else if (tab === 'lists') {
-        renderListsFilters();
-        fetchLists();
-    } else {
-        restoreCollectionFilters();
-        updateRatingSection(tab);
-    }
-}
-
-// Shows a "private" message when a non-owner visits a private tab
-function showPrivateTab(tab) {
-    state.tab = tab;
-
-    document.getElementById('collectionTitle').textContent = TAB_TITLES[tab] || tab;
-
-    document.querySelectorAll('.collection-nav__item[href]').forEach(item => {
-        const href = item.getAttribute('href');
-        item.classList.toggle('collection-nav__item--active', href.includes(`tab=${tab}`));
-    });
-
-    const url = new URL(window.location);
-    url.searchParams.set('tab', tab);
-    window.history.pushState({}, '', url);
-
-    document.getElementById('collectionGrid').style.display = 'none';
-    document.getElementById('listsGrid').style.display = 'none';
-    document.getElementById('collectionEmpty').style.display = 'none';
-    document.getElementById('listsGrid').style.display = 'none';
-    document.getElementById('listsEmpty').style.display = 'none';
-    document.getElementById('collectionCount').textContent = '';
-
-    let privateMsg = document.getElementById('collectionPrivateMsg');
-    if (!privateMsg) {
-        privateMsg = document.createElement('div');
-        privateMsg.id = 'collectionPrivateMsg';
-        privateMsg.className = 'collection-private-msg';
-        document.querySelector('.collection-main').appendChild(privateMsg);
-    }
-    privateMsg.style.display = 'flex';
-    privateMsg.innerHTML = `
-        <span class="collection-private-msg__icon">🔒</span>
-        <p class="collection-private-msg__text">This section is private</p>
-    `;
-}
-
-// Loads available genres from API and injects them into dropdown
-async function loadGenres() {
-    try {
-        const res = await fetch('/api/genres/');
-        if (!res.ok) return;
-        const genres = await res.json();
-        const menu = document.getElementById('colGenreMenu');
-        // Remove any genres already injected to avoid duplicates on re-init
-        menu.querySelectorAll('.col-filter-option[data-filter="genre"]:not([data-value=""])').forEach(el => el.remove());
-        genres.forEach(g => {
-            const btn = document.createElement('button');
-            btn.className = 'col-filter-option';
-            btn.dataset.filter = 'genre';
-            btn.dataset.value = g.tmdb_id;
-            btn.textContent = g.name;
-            menu.appendChild(btn);
-        });
-        initGenreOptions();
-    } catch {}
-}
-
-// Initializes dropdown behavior for all filter dropdowns
+// Dropdown initialization (currently handled via CSS hover)
 function initDropdowns() {
-    document.querySelectorAll('.filter-dropdown').forEach(dropdown => {
-        const btn = dropdown.querySelector('.filter-btn');
-
-        btn.addEventListener('click', e => {
-            e.stopPropagation();
-            const isOpen = dropdown.classList.contains('open');
-
-            closeAllDropdowns();
-
-            if (!isOpen) dropdown.classList.add('open');
-        });
-    });
-    // Global click handler to close dropdowns when clicking outside
-    document.addEventListener('click', e => {
-        if (!e.target.closest('.filter-dropdown')) closeAllDropdowns();
-    });
+    /* browse-bar uses CSS hover */
 }
 
-// Close all open dropdown menus
-function closeAllDropdowns() {
-    document.querySelectorAll('.filter-dropdown.open').forEach(d => d.classList.remove('open'));
+// Highlight default filter selections in UI
+function highlightDefaults() {
+    const defSort = document.querySelector('.col-filter-option[data-filter="sort"][data-value="added_desc"]');
+    if (defSort) defSort.classList.add('selected');
+
+    const defGenre = document.querySelector('.col-filter-option[data-filter="genre"][data-value=""]');
+    if (defGenre) defGenre.classList.add('selected');
+
+    const defYear = document.querySelector('.col-filter-option[data-filter="year"][data-value=""]');
+    if (defYear) defYear.classList.add('selected');
+
+    const defDur = document.querySelector('.col-filter-option[data-filter="duration"][data-value=""]');
+    if (defDur) defDur.classList.add('selected');
 }
 
-// Shows or hides user-rating-related sort options
-function updateRatingSection(tab) {
-    const section = document.getElementById('userRatingSortOptions');
-    if (section) {
-        section.style.display = RATED_ONLY_TABS.has(tab) ? '' : 'none';
-    }
-}
-
-// Initializes sorting dropdown options and binds click handlers
+// Initialize sorting options for collection tab
 function initSortOptions() {
     document.querySelectorAll('.col-filter-option[data-filter="sort"]').forEach(btn => {
         btn.addEventListener('click', e => {
             e.stopPropagation();
 
+            // Update selected UI state
             document.querySelectorAll('.col-filter-option[data-filter="sort"]')
                 .forEach(b => b.classList.remove('selected'));
 
             btn.classList.add('selected');
-
             state.sort = btn.dataset.value;
 
-            document.getElementById('colSortLabel').textContent = btn.dataset.label;
-            document.getElementById('colSortBtn').classList.add('active');
+            // Status/Favorites: button stays highlighted, label stays "SORT"
+            document.getElementById('colSortBtn').classList.toggle('active', state.sort !== 'added_desc');
 
-            closeAllDropdowns();
             renderActiveFilters();
             fetchCollection();
         });
     });
 }
 
-// Initializes genre selection dropdown
+// Initialize genre filter options
 function initGenreOptions() {
     document.querySelectorAll('.col-filter-option[data-filter="genre"]').forEach(btn => {
         btn.addEventListener('click', e => {
@@ -558,39 +320,68 @@ function initGenreOptions() {
 
             btn.classList.add('selected');
 
-            state.genre_id = btn.dataset.value ? parseInt(btn.dataset.value) : null;
+            state.genre_id   = btn.dataset.value ? parseInt(btn.dataset.value) : null;
+            state.genre_name = btn.dataset.value ? btn.textContent.trim() : null;
 
-            document.getElementById('colGenreLabel').textContent =
-                btn.dataset.value ? `Genre · ${btn.textContent.trim()}` : 'Genre';
-            document.getElementById('colGenreBtn').classList.toggle('active', !!btn.dataset.value);
+            document.getElementById('colGenreBtn').classList.toggle('active', !!state.genre_id);
 
-            closeAllDropdowns();
             renderActiveFilters();
             fetchCollection();
         });
     });
 }
 
-// Initializes year filter and decade selection logic
+// Initialize year and upcoming filters
 function initYearOptions() {
     document.querySelectorAll('.col-filter-option[data-filter="year"]').forEach(btn => {
         btn.addEventListener('click', e => {
             e.stopPropagation();
 
+            // Clear all year-related selections
+            document.querySelectorAll('.col-filter-option[data-filter="year"], .decade-btn, .col-filter-option[data-filter="upcoming"]')
+                .forEach(b => b.classList.remove('selected'));
+
+            btn.classList.add('selected');
+
+            // Reset year state
             state.year = null;
             state.year_from = null;
             state.year_to = null;
+            state.upcoming = false;
 
-            document.getElementById('colYearLabel').textContent = 'Year';
             document.getElementById('colYearBtn').classList.remove('active');
 
             removeYearSubmenu();
-            closeAllDropdowns();
             renderActiveFilters();
             fetchCollection();
         });
     });
-    // Decade selection buttons (e.g. 1990s, 2000s)
+
+    // Upcoming filter
+    document.querySelectorAll('.col-filter-option[data-filter="upcoming"]').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+
+            document.querySelectorAll('.col-filter-option[data-filter="year"], .decade-btn, .col-filter-option[data-filter="upcoming"]')
+                .forEach(b => b.classList.remove('selected'));
+
+            btn.classList.add('selected');
+
+            // Enable upcoming mode and reset year filters
+            state.year = null;
+            state.year_from = null;
+            state.year_to = null;
+            state.upcoming = true;
+
+            document.getElementById('colYearBtn').classList.add('active');
+
+            removeYearSubmenu();
+            renderActiveFilters();
+            fetchCollection();
+        });
+    });
+
+    // Decade selection (opens year submenu)
     document.querySelectorAll('.decade-btn').forEach(btn => {
         btn.addEventListener('click', e => {
             e.stopPropagation();
@@ -601,17 +392,19 @@ function initYearOptions() {
     });
 }
 
-// Builds and displays a submenu with years inside selected decade
+// Create dynamic submenu for selecting specific years within a decade
 function showYearSubmenu(decade) {
     removeYearSubmenu();
 
     const currentYear = new Date().getFullYear();
     const years = [];
+
     for (let y = decade; y <= decade + 9 && y <= currentYear; y++) years.push(y);
 
     const submenu = document.createElement('div');
     submenu.className = 'year-submenu';
     submenu.id = 'colYearSubmenu';
+
     submenu.innerHTML = `
         <div class="year-submenu__header">
             <span class="year-submenu__title">Pick a year or</span>
@@ -619,45 +412,48 @@ function showYearSubmenu(decade) {
         </div>
         <div class="year-submenu__grid">
             ${years.map(y => `<button class="year-option" data-year="${y}">${y}</button>`).join('')}
-        </div>
-    `;
+        </div>`;
 
     document.getElementById('colYearMenu').appendChild(submenu);
 
-    // Select whole decade range
+    // Select full decade range instead of single year
     submenu.querySelector('.year-submenu__decade-btn').addEventListener('click', e => {
         e.stopPropagation();
+
         state.year = null;
+        state.upcoming = false;
         state.year_from = decade;
         state.year_to = Math.min(decade + 9, currentYear);
-        document.getElementById('colYearLabel').textContent = `Year · ${decade}s`;
+
         document.getElementById('colYearBtn').classList.add('active');
-        closeAllDropdowns();
+
         renderActiveFilters();
         fetchCollection();
     });
 
+    // Select specific year
     submenu.querySelectorAll('.year-option').forEach(yBtn => {
         yBtn.addEventListener('click', e => {
             e.stopPropagation();
+
             state.year = parseInt(yBtn.dataset.year);
             state.year_from = null;
             state.year_to = null;
-            document.getElementById('colYearLabel').textContent = `Year · ${state.year}`;
+            state.upcoming = false;
+
             document.getElementById('colYearBtn').classList.add('active');
-            closeAllDropdowns();
+
             renderActiveFilters();
             fetchCollection();
         });
     });
 }
-
-// Removes the dynamically created year submenu
+// Remove year submenu from DOM
 function removeYearSubmenu() {
     document.getElementById('colYearSubmenu')?.remove();
 }
 
-// Initializes runtime/duration filter dropdown
+// Initialize duration filter options
 function initDurationOptions() {
     document.querySelectorAll('.col-filter-option[data-filter="duration"]').forEach(btn => {
         btn.addEventListener('click', e => {
@@ -665,31 +461,35 @@ function initDurationOptions() {
 
             document.querySelectorAll('.col-filter-option[data-filter="duration"]')
                 .forEach(b => b.classList.remove('selected'));
+
             btn.classList.add('selected');
 
-            state.runtime_min = btn.dataset.min ? parseInt(btn.dataset.min) : null;
-            state.runtime_max = btn.dataset.max ? parseInt(btn.dataset.max) : null;
+            // Update runtime filters
+            state.runtime_min   = btn.dataset.min ? parseInt(btn.dataset.min) : null;
+            state.runtime_max   = btn.dataset.max ? parseInt(btn.dataset.max) : null;
+            state.runtime_label = btn.dataset.value ? DURATION_LABELS[btn.dataset.value] : null;
 
-            document.getElementById('colDurationLabel').textContent =
-                btn.dataset.value ? `Duration · ${durationLabels[btn.dataset.value]}` : 'Duration';
             document.getElementById('colDurationBtn').classList.toggle('active', !!btn.dataset.value);
 
-            closeAllDropdowns();
             renderActiveFilters();
             fetchCollection();
         });
     });
 }
 
-// Initializes collection search input
+// Initialize search input with debounce
 function initSearch() {
     const input = document.getElementById('collectionSearch');
     const clear = document.getElementById('collectionSearchClear');
+
+    if (!input) return;
     let timer;
 
     input.addEventListener('input', () => {
         clear.style.display = input.value ? '' : 'none';
         clearTimeout(timer);
+
+        // Debounced search request
         timer = setTimeout(() => {
             state.search = input.value.trim();
             renderActiveFilters();
@@ -700,150 +500,504 @@ function initSearch() {
     clear.addEventListener('click', () => {
         input.value = '';
         clear.style.display = 'none';
+
         state.search = '';
         renderActiveFilters();
         fetchCollection();
     });
 }
 
-// Renders active filter tags based on current state
+// Load genres dynamically from API and rebuild genre menu
+async function loadGenres() {
+    try {
+        const res = await fetch('/api/genres/');
+        if (!res.ok) return;
+
+        const genres = await res.json();
+        const menu = document.getElementById('colGenreMenu');
+
+        if (!menu) return;
+
+        // Remove previously injected genre options
+        menu.querySelectorAll('.col-filter-option[data-filter="genre"]:not([data-value=""])')
+            .forEach(el => el.remove());
+
+        // Append genres from API
+        genres.forEach(g => {
+            const btn = document.createElement('button');
+            btn.className = 'col-filter-option';
+            btn.dataset.filter = 'genre'; btn.dataset.value = g.tmdb_id;
+            btn.textContent = g.name;
+
+            menu.appendChild(btn);
+        });
+        initGenreOptions();
+    } catch {}
+}
+
+// Renders active filter chips based on current state
 function renderActiveFilters() {
     const container = document.getElementById('colActiveFilters');
-    const resetBtn = document.getElementById('colResetFilters');
+    const resetBtn  = document.getElementById('colResetFilters');
+    const bar       = document.getElementById('colActiveFiltersBar');
+    if (!container) return;
+
     const tags = [];
 
-    if (state.sort !== 'added_desc') {
-        const label = document.getElementById('colSortLabel').textContent;
-        tags.push({ label, key: 'sort' });
-    }
-    if (state.genre_id) {
-        tags.push({ label: document.getElementById('colGenreLabel').textContent, key: 'genre' });
-    }
-    if (state.year) tags.push({ label: `${state.year}`, key: 'year' });
-    if (state.year_from) tags.push({ label: `${state.year_from}s`, key: 'decade' });
-    if (state.runtime_min || state.runtime_max) {
-        tags.push({ label: document.getElementById('colDurationLabel').textContent, key: 'duration' });
-    }
-    if (state.search) tags.push({ label: `"${state.search}"`, key: 'search' });
+    // Build active filter tags dynamically from state
+    if (state.sort !== 'added_desc')
+        tags.push({ label: SORT_LABELS[state.sort] || 'Sort', key: 'sort' });
 
-    // Render tags as HTML
+    if (state.genre_id && state.genre_name)
+        tags.push({ label: `Genre · ${state.genre_name}`, key: 'genre' });
+
+    if (state.upcoming)
+        tags.push({ label: 'Year · Upcoming', key: 'upcoming' });
+
+    if (state.year)
+        tags.push({ label: `Year · ${state.year}`, key: 'year' });
+
+    if (state.year_from)
+        tags.push({ label: `Year · ${state.year_from}s`, key: 'decade' });
+
+    if (state.runtime_label)
+        tags.push({ label: state.runtime_label, key: 'duration' });
+
+    if (state.search)
+        tags.push({ label: `Search · ${state.search}`, key: 'search' });
+
+    // Render chips
     container.innerHTML = tags.map(t =>
         `<span class="active-filter-tag">${escapeHtml(t.label)}
             <button class="active-filter-tag__remove" data-key="${t.key}">×</button>
         </span>`
     ).join('');
 
+    // Attach remove handlers for each chip
     container.querySelectorAll('.active-filter-tag__remove').forEach(btn => {
         btn.addEventListener('click', () => removeFilter(btn.dataset.key));
     });
 
-    resetBtn.style.display = tags.length ? '' : 'none';
+    // Toggle reset button and empty state styling
+    if (resetBtn) resetBtn.style.display = tags.length ? '' : 'none';
+    if (bar) bar.classList.toggle('col-active-filters-bar--empty', tags.length === 0);
 }
 
-// Removes a specific filter by key and resets related state + UI
+// Remove a single filter and sync UI + state
 function removeFilter(key) {
     if (key === 'sort') {
         state.sort = 'added_desc';
-        document.getElementById('colSortLabel').textContent = 'Sort';
-        document.getElementById('colSortBtn').classList.remove('active');
+        document.getElementById('colSortBtn')?.classList.remove('active');
+
+        document.querySelectorAll('.col-filter-option[data-filter="sort"]')
+            .forEach(b => {
+                b.classList.remove('selected');
+                if (b.dataset.value === 'added_desc') b.classList.add('selected');
+            });
     }
 
     if (key === 'genre') {
         state.genre_id = null;
-        document.getElementById('colGenreLabel').textContent = 'Genre';
-        document.getElementById('colGenreBtn').classList.remove('active');
+        state.genre_name = null;
+
+        document.getElementById('colGenreBtn')?.classList.remove('active');
+
+        document.querySelectorAll('.col-filter-option[data-filter="genre"]')
+            .forEach(b => {
+                b.classList.remove('selected');
+                if (!b.dataset.value) b.classList.add('selected');
+            });
+    }
+
+    if (key === 'upcoming') {
+        state.upcoming = false;
+
+        document.getElementById('colYearBtn')?.classList.remove('active');
+
+        document.querySelectorAll('.col-filter-option[data-filter="upcoming"]')
+            .forEach(b => b.classList.remove('selected'));
+
+        document.querySelectorAll('.col-filter-option[data-filter="year"]')
+            .forEach(b => {
+                if (!b.dataset.value) b.classList.add('selected');
+            });
     }
 
     if (key === 'year') {
         state.year = null;
-        document.getElementById('colYearLabel').textContent = 'Year';
-        document.getElementById('colYearBtn').classList.remove('active');
+
+        document.getElementById('colYearBtn')?.classList.remove('active');
+
         removeYearSubmenu();
+
+        document.querySelectorAll('.col-filter-option[data-filter="year"]')
+            .forEach(b => {
+                b.classList.remove('selected');
+                if (!b.dataset.value) b.classList.add('selected');
+            });
     }
 
     if (key === 'decade') {
         state.year_from = null;
         state.year_to = null;
-        document.getElementById('colYearLabel').textContent = 'Year';
-        document.getElementById('colYearBtn').classList.remove('active');
+
+        document.getElementById('colYearBtn')?.classList.remove('active');
+
         removeYearSubmenu();
+
+        document.querySelectorAll('.decade-btn')
+            .forEach(b => b.classList.remove('selected'));
     }
 
     if (key === 'duration') {
         state.runtime_min = null;
         state.runtime_max = null;
-        document.getElementById('colDurationLabel').textContent = 'Duration';
-        document.getElementById('colDurationBtn').classList.remove('active');
+        state.runtime_label = null;
+
+        document.getElementById('colDurationBtn')?.classList.remove('active');
+
+        document.querySelectorAll('.col-filter-option[data-filter="duration"]')
+            .forEach(b => {
+                b.classList.remove('selected');
+                if (!b.dataset.value) b.classList.add('selected');
+            });
     }
 
     if (key === 'search') {
         state.search = '';
-        document.getElementById('collectionSearch').value = '';
-        document.getElementById('collectionSearchClear').style.display = 'none';
-    }
 
-    document.querySelectorAll('.col-filter-option.selected').forEach(b => b.classList.remove('selected'));
+        const i = document.getElementById('collectionSearch');
+        const c = document.getElementById('collectionSearchClear');
+
+        if (i) i.value = '';
+        if (c) c.style.display = 'none';
+    }
 
     renderActiveFilters();
     fetchCollection();
 }
 
-// Resets all filters to default state
-function resetFilters(fetch = true) {
+function resetFilters(doFetch = true) {
     state.sort = 'added_desc';
     state.genre_id = null;
+    state.genre_name = null;
+
     state.year = null;
     state.year_from = null;
     state.year_to = null;
+
+    state.upcoming = false;
     state.runtime_min = null;
     state.runtime_max = null;
-    state.search = '';
+    state.runtime_label = null; state.search = '';
 
-    document.getElementById('colSortLabel').textContent = 'Sort';
-    document.getElementById('colSortBtn').classList.remove('active');
+    // Reset UI buttons
+    document.getElementById('colSortBtn')?.classList.remove('active');
+    document.getElementById('colGenreBtn')?.classList.remove('active');
+    document.getElementById('colYearBtn')?.classList.remove('active');
+    document.getElementById('colDurationBtn')?.classList.remove('active');
 
-    document.getElementById('colGenreLabel').textContent = 'Genre';
-    document.getElementById('colGenreBtn').classList.remove('active');
+    // Reset search input
+    const si = document.getElementById('collectionSearch');
+    const sc = document.getElementById('collectionSearchClear');
+    if (si) si.value = ''; if (sc) sc.style.display = 'none';
 
-    document.getElementById('colYearLabel').textContent = 'Year';
-    document.getElementById('colYearBtn').classList.remove('active');
+    // Clear selected filter options
+    document.querySelectorAll('.col-filter-option.selected')
+        .forEach(b => b.classList.remove('selected'));
 
-    document.getElementById('colDurationLabel').textContent = 'Duration';
-    document.getElementById('colDurationBtn').classList.remove('active');
-
-    document.getElementById('collectionSearch').value = '';
-    document.getElementById('collectionSearchClear').style.display = 'none';
-
-    // Clear selected options
-    document.querySelectorAll('.col-filter-option.selected').forEach(b => b.classList.remove('selected'));
-
-    // Restore default sort selection
-    const defaultBtn = document.querySelector('.col-filter-option[data-filter="sort"][data-value="added_desc"]');
-    if (defaultBtn) defaultBtn.classList.add('selected');
-
+    highlightDefaults();
     removeYearSubmenu();
     renderActiveFilters();
-    if (fetch) fetchCollection();
+
+    if (doFetch) fetchCollection();
 }
 
-// HTML escaping to prevent XSS in rendered labels
+// Renders "My Lists" filter bar and binds UI events
+function renderListsFilters() {
+
+    // Reset local list filter state when entering tab
+    listsState.sort = 'updated_desc';
+    listsState.is_public = null;
+    listsState.search = '';
+
+    // Inject full filter UI into container
+    document.getElementById('collectionFilters').innerHTML = `
+        <div class="lists-filters-row">
+            <div class="col-browse-bar" style="overflow:visible;">
+                <span class="col-browse-bar__label">Browse by</span>
+                <div class="col-browse-bar__divider"></div>
+                <div class="col-browse-bar__item">
+                    <button class="col-browse-bar__btn" id="listsSortBtn">
+                        <span id="listsSortLabel">SORT · Newest updated</span>
+                        <svg class="col-browse-bar__arrow" viewBox="0 0 10 6" fill="none">
+                            <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                    <div class="col-browse-bar__menu col-browse-bar__menu--sort">
+                        <div class="col-browse-bar__section">Last updated</div>
+                        <button class="lists-sort-option selected" data-value="updated_desc" data-label="SORT · Newest updated">Newest updated</button>
+                        <button class="lists-sort-option" data-value="updated_asc"  data-label="SORT · Oldest updated">Oldest updated</button>
+                        <div class="col-browse-bar__section">Created</div>
+                        <button class="lists-sort-option" data-value="created_desc" data-label="SORT · Newest created">Newest created</button>
+                        <button class="lists-sort-option" data-value="created_asc"  data-label="SORT · Oldest created">Oldest created</button>
+                        <div class="col-browse-bar__section">Other</div>
+                        <button class="lists-sort-option" data-value="name_asc"   data-label="SORT · Name A–Z">Name A–Z</button>
+                        <button class="lists-sort-option" data-value="name_desc"  data-label="SORT · Name Z–A">Name Z–A</button>
+                        <button class="lists-sort-option" data-value="films_desc" data-label="SORT · Most films">Most films</button>
+                        <button class="lists-sort-option" data-value="films_asc"  data-label="SORT · Fewest films">Fewest films</button>
+                    </div>
+                </div>
+            </div>
+            ${IS_OWNER ? `
+            <div class="lists-visibility-toggle">
+                <button class="lists-vis-btn lists-vis-btn--active" data-value="">All</button>
+                <button class="lists-vis-btn" data-value="false">Private</button>
+                <button class="lists-vis-btn" data-value="true">Public</button>
+            </div>` : ''}
+            <div class="col-browse-search" style="margin-left:auto;">
+                <span class="col-browse-search__icon">⌕</span>
+                <input type="text" class="col-browse-search__input" id="listsSearch" placeholder="Search lists..." autocomplete="off">
+                <button class="col-browse-search__clear" id="listsSearchClear" style="display:none">×</button>
+            </div>
+        </div>
+        <div class="lists-filters-divider"></div>`;
+
+    // Sort option click handling
+    document.querySelectorAll('.lists-sort-option').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+
+             // Update UI selected state
+            document.querySelectorAll('.lists-sort-option')
+                .forEach(b => b.classList.remove('selected'));
+
+            btn.classList.add('selected');
+            listsState.sort = btn.dataset.value;
+
+            // Update label inside button (shows current sort)
+            document.getElementById('listsSortLabel').textContent =
+                btn.dataset.label || btn.textContent.trim();
+
+            fetchLists();
+        });
+    });
+
+    // Visibility filter (all / private / public)
+    document.querySelectorAll('.lists-vis-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+
+            document.querySelectorAll('.lists-vis-btn')
+                .forEach(b => b.classList.remove('lists-vis-btn--active'));
+
+            btn.classList.add('lists-vis-btn--active');
+
+            // Convert dataset value into boolean/null filter
+            listsState.is_public =
+                btn.dataset.value === '' ? null : btn.dataset.value === 'true';
+
+            fetchLists();
+        });
+    });
+
+    // Search input with debounce
+    const si = document.getElementById('listsSearch');
+    const sc = document.getElementById('listsSearchClear');
+
+    let t;
+
+    si.addEventListener('input', () => {
+        listsState.search = si.value.trim();
+        sc.style.display = listsState.search ? '' : 'none';
+        clearTimeout(t);
+        t = setTimeout(fetchLists, 300);
+    });
+
+    sc.addEventListener('click', () => {
+        si.value = '';
+        listsState.search = '';
+        sc.style.display = 'none';
+        fetchLists();
+    });
+}
+
+// Same structure as "My Lists" but without visibility filter
+function renderLikedListsFilters() {
+    listsState.sort = 'liked_desc';
+    listsState.search = '';
+
+    document.getElementById('collectionFilters').innerHTML = `
+        <div class="lists-filters-row">
+            <div class="col-browse-bar" style="overflow:visible;">
+                <span class="col-browse-bar__label">Browse by</span>
+                <div class="col-browse-bar__divider"></div>
+                <div class="col-browse-bar__item">
+                    <button class="col-browse-bar__btn" id="likedSortBtn">
+                        <span id="likedSortLabel">SORT · Newest liked</span>
+                        <svg class="col-browse-bar__arrow" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    </button>
+                    <div class="col-browse-bar__menu col-browse-bar__menu--sort">
+                        <div class="col-browse-bar__section">Date liked</div>
+                        <button class="liked-sort-option selected" data-value="liked_desc" data-label="SORT · Newest liked">Newest liked</button>
+                        <button class="liked-sort-option" data-value="liked_asc"  data-label="SORT · Oldest liked">Oldest liked</button>
+                        <div class="col-browse-bar__section">Likes</div>
+                        <button class="liked-sort-option" data-value="likes_desc" data-label="SORT · Most liked">Most liked</button>
+                        <button class="liked-sort-option" data-value="likes_asc"  data-label="SORT · Least liked">Least liked</button>
+                        <div class="col-browse-bar__section">Views</div>
+                        <button class="liked-sort-option" data-value="views_desc" data-label="SORT · Most viewed">Most viewed</button>
+                        <button class="liked-sort-option" data-value="views_asc"  data-label="SORT · Least viewed">Least viewed</button>
+                        <div class="col-browse-bar__section">Other</div>
+                        <button class="liked-sort-option" data-value="films_desc" data-label="SORT · Most films">Most films</button>
+                        <button class="liked-sort-option" data-value="name_asc"   data-label="SORT · Name A–Z">Name A–Z</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-browse-search" style="margin-left:auto;">
+                <span class="col-browse-search__icon">⌕</span>
+                <input type="text" class="col-browse-search__input" id="listsSearch" placeholder="Search liked lists..." autocomplete="off">
+                <button class="col-browse-search__clear" id="listsSearchClear" style="display:none">×</button>
+            </div>
+        </div>
+        <div class="lists-filters-divider"></div>`;
+
+    // Sort handling
+    document.querySelectorAll('.liked-sort-option').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+
+            document.querySelectorAll('.liked-sort-option')
+                .forEach(b => b.classList.remove('selected'));
+
+            btn.classList.add('selected');
+            listsState.sort = btn.dataset.value;
+
+            document.getElementById('likedSortLabel').textContent =
+                btn.dataset.label || btn.textContent.trim();
+
+            fetchLikedLists();
+        });
+    });
+
+    // Search handling (debounced)
+    const si = document.getElementById('listsSearch');
+    const sc = document.getElementById('listsSearchClear');
+
+    let t;
+
+    si.addEventListener('input', () => {
+        listsState.search = si.value.trim();
+        sc.style.display = listsState.search ? '' : 'none';
+        clearTimeout(t);
+        t = setTimeout(fetchLikedLists, 300);
+    });
+
+    sc.addEventListener('click', () => {
+        si.value = '';
+        listsState.search = '';
+        sc.style.display = 'none';
+        fetchLikedLists();
+    });
+}
+
+// Shows or hides rating-related UI depending on active tab
+function updateRatingSection(tab) {
+    const s = document.getElementById('userRatingSortOptions');
+    if (s) s.style.display = RATED_ONLY_TABS.has(tab) ? '' : 'none';
+}
+
+// Redirects back to default collection view while preserving current tab
+function restoreCollectionFilters() {
+    const base = IS_OWNER ? '/collection' : `/users/${PROFILE_USERNAME}/collection`;
+    window.location.href = `${base}?tab=${state.tab}`;
+}
+
+// Handles switching between collection tabs (films, lists, liked lists, etc.)
+function switchTab(tab) {
+    if (!IS_OWNER && !PRIVACY[tab]) { showPrivateTab(tab); return; }
+
+    const prevEl = document.getElementById(`count-${state.tab}`);
+    if (prevEl) prevEl.textContent = '—';
+
+    state.tab = tab;
+
+    document.getElementById('collectionTitle').textContent = TAB_TITLES[tab] || tab;
+
+    // Update active nav item
+    document.querySelectorAll('.collection-nav__item[href]').forEach(item => {
+        item.classList.toggle('collection-nav__item--active', item.getAttribute('href').includes(`tab=${tab}`));
+    });
+
+    // Sync URL with current tab
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tab);
+    window.history.pushState({}, '', url);
+
+    const isLists = tab === 'lists' || tab === 'liked_lists';
+
+    // Toggle main vs lists UI
+    document.getElementById('collectionGrid').style.display = isLists ? 'none' : '';
+    document.getElementById('collectionEmpty').style.display = 'none';
+    document.getElementById('listsGrid').style.display = isLists ? 'grid' : 'none';
+    document.getElementById('listsEmpty').style.display = 'none';
+
+    // Load appropriate data source per tab
+    if (tab === 'liked_lists') { renderLikedListsFilters(); fetchLikedLists(); }
+    else if (tab === 'lists')  { renderListsFilters(); fetchLists(); }
+    else { restoreCollectionFilters(); updateRatingSection(tab); }
+}
+
+// Shows private placeholder when user has no access to a tab
+function showPrivateTab(tab) {
+    state.tab = tab;
+
+    document.getElementById('collectionTitle').textContent = TAB_TITLES[tab] || tab;
+
+    document.querySelectorAll('.collection-nav__item[href]').forEach(item => {
+        item.classList.toggle('collection-nav__item--active', item.getAttribute('href').includes(`tab=${tab}`));
+    });
+
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tab);
+    window.history.pushState({}, '', url);
+
+    // Hide all main content sections
+    ['collectionGrid','listsGrid','collectionEmpty','listsEmpty']
+        .forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+
+    document.getElementById('collectionCount').textContent = '';
+
+    // Render private message if missing
+    let pm = document.getElementById('collectionPrivateMsg');
+    if (!pm) {
+        pm = document.createElement('div');
+        pm.id = 'collectionPrivateMsg';
+        pm.className = 'collection-private-msg';
+        document.querySelector('.collection-main').appendChild(pm);
+    }
+
+    pm.style.display = 'flex';
+    pm.innerHTML = `<span class="collection-private-msg__icon">🔒</span><p class="collection-private-msg__text">This section is private</p>`;
+}
+
+// Basic HTML escaping to prevent XSS in dynamic content rendering
 function escapeHtml(str) {
     return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;');
 }
 
-// Initializes full collection page
+// Initializes collection page: sets up correct tab, filters, and data loading
 async function init() {
     document.getElementById('collectionTitle').textContent = TAB_TITLES[ACTIVE_TAB];
 
-    if (!IS_OWNER && !PRIVACY[ACTIVE_TAB]) {
-        showPrivateTab(ACTIVE_TAB);
-        return;
-    }
+    if (!IS_OWNER && !PRIVACY[ACTIVE_TAB]) { showPrivateTab(ACTIVE_TAB); return; }
 
+    // Lists tab
     if (ACTIVE_TAB === 'lists') {
         document.getElementById('collectionGrid').style.display = 'none';
         document.getElementById('listsGrid').style.display = 'grid';
@@ -852,8 +1006,7 @@ async function init() {
         updateRatingSection(ACTIVE_TAB);
 
         document.querySelectorAll('.collection-nav__item[href]').forEach(item => {
-            const href = item.getAttribute('href');
-            item.classList.toggle('collection-nav__item--active', href.includes('tab=lists'));
+            item.classList.toggle('collection-nav__item--active', item.getAttribute('href').includes('tab=lists'));
         });
 
         fetchLists();
@@ -866,17 +1019,14 @@ async function init() {
         updateRatingSection(ACTIVE_TAB);
 
         document.querySelectorAll('.collection-nav__item[href]').forEach(item => {
-            const href = item.getAttribute('href');
-            item.classList.toggle('collection-nav__item--active', href.includes('tab=liked_lists'));
+            item.classList.toggle('collection-nav__item--active', item.getAttribute('href').includes('tab=liked_lists'));
         });
 
         fetchLikedLists();
 
     } else {
         updateRatingSection(ACTIVE_TAB);
-
-        document.getElementById('colResetFilters')
-            .addEventListener('click', () => resetFilters(true));
+        document.getElementById('colResetFilters')?.addEventListener('click', () => resetFilters(true));
 
         initDropdowns();
         initSortOptions();
@@ -884,20 +1034,19 @@ async function init() {
         initDurationOptions();
         initSearch();
 
-        const defaultSortBtn = document.querySelector(
-            `.col-filter-option[data-filter="sort"][data-value="${state.sort}"]`
-        );
-        if (defaultSortBtn) defaultSortBtn.classList.add('selected');
-
+        highlightDefaults();
         await loadGenres();
+
         fetchCollection();
     }
 
+    // Navigation click handling for SPA-like tab switching
     document.querySelectorAll('.collection-nav__item[href]').forEach(item => {
         item.addEventListener('click', e => {
             e.preventDefault();
-            const url = new URL(item.getAttribute('href'), window.location.origin);
-            const tab = url.searchParams.get('tab');
+            const tab = new URL(item.getAttribute('href'), window.location.origin)
+                .searchParams.get('tab');
+
             if (tab) switchTab(tab);
         });
     });
