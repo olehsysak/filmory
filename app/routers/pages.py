@@ -297,6 +297,17 @@ async def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
 
+@router.get("/profile")
+async def own_profile_page(request: Request):
+    """Redirects authenticated user to their own profile page /users/{username}."""
+    user = request.state.user
+
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+
+    return RedirectResponse(url=f"/users/{user.username}", status_code=302)
+
+
 @router.get("/users/{username}")
 async def profile_page(
     request: Request,

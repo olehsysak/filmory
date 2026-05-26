@@ -42,28 +42,29 @@ async def get_user_and_check_privacy(
 
 @router.get("/{username}/films/want-to-watch", response_model=list[UserFilmResponse])
 async def get_want_to_watch(
-    username: str,
-    request: Request,
-    db: AsyncSession = Depends(get_async_db),
-    service: UserFilmService = Depends(get_user_film_service),
-    sort: str = Query(default="added_desc"),
-    genre_id: int | None = Query(default=None),
-    year: int | None = Query(default=None),
-    year_from: int | None = Query(default=None),
-    year_to: int | None = Query(default=None),
-    runtime_min: int | None = Query(default=None),
-    runtime_max: int | None = Query(default=None),
-    search: str | None = Query(default=None),
+        username: str,
+        request: Request,
+        db: AsyncSession = Depends(get_async_db),
+        service: UserFilmService = Depends(get_user_film_service),
+        sort: str = Query(default="added_desc"),
+        genre_id: int | None = Query(default=None),
+        year: int | None = Query(default=None),
+        year_from: int | None = Query(default=None),
+        year_to: int | None = Query(default=None),
+        upcoming: bool = Query(default=False),
+        runtime_min: int | None = Query(default=None),
+        runtime_max: int | None = Query(default=None),
+        search: str | None = Query(default=None),
 ):
-    """Returns user's "want to watch" list."""
+    """Returns user's 'want to watch' list."""
     viewer = request.state.user
     user_id = await get_user_and_check_privacy(
         username, "want_to_watch_public", db, viewer.id if viewer else None
     )
-
     return await service.get_watchlist(
         user_id, sort=sort, genre_id=genre_id, year=year,
         year_from=year_from, year_to=year_to,
+        upcoming=upcoming,
         runtime_min=runtime_min, runtime_max=runtime_max, search=search,
     )
 

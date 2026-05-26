@@ -24,9 +24,11 @@ router = APIRouter(
 async def get_liked_lists(
     current_user: User = Depends(get_current_user),
     service: UserListLikeService = Depends(get_user_list_like_service),
+    sort: str = Query(default="liked_desc"),
+    search: str | None = Query(default=None),
 ):
-    """Get all public lists liked by the current user."""
-    return await service.get_liked_lists(current_user.id)
+    """Get all public lists liked by the current user, with sort and search."""
+    return await service.get_liked_lists(current_user.id, sort=sort, search=search)
 
 
 @router.post("/", response_model=UserListResponse, status_code=status.HTTP_201_CREATED)

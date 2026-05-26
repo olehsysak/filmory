@@ -31,6 +31,7 @@ async def get_favorites(
     year: int | None = Query(default=None),
     year_from: int | None = Query(default=None),
     year_to: int | None = Query(default=None),
+    upcoming: bool = Query(default=False),
     runtime_min: int | None = Query(default=None),
     runtime_max: int | None = Query(default=None),
     rated_only: bool = Query(default=False),
@@ -42,6 +43,7 @@ async def get_favorites(
         current_user.id,
         sort=sort, genre_id=genre_id, year=year,
         year_from=year_from, year_to=year_to,
+        upcoming=upcoming,
         runtime_min=runtime_min, runtime_max=runtime_max,
         rated_only=rated_only, unrated_only=unrated_only, search=search,
     )

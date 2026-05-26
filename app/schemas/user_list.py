@@ -109,6 +109,7 @@ class LikedListResponse(BaseModel):
     cover_url: str | None = Field(None, description="Primary cover poster URL")
     cover_urls: list[str] = Field(default_factory=list, description="Up to 3 cover poster URLs")
     likes_count: int = Field(0, description="Number of likes")
+    views_count: int = Field(0, description="Number of views")
     updated_at: datetime = Field(..., description="Last update date by the author")
 
     model_config = ConfigDict(from_attributes=False)

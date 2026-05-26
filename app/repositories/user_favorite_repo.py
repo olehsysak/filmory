@@ -32,6 +32,7 @@ class UserFavoriteRepository:
             year: int | None = None,
             year_from: int | None = None,
             year_to: int | None = None,
+            upcoming: bool = False,
             runtime_min: int | None = None,
             runtime_max: int | None = None,
             rated_only: bool = False,
@@ -39,8 +40,6 @@ class UserFavoriteRepository:
             search: str | None = None,
     ):
         """Get all user favorites with optional filters and sorting."""
-
-        # Base query for user favorites with film data and optional user film info (rating, status
         query = (
             select(UserFavorite, UserFilm.rating, UserFilm.status)
             .join(Film, Film.id == UserFavorite.film_id)
@@ -55,10 +54,10 @@ class UserFavoriteRepository:
             .where(UserFavorite.user_id == user_id)
         )
 
-        # Apply filtering rules (genre, year, runtime, rating, search)
         query = apply_film_filters(
             query, Film,
             genre_id=genre_id, year=year, year_from=year_from, year_to=year_to,
+            upcoming=upcoming,
             runtime_min=runtime_min, runtime_max=runtime_max,
             rated_only=rated_only, unrated_only=unrated_only, search=search,
             is_favorite=True,

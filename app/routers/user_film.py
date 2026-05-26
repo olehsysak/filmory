@@ -33,6 +33,7 @@ async def get_want_to_watch(
     year: int | None = Query(default=None),
     year_from: int | None = Query(default=None),
     year_to: int | None = Query(default=None),
+    upcoming: bool = Query(default=False),
     runtime_min: int | None = Query(default=None),
     runtime_max: int | None = Query(default=None),
     search: str | None = Query(default=None),
@@ -42,6 +43,7 @@ async def get_want_to_watch(
         current_user.id,
         sort=sort, genre_id=genre_id, year=year,
         year_from=year_from, year_to=year_to,
+        upcoming=upcoming,
         runtime_min=runtime_min, runtime_max=runtime_max,
         search=search,
     )
@@ -56,6 +58,7 @@ async def get_watching(
     year: int | None = Query(default=None),
     year_from: int | None = Query(default=None),
     year_to: int | None = Query(default=None),
+    upcoming: bool = Query(default=False),
     runtime_min: int | None = Query(default=None),
     runtime_max: int | None = Query(default=None),
     search: str | None = Query(default=None),
@@ -65,6 +68,7 @@ async def get_watching(
         current_user.id,
         sort=sort, genre_id=genre_id, year=year,
         year_from=year_from, year_to=year_to,
+        upcoming=upcoming,
         runtime_min=runtime_min, runtime_max=runtime_max,
         search=search,
     )
@@ -79,6 +83,7 @@ async def get_completed(
     year: int | None = Query(default=None),
     year_from: int | None = Query(default=None),
     year_to: int | None = Query(default=None),
+    upcoming: bool = Query(default=False),
     runtime_min: int | None = Query(default=None),
     runtime_max: int | None = Query(default=None),
     rated_only: bool = Query(default=False),
@@ -90,6 +95,7 @@ async def get_completed(
         current_user.id,
         sort=sort, genre_id=genre_id, year=year,
         year_from=year_from, year_to=year_to,
+        upcoming=upcoming,
         runtime_min=runtime_min, runtime_max=runtime_max,
         rated_only=rated_only, unrated_only=unrated_only, search=search,
     )
@@ -104,6 +110,7 @@ async def get_dropped(
     year: int | None = Query(default=None),
     year_from: int | None = Query(default=None),
     year_to: int | None = Query(default=None),
+    upcoming: bool = Query(default=False),
     runtime_min: int | None = Query(default=None),
     runtime_max: int | None = Query(default=None),
     search: str | None = Query(default=None),
@@ -113,6 +120,7 @@ async def get_dropped(
         current_user.id,
         sort=sort, genre_id=genre_id, year=year,
         year_from=year_from, year_to=year_to,
+        upcoming=upcoming,
         runtime_min=runtime_min, runtime_max=runtime_max,
         search=search,
     )

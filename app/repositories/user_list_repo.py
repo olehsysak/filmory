@@ -115,14 +115,16 @@ class UserListRepository:
 
 
     async def get_liked_lists_for_user(
-        self,
-        liked_list_ids: list[int],
-    ) -> list[tuple[UserList, User, int]]:
-        """Get public liked lists by IDs with author and film count."""
+            self,
+            liked_list_ids: list[int],
+            sort: str = "liked_desc",
+            search: str | None = None,
+    ) -> list[tuple]:
+        """Get public liked lists by IDs with author and film count, sorted and filtered."""
         if not liked_list_ids:
             return []
 
-        # Subquery: count films per list
+        # Count films per list
         film_count = (
             select(func.count())
             .where(UserListFilm.list_id == UserList.id)
@@ -130,15 +132,33 @@ class UserListRepository:
             .scalar_subquery()
         )
 
-        result = await self.db.execute(
+        # Public liked lists with authors and film counts
+        query = (
             select(UserList, User, film_count.label("film_count"))
             .join(User, User.id == UserList.user_id)
             .where(
                 UserList.id.in_(liked_list_ids),
-                UserList.is_public.is_(True),  # hide private lists automaticall
+                UserList.is_public.is_(True),
             )
-            .order_by(UserList.updated_at.desc())
         )
+
+        if search:
+            query = query.where(UserList.name.ilike(f"%{search}%"))
+
+        sort_map = {
+            "liked_desc": UserList.updated_at.desc(),
+            "liked_asc": UserList.updated_at.asc(),
+            "likes_desc": UserList.likes_count.desc(),
+            "likes_asc": UserList.likes_count.asc(),
+            "views_desc": UserList.views_count.desc(),
+            "views_asc": UserList.views_count.asc(),
+            "films_desc": film_count.desc(),
+            "name_asc": UserList.name.asc(),
+        }
+
+        query = query.order_by(sort_map.get(sort, UserList.updated_at.desc()))
+
+        result = await self.db.execute(query)
         return result.all()
 
 
