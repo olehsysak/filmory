@@ -6,6 +6,7 @@ from app.schemas.user_favorite import UserFavoriteResponse
 from app.services.user_film_service import UserFilmService
 from app.services.user_favorite_service import UserFavoriteService
 from app.services.user_list_service import UserListService
+from app.services.user_list_like_service import UserListLikeService
 from app.repositories.profile_repo import ProfileRepository
 
 
@@ -214,3 +215,24 @@ async def get_lists(
     )
 
     return lists
+
+
+@router.get("/{username}/liked-lists", response_model=list)
+async def get_user_liked_lists(
+        username: str,
+        request: Request,
+        db: AsyncSession = Depends(get_async_db),
+        sort: str = Query(default="liked_desc"),
+        search: str | None = Query(default=None),
+):
+    """Returns public liked lists for a user profile (respects liked_lists_public privacy)."""
+
+    viewer = request.state.user
+    viewer_id = viewer.id if viewer else None
+
+    user_id = await get_user_and_check_privacy(
+        username, "liked_lists_public", db, viewer_id
+    )
+
+    service = UserListLikeService(db)
+    return await service.get_liked_lists(user_id, sort=sort, search=search)

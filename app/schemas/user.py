@@ -43,6 +43,7 @@ class UserProfileResponse(BaseModel):
     dropped_public: bool = Field(True, description="Whether 'Dropped' list is visible to others")
     favorites_public: bool = Field(True, description="Whether favorites are visible to others")
     lists_public: bool = Field(True, description="Whether custom lists are visible to others")
+    liked_lists_public: bool = Field(True, description="Whether liked lists are visible to others")
     activity_public: bool = Field(True, description="Whether activity feed is visible to others")
 
     model_config = ConfigDict(from_attributes=False)
@@ -63,6 +64,7 @@ class UserStatsResponse(BaseModel):
     public_lists_count: int = Field(0, description="Number of publicly visible custom lists")
     private_lists_count: int = Field(0, description="Number of private custom lists")
     total_lists_count: int = Field(0, description="Total number of custom lists (public + private)")
+    liked_lists_count: int = Field(0, description="Total number of liked lists")
 
     model_config = ConfigDict(from_attributes=False)
 
@@ -87,6 +89,7 @@ class UserPrivacyUpdate(BaseModel):
     dropped_public: bool | None = Field(None, description="Set visibility of 'Dropped' list")
     favorites_public: bool | None = Field(None, description="Set visibility of favorites")
     lists_public: bool | None = Field(None, description="Set visibility of custom lists")
+    liked_lists_public: bool | None = Field(None, description="Set visibility of liked lists tab")
     activity_public: bool | None = Field(None, description="Set visibility of activity feed")
 
 

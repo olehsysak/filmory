@@ -39,6 +39,7 @@ class User(Base):
     dropped_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     favorites_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     lists_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    liked_lists_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     activity_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     films: Mapped[list["UserFilm"]] = relationship(

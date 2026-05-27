@@ -105,8 +105,8 @@
                 <span class="collection-nav__count" id="count-lists">—</span>
             </a>
 
-            {% if is_owner %}
-            <a href="/collection?tab=liked_lists"
+            {% if is_owner or privacy.get('liked_lists') %}
+            <a href="{% if is_owner %}/collection{% else %}/users/{{ profile_username }}/collection{% endif %}?tab=liked_lists"
                class="collection-nav__item {% if active_tab == 'liked_lists' %}collection-nav__item--active{% endif %}">
                 <span class="collection-nav__icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">

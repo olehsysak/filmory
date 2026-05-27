@@ -124,9 +124,23 @@
                     <span class="profile-srow__value">{{ profile.stats.private_lists_count }}</span>
                 </div>
                 <div class="profile-srow profile-srow--total">
-                    <span class="profile-srow__label">Total lists</span>
+                    <span class="profile-srow__label">Total created</span>
                     <span class="profile-srow__value">{{ profile.stats.total_lists_count }}</span>
                 </div>
+                {% if profile.is_owner or profile.liked_lists_public %}
+                <div class="profile-srow-separator"></div>
+                {% if profile.is_owner %}
+                <a class="profile-srow" href="/collection?tab=liked_lists">
+                    <span class="profile-srow__label">Liked lists</span>
+                    <span class="profile-srow__value">{{ profile.stats.liked_lists_count }}</span>
+                </a>
+                {% else %}
+                <a class="profile-srow" href="/users/{{ profile.username }}/collection?tab=liked_lists">
+                    <span class="profile-srow__label">Liked lists</span>
+                    <span class="profile-srow__value">{{ profile.stats.liked_lists_count }}</span>
+                </a>
+                {% endif %}
+                {% endif %}
             </div>
 
             <!-- Ratings chart — always visible -->
@@ -190,6 +204,9 @@
                 {% endif %}
                 {% if profile.is_owner or profile.lists_public %}
                 <a class="profile-nav__tab" href="{{ base }}?tab=lists">Lists</a>
+                {% endif %}
+                {% if profile.is_owner or profile.liked_lists_public %}
+                <a class="profile-nav__tab" href="{{ base }}?tab=liked_lists">Liked Lists</a>
                 {% endif %}
             </nav>
 

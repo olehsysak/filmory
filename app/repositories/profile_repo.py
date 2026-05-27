@@ -117,6 +117,13 @@ class ProfileRepository:
         public_lists = lists_row.public
         private_lists = lists_row.private
 
+        # Liked lists count
+        from app.models.user_list_like import UserListLike
+        liked_lists_count = await self.db.scalar(
+            select(func.count(UserListLike.id))
+            .where(UserListLike.user_id == user_id)
+        ) or 0
+
         total_minutes = row.total_minutes or 0
 
         return {
@@ -134,6 +141,7 @@ class ProfileRepository:
             "public_lists_count": public_lists,
             "private_lists_count": private_lists,
             "total_lists_count": public_lists + private_lists,
+            "liked_lists_count": liked_lists_count,
         }
 
 

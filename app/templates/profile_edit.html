@@ -186,6 +186,17 @@
                         <span class="pe-switch__track"></span>
                     </label>
                 </div>
+                <div class="pe-toggle-row">
+                    <div class="pe-toggle-info">
+                        <p class="pe-toggle-label">Liked Lists</p>
+                        <p class="pe-toggle-desc">liked lists tab visible to others</p>
+                    </div>
+                    <label class="pe-switch">
+                        <input type="checkbox" id="toggleLikedLists"
+                               {% if current_user.liked_lists_public %}checked{% endif %}>
+                        <span class="pe-switch__track"></span>
+                    </label>
+                </div>
             </div>
         </div>
 

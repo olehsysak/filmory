@@ -48,6 +48,7 @@ class ProfileService:
             "dropped_public": user.dropped_public,
             "favorites_public": user.favorites_public,
             "lists_public": user.lists_public,
+            "liked_lists_public": user.liked_lists_public,
             "activity_public": user.activity_public,
         }
 

@@ -23,7 +23,9 @@ const TAB_ENDPOINTS = {
 
 // Lists endpoints
 const LISTS_ENDPOINT       = PROFILE_USERNAME ? `/api/users/${PROFILE_USERNAME}/lists` : '/api/user/lists/';
-const LIKED_LISTS_ENDPOINT = '/api/user/lists/liked';
+const LIKED_LISTS_ENDPOINT = PROFILE_USERNAME
+    ? `/api/users/${PROFILE_USERNAME}/liked-lists`
+    : '/api/user/lists/liked';
 
 // Tabs that support rating-related filters
 const RATED_ONLY_TABS      = new Set(['completed', 'favorites']);

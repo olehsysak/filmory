@@ -133,11 +133,12 @@ async def user_collection_page(
         "dropped": target_user.dropped_public,
         "favorites": target_user.favorites_public,
         "lists": target_user.lists_public,
+        "liked_lists": target_user.liked_lists_public,
     }
 
-    valid_tabs = {"want_to_watch", "watching", "completed", "dropped", "favorites", "lists"}
+    valid_tabs = {"want_to_watch", "watching", "completed", "dropped", "favorites", "lists", "liked_lists"}
     if tab not in valid_tabs:
-        tab = "want_to_watch" # fallback tab
+        tab = "want_to_watch"  # fallback tab
 
     return templates.TemplateResponse("collection.html", {
         "request": request,

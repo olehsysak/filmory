@@ -139,6 +139,7 @@ document.getElementById('peSavePrivacy').addEventListener('click', async () => {
                 dropped_public:       document.getElementById('toggleDropped').checked,
                 favorites_public:     document.getElementById('toggleFavorites').checked,
                 lists_public:         document.getElementById('toggleLists').checked,
+                liked_lists_public:   document.getElementById('toggleLikedLists').checked,
                 activity_public:      document.getElementById('toggleActivity').checked,
             }),
         });
