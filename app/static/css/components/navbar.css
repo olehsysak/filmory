@@ -518,3 +518,39 @@
         display: flex;
     }
 }
+
+/* Touch targets (min 44px) */
+@media (max-width: 768px) {
+    .nav-link {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+
+    .drawer__link {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+
+    .theme-toggle {
+        width: 44px;
+        height: 44px;
+    }
+
+    .navbar__burger {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+/* Overrides CSS :hover behaviour once JS attaches .js-dropdown */
+.js-dropdown .nav-dropdown__menu,
+.js-dropdown .user-menu__dropdown {
+    display: none;
+}
+
+.js-dropdown .nav-dropdown__menu.is-open,
+.js-dropdown .user-menu__dropdown.is-open {
+    display: block;
+}
