@@ -1,4 +1,4 @@
-/* ─── HERO ───────────────────────────────────────────────── */
+/* Hero */
 .film-hero {
     position: relative;
     width: 100%;
@@ -28,8 +28,7 @@
     background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.3) 40%, var(--bg) 100%);
 }
 
-
-/* ─── LAYOUT ─────────────────────────────────────────────── */
+/* Layout */
 .film-layout {
     position: relative;
     z-index: 2;
@@ -42,8 +41,7 @@
     align-items: start;
 }
 
-
-/* ─── LEFT COLUMN (sticky) ───────────────────────────────── */
+/* Left column (sticky) */
 .film-poster-col {
     position: sticky;
     top: 24px;
@@ -74,8 +72,7 @@
     font-size: 14px;
 }
 
-
-/* ─── ACTIONS ────────────────────────────────────────────── */
+/* Actions */
 .film-actions {
     display: flex;
     flex-direction: column;
@@ -429,8 +426,7 @@
     color: var(--text-muted);
 }
 
-
-/* ─── RIGHT COLUMN ───────────────────────────────────────── */
+/* Right column */
 .film-info {
     display: flex;
     flex-direction: column;
@@ -483,8 +479,7 @@
     color: var(--text-muted);
 }
 
-
-/* ─── STATS ROW ──────────────────────────────────────────── */
+/* Stats row */
 .film-stats-row {
     display: flex;
     align-items: flex-start;
@@ -605,8 +600,7 @@
     color: var(--accent);
 }
 
-
-/* ─── INFO TABLE ─────────────────────────────────────────── */
+/* Info table */
 .film-info-table {
     display: flex;
     flex-direction: column;
@@ -651,8 +645,7 @@
     color: var(--accent);
 }
 
-
-/* ─── OVERVIEW ───────────────────────────────────────────── */
+/* Overview */
 .film-section-label {
     margin-bottom: 10px;
     font-size: 11px;
@@ -670,8 +663,7 @@
     color: var(--text);
 }
 
-
-/* ─── POPULARITY ─────────────────────────────────────────── */
+/* Popularity */
 .film-popularity {
     display: flex;
     flex-direction: column;
@@ -716,8 +708,7 @@
     white-space: nowrap;
 }
 
-
-/* ─── HORIZONTAL SCROLL ──────────────────────────────────── */
+/* Horizontal scroll*/
 .film-hscroll {
     overflow-x: auto;
     padding-bottom: 10px;
@@ -748,8 +739,7 @@
     width: max-content;
 }
 
-
-/* ─── CREDITS ────────────────────────────────────────────── */
+/* Credits */
 .film-credits {
     display: flex;
     flex-direction: column;
@@ -824,8 +814,7 @@
     transform: translateX(3px);
 }
 
-
-/* ─── SIMILAR ────────────────────────────────────────────── */
+/* Similar */
 .film-similar {
     display: flex;
     flex-direction: column;
@@ -909,8 +898,7 @@
     color: var(--accent);
 }
 
-
-/* ─── RESPONSIVE ─────────────────────────────────────────── */
+/* Responsive */
 @media (max-width: 768px) {
     .film-hero {
         min-height: 300px;
