@@ -371,3 +371,14 @@
     .idx-hero__title { font-size: 18px; }
     .genre-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ─── LIGHT THEME OVERRIDES ─────────────────────────────── */
+
+[data-theme="light"] .idx-hero__inner {
+    background: #2a2a2a;
+}
+
+[data-theme="light"] .idx-hero__bg {
+    filter: blur(1px) brightness(0.7);
+    background-color: #2a2a2a;
+}

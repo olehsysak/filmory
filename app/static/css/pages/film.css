@@ -966,3 +966,11 @@
         grid-template-columns: 90px 1fr;
     }
 }
+
+[data-theme="light"] .film-hero__backdrop {
+    filter: brightness(0.65);
+}
+
+[data-theme="light"] .film-hero__backdrop--blur {
+    filter: brightness(0.55) blur(1px);
+}
