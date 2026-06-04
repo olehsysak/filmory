@@ -145,3 +145,25 @@ a {
     color: var(--text);
     border-color: var(--text-muted);
 }
+
+/* Responsive */
+
+@media (max-width: 768px) {
+    .container {
+        padding: 20px 16px;
+    }
+
+    .footer {
+        padding: 32px 0 24px;
+    }
+
+    .footer__container {
+        padding: 0 16px;
+    }
+
+    .footer__bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}

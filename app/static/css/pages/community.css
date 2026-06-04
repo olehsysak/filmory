@@ -296,3 +296,31 @@
     0%, 100% { opacity: 1; }
     50%       { opacity: 0.4; }
 }
+
+/* Responsive */
+
+@media (max-width: 768px) {
+    .cm-page {
+        padding: 1.5rem 1rem 3rem;
+        gap: 2rem;
+    }
+
+    .cm-people-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cm-liked-grid-6 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .cm-bottom {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .cm-liked-grid-6 {
+        grid-template-columns: 1fr;
+    }
+}
