@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
+from pathlib import Path
 import uvicorn
 from app.cache.redis_client import get_redis, close_redis
 from app.routers.auth import router as auth_router
@@ -22,6 +23,9 @@ from app.database import async_session_maker
 from app.utils.sync import sync_genres
 
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # startup
@@ -40,7 +44,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/static", StaticFiles(directory=BASE_DIR / "app" / "static"), name="static")
 
 app.add_middleware(AuthMiddleware)
 
